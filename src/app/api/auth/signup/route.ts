@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Normalize email to lowercase for consistent lookups and storage
+    const normalizedEmail = email.trim().toLowerCase()
+
     // Check if user already exists
-    const existingUser = await User.findOne({ email }).lean()
+    const existingUser = await User.findOne({ email: normalizedEmail }).lean()
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email already exists" },
@@ -36,17 +39,34 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const user = await User.create({
-      email,
+      email: normalizedEmail,
       name,
       password: hashedPassword,
       role: "MEMBER",
     })
 
-    // Create organization for the new user
-    const organization = await Organization.create({
-      name: `${name}'s Workspace`,
-      slug: `${name.toLowerCase().replace(/\s+/g, "-")}-${Math.random().toString(36).substring(2, 8)}`,
-    })
+    // Create organization for the new user with a unique slug
+    const baseSlug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    const uniqueSlug = `${baseSlug}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+
+    let organization
+    try {
+      organization = await Organization.create({
+        name: `${name}'s Workspace`,
+        slug: uniqueSlug,
+      })
+    } catch (orgError: any) {
+      // Handle unique slug collision by retrying with a longer random suffix
+      if (orgError?.code === 11000) {
+        const retrySlug = `${baseSlug}-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
+        organization = await Organization.create({
+          name: `${name}'s Workspace`,
+          slug: retrySlug,
+        })
+      } else {
+        throw orgError
+      }
+    }
 
     // Create membership with ADMIN role
     const membership = await Membership.create({
@@ -88,10 +108,29 @@ export async function POST(request: NextRequest) {
     })
 
     return response
-  } catch (error) {
-    console.error("Sign-up error:", error)
+  } catch (error: any) {
+    // Log the actual error server-side for debugging
+    console.error("Sign-up error:", error?.message || error)
+
+    // Return appropriate error messages based on error type
+    if (error?.code === 11000) {
+      // MongoDB duplicate key error
+      const keyPattern = error?.keyPattern?.email
+      if (keyPattern) {
+        return NextResponse.json(
+          { error: "User with this email already exists" },
+          { status: 400 }
+        )
+      }
+      return NextResponse.json(
+        { error: "A user with this information already exists" },
+        { status: 400 }
+      )
+    }
+
+    // For other errors, return a generic message (don't leak server details)
     return NextResponse.json(
-      { error: "An error occurred during sign-up" },
+      { error: "An error occurred during sign-up. Please try again." },
       { status: 500 }
     )
   }

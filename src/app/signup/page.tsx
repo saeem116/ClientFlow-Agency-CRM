@@ -72,6 +72,12 @@ export default function SignUpPage() {
           // (sidebar) renders immediately without a manual refresh.
           await refresh()
           router.push("/dashboard")
+        } else if (response.status === 400) {
+          // Client error (validation, duplicate email) - show the server's message
+          setError(data.error || "Registration failed. Please check your input.")
+        } else if (response.status === 500) {
+          // Server error - show a user-friendly message
+          setError("Server error. Please try again later.")
         } else {
           setError(data.error || "Registration failed. Email might already be in use.")
         }
