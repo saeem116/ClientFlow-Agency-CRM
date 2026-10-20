@@ -1,0 +1,42 @@
+﻿node.exe : npm notice run clientflow@0.1.0 npx
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\USER\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run clientflow@0.1.0 npx:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run next build
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 17ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 411ms
+  Running TypeScript ...
+  Finished TypeScript in 1427ms ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/12) ...
+  Generating static pages using 15 workers (3/12) 
+  Generating static pages using 15 workers (6/12) 
+  Generating static pages using 15 workers (9/12) 
+✓ Generating static pages using 15 workers (12/12) in 763ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/tasks/[id]
+├ ○ /clients
+├ ƒ /clients/[id]
+├ ○ /dashboard
+├ ○ /invoices
+├ ○ /leads
+├ ○ /projects
+├ ○ /reports
+├ ○ /settings
+└ ○ /tasks
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

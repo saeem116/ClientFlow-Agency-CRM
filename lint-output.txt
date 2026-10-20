@@ -1,0 +1,291 @@
+﻿node.exe : npm notice run clientflow@0.1.0 lint
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\USER\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run clientflow@0.1.0 lint:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run eslint
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\security.test.ts
+  1:65  warning  'test' is defined but never used                 @typescript-eslint/no-unused-vars
+  5:5   warning  'testUserId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  6:15  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\business\lead-pipeline.test.ts
+   1:65  warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+   7:15  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:54  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\business\project-progress.test.ts
+    1:65   warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+    2:68   warning  'Client' is defined but never used        @typescript-eslint/no-unused-vars
+    7:15   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:74   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:121  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:123  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:127  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:126  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:75   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\database\client.test.ts
+  1:65  warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+  6:15  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\database\invoice.test.ts
+    1:65  warning  'test' is defined but never used                 @typescript-eslint/no-unused-vars
+    2:77  warning  'Client' is defined but never used               @typescript-eslint/no-unused-vars
+    5:5   warning  'testUserId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    7:15  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   44:75  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   55:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   69:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   81:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   94:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  108:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  118:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  131:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  143:60  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  149:63  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\database\lead.test.ts
+    1:65  warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+    2:48  warning  'Client' is defined but never used        @typescript-eslint/no-unused-vars
+    2:56  warning  'Membership' is defined but never used    @typescript-eslint/no-unused-vars
+    2:68  warning  'User' is defined but never used          @typescript-eslint/no-unused-vars
+    7:15  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:63  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:68  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\database\project.test.ts
+    1:65   warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+    2:51   warning  'Client' is defined but never used        @typescript-eslint/no-unused-vars
+    2:59   warning  'Task' is defined but never used          @typescript-eslint/no-unused-vars
+    2:65   warning  'Membership' is defined but never used    @typescript-eslint/no-unused-vars
+    2:77   warning  'User' is defined but never used          @typescript-eslint/no-unused-vars
+    7:15   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:33   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:66   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   56:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:33   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:33   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:125  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:125  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:123  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:129  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:127  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:128  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\__tests__\database\task.test.ts
+   1:65  warning  'test' is defined but never used          @typescript-eslint/no-unused-vars
+   2:48  warning  'Client' is defined but never used        @typescript-eslint/no-unused-vars
+   2:65  warning  'Organization' is defined but never used  @typescript-eslint/no-unused-vars
+   7:15  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:65  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\api\auth\signin\route.ts
+   2:38  warning  'Organization' is defined but never used  @typescript-eslint/no-unused-vars
+  56:53  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\api\auth\signout\route.ts
+  2:10  warning  'User' is defined but never used             @typescript-eslint/no-unused-vars
+  3:10  warning  'getOrganization' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\auth\signup\route.ts
+  52:11  warning  'membership' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\clients\route.ts
+  31:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  80:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  80:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\api\invoices\[id]\payment\route.ts
+  42:9  warning  'now' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\invoices\[id]\route.ts
+  63:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\api\invoices\[id]\update\route.ts
+  2:29  warning  'Client' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\search\route.ts
+  62:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\api\tasks\route.ts
+  18:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\clients\[id]\edit\client-edit-form.tsx
+  51:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+  75:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+E:\Agency_CRM\clientflow\src\app\clients\new\page.tsx
+   2:18  warning  'Membership' is defined but never used       @typescript-eslint/no-unused-vars
+   2:30  warning  'User' is defined but never used             @typescript-eslint/no-unused-vars
+   3:27  warning  'getSession' is defined but never used       @typescript-eslint/no-unused-vars
+  46:28  warning  'existingClients' is defined but never used  @typescript-eslint/no-unused-vars
+  48:20  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\clients\page.tsx
+  21:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\dashboard\page.tsx
+  147:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  293:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  298:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\dashboard\revenue-chart.tsx
+  96:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\Agency_CRM\clientflow\src\app\dashboard\revenue-chart.tsx:96:5
+  94 |
+  95 |   useEffect(() => {
+> 96 |     setMounted(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  97 |   }, [])
+  98 |
+  99 |   const theme = mounted ? resolvedTheme : "light"  react-hooks/set-state-in-effect
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\edit\page.tsx
+  42:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\page.tsx
+    4:10  warning  'notFound' is defined but never used                                                                                                                            @typescript-eslint/no-unused-vars
+   25:9   warning  'lineItems' is assigned a value but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   44:9   error    Do not use an `<a>` element to navigate to `/invoices/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+  127:37  error    Unexpected any. Specify a different type                                                                                                                        @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\payment\page.tsx
+  2:10  warning  'Payment' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\invoices\new\page.tsx
+  56:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\page.tsx
+  21:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\leads\new\page.tsx
+   11:10  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+  109:24  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\leads\page.tsx
+  21:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\edit\page.tsx
+  48:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\page.tsx
+  61:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\project-detail-client.tsx
+    6:41  warning  'CardTitle' is defined but never used                   @typescript-eslint/no-unused-vars
+   16:3   warning  'X' is defined but never used                           @typescript-eslint/no-unused-vars
+   18:3   warning  'ChevronLeft' is defined but never used                 @typescript-eslint/no-unused-vars
+  375:27  warning  'milestoneProgress' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\project-edit-form.tsx
+  63:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+  87:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+E:\Agency_CRM\clientflow\src\app\projects\new\page.tsx
+  56:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\page.tsx
+  21:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\projects-page-client.tsx
+  76:64  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\Agency_CRM\clientflow\src\app\reports\page.tsx
+  25:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\settings\page.tsx
+  30:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\sign-in\page.tsx
+  58:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\signup\page.tsx
+  72:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\tasks\[id]\edit\page.tsx
+    3:10  warning  'getOrganization' is defined but never used          @typescript-eslint/no-unused-vars
+    4:20  warning  'redirect' is defined but never used                 @typescript-eslint/no-unused-vars
+   35:41  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  121:9   warning  'revalidatePath' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\tasks\[id]\page.tsx
+    3:10  warning  'getOrganization' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+    4:10  warning  'notFound' is defined but never used                                                                                                                         @typescript-eslint/no-unused-vars
+    4:20  warning  'redirect' is defined but never used                                                                                                                         @typescript-eslint/no-unused-vars
+   29:11  error    Do not use an `<a>` element to navigate to `/tasks/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+  102:11  error    Do not use an `<a>` element to navigate to `/tasks/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+E:\Agency_CRM\clientflow\src\app\tasks\new\page.tsx
+   11:10  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+   56:13  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:28  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\tasks\page.tsx
+  16:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\components\layout\project-search.tsx
+  17:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\components\providers\theme-provider.tsx
+  54:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\Agency_CRM\clientflow\src\components\providers\theme-provider.tsx:54:5
+  52 |     const stored = getStoredTheme()
+  53 |     const initial = stored || "system"
+> 54 |     setThemeState(initial)
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  55 |     const resolved = initial === "system" ? getSystemTheme() : initial
+  56 |     setResolvedTheme(resolved)
+  57 |     applyTheme(resolved)  react-hooks/set-state-in-effect
+
+E:\Agency_CRM\clientflow\src\lib\auth.ts
+  195:9  warning  'membership' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\lib\database.ts
+  41:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\lib\prisma.ts
+  15:6  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 152 problems (99 errors, 53 warnings)
+

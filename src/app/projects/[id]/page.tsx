@@ -1,0 +1,83 @@
+import { ensureDb } from "@/lib/database"
+import { Project, Client, Task, Activity } from "@/lib/database"
+import { getOrganization, getSession } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { ProjectDetailPageClient } from "./project-detail-client"
+
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await ensureDb()
+  const { id } = await params
+
+  const session = await getSession()
+  if (!session?.user) {
+    redirect("/sign-in")
+  }
+
+  const org = await getOrganization()
+  if (!org) {
+    redirect("/sign-in")
+  }
+
+  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean()
+
+  if (!project) {
+    throw new Error("Project not found")
+  }
+
+  // Fetch related data
+  const client = await Client.findById(project.clientId).lean()
+  const tasks = await Task.find({ projectId: id }).sort({ status: 1, dueDate: 1 }).lean()
+  const activities = await Activity.find({ projectId: id }).sort({ createdAt: -1 }).limit(20).lean()
+
+  const clientName = client
+    ? client.companyName ||
+      `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"
+    : "Unknown"
+
+  return (
+    <ProjectDetailPageClient
+      project={{
+        id: project._id.toString(),
+        name: project.name,
+        description: project.description || null,
+        status: project.status,
+        priority: project.priority,
+        budget: project.budget || null,
+        startDate: project.startDate || null,
+        endDate: project.endDate || null,
+        createdAt: project.createdAt || new Date(),
+        updatedAt: project.updatedAt || new Date(),
+        clientId: project.clientId?.toString() || "",
+        organizationId: project.organizationId?.toString() || "",
+        createdById: project.createdById?.toString() || null,
+        clientName,
+        client: client ? {
+          id: client._id.toString(),
+          firstName: client.firstName || null,
+          lastName: client.lastName || null,
+          companyName: client.companyName || null,
+          email: client.email || null,
+        } : null,
+        tasks: tasks.map((t: any) => ({
+          id: t._id.toString(),
+          title: t.title,
+          status: t.status,
+          assignee: t.assigneeId ? { id: t.assigneeId.toString(), name: "User", email: "" } : null,
+        })),
+        milestones: [],
+        activities: activities.map((a: any) => ({
+          id: a._id.toString(),
+          type: a.type,
+          title: a.title,
+          description: a.description,
+          createdAt: a.createdAt,
+        })),
+      }}
+    />
+  )
+}
+
+export const metadata = {
+  title: "Project - ClientFlow",
+  description: "Project details and information",
+}
