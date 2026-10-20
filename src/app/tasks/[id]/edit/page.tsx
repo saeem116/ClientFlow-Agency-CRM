@@ -12,7 +12,14 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   await ensureDb()
   const { id } = await params
 
-  const task = await Task.findById(id).lean()
+  const task = await Task.findById(id).lean() as unknown as {
+    _id: { toString(): string }
+    title: string
+    description?: string | null
+    status: string
+    priority: string
+    dueDate?: Date | null
+  } | null
 
   if (!task) notFound()
 

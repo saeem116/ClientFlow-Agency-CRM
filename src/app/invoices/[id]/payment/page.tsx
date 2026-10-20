@@ -15,10 +15,23 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    number: string
+    status: string
+    total?: number | null
+    paidAmount?: number | null
+    clientId?: { toString(): string }
+  } | null
   if (!invoice) notFound()
 
-  const client = await Client.findById(invoice.clientId).lean()
+  const client = await Client.findById(invoice.clientId).lean() as unknown as {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+  } | null
   const clientName = client
     ? client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"
     : "Unknown"

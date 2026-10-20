@@ -15,7 +15,15 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    number: string
+    status: string
+    total?: number
+    dueDate?: Date | null
+    clientId?: { toString(): string } | null
+    notes?: string | null
+  } | null
   if (!invoice) notFound()
 
   const clients = await Client.find({ organizationId: org.id })

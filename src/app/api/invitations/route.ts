@@ -37,7 +37,7 @@ export async function GET() {
     .exec()
 
   // Fetch org and inviter names for display
-  const org = await Organization.findById(orgId).lean()
+  const org = await Organization.findById(orgId).lean() as unknown as { name: string } | null
   const orgName = org?.name || "Workspace"
 
   const serialized = invitations.map((inv: Record<string, unknown>) => ({
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     )
   }
   const orgId = memberships[0].organizationId.toString()
-  const org = await Organization.findById(orgId).lean()
+  const org = await Organization.findById(orgId).lean() as unknown as { name: string } | null
   const orgName = org?.name || "ClientFlow"
 
   // Check for duplicate pending invitation

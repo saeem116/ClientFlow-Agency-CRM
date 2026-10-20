@@ -18,14 +18,34 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     redirect("/sign-in")
   }
 
-  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean()
+  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    name: string
+    description?: string | null
+    status: string
+    priority: string
+    budget?: number | null
+    startDate?: Date | null
+    endDate?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+    clientId?: { toString(): string } | null
+    organizationId: { toString(): string }
+    createdById?: { toString(): string } | null
+  } | null
 
   if (!project) {
     throw new Error("Project not found")
   }
 
   // Fetch related data
-  const client = await Client.findById(project.clientId).lean()
+  const client = await Client.findById(project.clientId).lean() as unknown as {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+  } | null
   const tasks = await Task.find({ projectId: id }).sort({ status: 1, dueDate: 1 }).lean()
   const activities = await Activity.find({ projectId: id }).sort({ createdAt: -1 }).limit(20).lean()
 

@@ -19,7 +19,11 @@ export default async function SettingsPage() {
   }
 
   // Fetch organization details with memberships
-  const organization = await Organization.findOne({ _id: org.id }).lean()
+  const organization = await Organization.findOne({ _id: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    name: string
+    slug: string
+  } | null
 
   const memberships = await Membership.find({ organizationId: org.id })
     .populate("userId", "name email avatar")

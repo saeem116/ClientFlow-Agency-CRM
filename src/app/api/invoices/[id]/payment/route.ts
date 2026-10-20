@@ -17,7 +17,16 @@ export async function POST(
   }
 
   // Check if invoice belongs to org
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    number: string
+    status: string
+    total: number
+    paidAmount: number
+    clientId: { toString(): string }
+    organizationId: { toString(): string }
+    notes?: string | null
+  } | null
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
   }

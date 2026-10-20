@@ -11,7 +11,20 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const client = await Client.findOne({ _id: id, organizationId: org.id }).lean()
+  const client = await Client.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+    phone?: string | null
+    website?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    notes?: string | null
+    status: string
+  } | null
 
   if (!client) notFound()
 

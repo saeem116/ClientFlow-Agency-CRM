@@ -17,7 +17,17 @@ export async function POST(
 
   const { clientId, status, dueDate, total, notes } = body
 
-  const invoice = await Invoice.findById(id).lean()
+  const invoice = await Invoice.findById(id).lean() as unknown as {
+    _id: { toString(): string }
+    number: string
+    status: string
+    total?: number | null
+    paidAmount?: number | null
+    dueDate?: Date | null
+    clientId?: { toString(): string }
+    organizationId: { toString(): string }
+    notes?: string | null
+  } | null
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
   }

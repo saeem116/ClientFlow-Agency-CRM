@@ -24,7 +24,7 @@ export async function PATCH(
   const notification = await Notification.findOne({
     _id: id,
     userId: session.user.id,
-  }).lean()
+  }).lean() as unknown as { _id: { toString(): string }; readAt?: Date; type: string; title: string; message: string; link?: string; createdAt: Date } | null
 
   if (!notification) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })

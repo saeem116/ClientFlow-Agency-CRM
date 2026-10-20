@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Generate invoice number
-  const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 }).lean()
+  const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 }).lean() as unknown as {
+    number?: string
+    createdAt?: Date
+  } | null
   const currentYear = new Date().getFullYear()
   let nextNum = 1
   if (lastInvoice?.number) {

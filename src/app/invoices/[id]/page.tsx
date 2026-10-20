@@ -15,7 +15,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    number: string
+    status: string
+    total: number
+    paidAmount: number
+    dueDate?: Date | null
+    issueDate: Date
+    clientId: { toString(): string }
+    organizationId: { toString(): string }
+    notes?: string | null
+  } | null
 
   if (!invoice) {
     throw new Error("Invoice not found")
@@ -23,7 +34,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   const payments = await Payment.find({ invoiceId: id }).lean()
   const lineItems = await InvoiceLineItem.find({ invoiceId: id }).lean()
-  const client = await Client.findById(invoice.clientId).lean()
+  const client = await Client.findById(invoice.clientId).lean() as unknown as {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+  } | null
 
   const balance = (invoice.total || 0) - (invoice.paidAmount || 0)
   const isOverdue = invoice.dueDate && new Date(invoice.dueDate) < new Date() && invoice.status !== "PAID" && invoice.status !== "VOIDED"
@@ -79,7 +96,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               <div className="flex justify-between">
                 <span className="text-slate-500">Due Date:</span>
                 <span className={isOverdue ? "text-red-600 font-semibold" : ""}>
-                  {new Date(invoice.dueDate).toLocaleDateString()}
+                  {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : ""}
                   {isOverdue && " (Overdue)"}
                 </span>
               </div>

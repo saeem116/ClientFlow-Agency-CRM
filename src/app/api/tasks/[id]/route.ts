@@ -9,7 +9,19 @@ export async function GET(
   await ensureDb()
   const { id } = await params
 
-  const task = await Task.findById(id).lean()
+  const task = await Task.findById(id).lean() as unknown as {
+    _id: { toString(): string }
+    title: string
+    description?: string | null
+    status: string
+    priority: string
+    projectId?: { toString(): string } | null
+    assigneeId?: { toString(): string } | null
+    dueDate?: Date | null
+    completedAt?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+  } | null
 
   if (!task) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 })
@@ -46,7 +58,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const existingTask = await Task.findById(id).lean()
+  const existingTask = await Task.findById(id).lean() as unknown as {
+    _id: { toString(): string }
+    title: string
+    description?: string | null
+    status: string
+    priority: string
+    projectId?: { toString(): string } | null
+    assigneeId?: { toString(): string } | null
+    dueDate?: Date | null
+    completedAt?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+  } | null
 
   if (!existingTask) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 })

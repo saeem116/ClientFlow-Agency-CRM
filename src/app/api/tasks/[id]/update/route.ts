@@ -23,7 +23,19 @@ export async function POST(
   }
 
   // Verify project membership if projectId is being changed
-  const task = await Task.findById(id).lean()
+  const task = await Task.findById(id).lean() as unknown as {
+    _id: { toString(): string }
+    title: string
+    description?: string | null
+    status: string
+    priority: string
+    projectId?: { toString(): string } | null
+    assigneeId?: { toString(): string } | null
+    dueDate?: Date | null
+    completedAt?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+  } | null
   if (!task) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 })
   }
@@ -47,7 +59,19 @@ export async function POST(
       completedAt: status === "DONE" ? new Date() : null,
     },
     { new: true, runValidators: true }
-  ).lean()
+  ).lean() as unknown as {
+    _id: { toString(): string }
+    title: string
+    description?: string | null
+    status: string
+    priority: string
+    projectId?: { toString(): string } | null
+    assigneeId?: { toString(): string } | null
+    dueDate?: Date | null
+    completedAt?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+  }
 
   // Notify task assignee or org admins
   const session = await getSession()

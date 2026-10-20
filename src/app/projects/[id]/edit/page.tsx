@@ -11,7 +11,19 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean()
+  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+    _id: { toString(): string }
+    name: string
+    description?: string | null
+    status: string
+    priority: string
+    budget?: number | null
+    startDate?: Date | null
+    endDate?: Date | null
+    clientId?: { toString(): string } | null
+    organizationId: { toString(): string }
+    createdById?: { toString(): string } | null
+  } | null
 
   if (!project) notFound()
 
