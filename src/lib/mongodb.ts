@@ -22,8 +22,8 @@ export function connectMongo(): Promise<typeof mongoose> | typeof mongoose {
     bufferCommands: false,
     maxPoolSize: 10,
     minPoolSize: 2,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 3000,
+    socketTimeoutMS: 10000,
   })
 
   if (process.env.NODE_ENV !== "production") globalForMongoose.mongoose = conn

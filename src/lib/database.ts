@@ -25,12 +25,14 @@ export async function ensureDb() {
     await connectMongo()
     connected = true
   } catch (error) {
+    // Log the actual error for debugging (without exposing secrets)
+    console.error('Database connection error:', error instanceof Error ? error.message : String(error))
     // MongoDB may not be available during build time - log and continue
     if (process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn('Warning: MongoDB connection failed during build. Pages will render without data.')
       return
     }
-    throw error
+    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
