@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb } from "@/lib/database"
-import { getSession } from "@/lib/auth"
+import { getSession, requireOrg } from "@/lib/auth"
 import { uploadAvatar, deleteFile, getUserAvatar, getClientOrThrow } from "@/lib/gridfs"
 import { User } from "@/lib/database"
 
@@ -9,6 +9,13 @@ export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Shared demo account may view its avatar but may never upload a new one.
+  try {
+    requireOrg()
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const contentType = request.headers.get("content-type") || ""

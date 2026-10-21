@@ -78,7 +78,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 function PaymentForm({ invoiceId, balance }: { invoiceId: string; balance: number }) {
   return (
     <div className="rounded-lg border border-slate-200 p-6">
-      <form action={`/api/invoices/${invoiceId}/payment`} method="POST">
+      <form action={`/api/invoices/${invoiceId}/payment?returnTo=/invoices/${invoiceId}`} method="POST">
         <input type="hidden" name="invoiceId" value={invoiceId} />
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">

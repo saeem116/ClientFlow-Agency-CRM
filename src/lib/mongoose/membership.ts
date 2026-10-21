@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IMembership {
   id: string
@@ -50,4 +50,5 @@ const membershipSchema = new Schema<IMembershipDocument>(
 membershipSchema.index({ organizationId: 1, userId: 1 }, { unique: true })
 
 export const Membership = mongoose.models.Membership || model<IMembershipDocument>("Membership", membershipSchema)
+
 

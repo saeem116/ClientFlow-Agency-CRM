@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Project } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { requireOrg } from "@/lib/auth"
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
   await ensureDb()
   const { id } = await params
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -31,7 +31,7 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json()
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -66,7 +66,7 @@ export async function DELETE(
   await ensureDb()
   const { id } = await params
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

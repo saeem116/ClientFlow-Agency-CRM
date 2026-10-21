@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, User, Membership, Organization } from "@/lib/database"
 import { hashPassword } from "@/lib/bcrypt"
+import { createSession } from "@/lib/auth"
+import { getDemoAccountEmail } from "@/lib/demo-account"
 
 export async function POST(request: NextRequest) {
   await ensureDb()
@@ -16,6 +18,15 @@ export async function POST(request: NextRequest) {
 
     // Normalize email to lowercase for consistent lookups and storage
     const normalizedEmail = email.trim().toLowerCase()
+
+    // Block demo account registration in production.
+    const demoEmail = getDemoAccountEmail()
+    if (demoEmail && normalizedEmail === demoEmail) {
+      return NextResponse.json(
+        { error: "This email is reserved" },
+        { status: 400 }
+      )
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail }).lean()
@@ -69,25 +80,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create membership with ADMIN role
-    const membership = await Membership.create({
+    await Membership.create({
       userId: user._id,
       organizationId: organization._id,
       role: "ADMIN",
     })
 
-    // Create session data
-    const sessionData = {
-      userId: user._id.toString(),
-      organizationId: organization._id.toString(),
-      timestamp: Date.now(),
-    }
+    // Use the centralized session creator so the cookie is always signed
+    // and consistent with getSession()'s verification path.
+    await createSession(user._id.toString(), organization._id.toString())
 
-    // Create session token (URL-safe base64 without padding)
-    const sessionToken = Buffer.from(JSON.stringify(sessionData))
-      .toString('base64url')
-
-    // Create response with the session cookie
-    const response = NextResponse.json({
+    return NextResponse.json({
       user: {
         id: user._id.toString(),
         email: user.email,
@@ -97,17 +100,6 @@ export async function POST(request: NextRequest) {
         organizationId: organization._id.toString(),
       },
     })
-
-    // Set the session cookie
-    response.cookies.set("session", sessionToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    })
-
-    return response
   } catch (error: any) {
     // Log the actual error server-side for debugging
     console.error("Sign-up error:", error?.message || error)

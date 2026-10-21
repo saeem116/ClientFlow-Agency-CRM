@@ -6,17 +6,13 @@ import { getCurrentUser, getOrganization } from "@/lib/auth"
  *
  * Returns the authenticated user AND their organization for the current
  * request, or `null` when there is no valid session.
- *
- * This is the ONLY endpoint the client calls to refresh its auth state. The
- * session cookie is httpOnly, so the client cannot read it; instead it asks
- * the server to validate the cookie and return the current user + org. This
- * keeps server-side session validation authoritative while letting the UI
- * update immediately after sign-in/sign-up without a full page reload.
+ * Also returns `isDemo` to indicate whether this session belongs to the
+ * shared public demo account (reviewer@clientflow.test).
  */
 export async function GET() {
   const session = await getCurrentUser()
   if (!session) {
-    return NextResponse.json({ user: null, org: null }, { status: 401 })
+    return NextResponse.json({ user: null, org: null, isDemo: false }, { status: 401 })
   }
 
   const org = await getOrganization()
@@ -26,5 +22,6 @@ export async function GET() {
     org: org
       ? { id: org.id, name: org.name, slug: org.slug }
       : null,
+    isDemo: session.isDemo,
   })
 }

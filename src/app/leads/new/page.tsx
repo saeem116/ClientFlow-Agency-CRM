@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
 import { Lead } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -93,7 +93,7 @@ function LeadForm({ org }: { org: { id: string; name: string } }) {
 async function createLead(formData: FormData) {
   "use server"
   await ensureDb()
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) redirect("/sign-in")
 
   const title = formData.get("title") as string

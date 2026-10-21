@@ -3,6 +3,7 @@ import { Invoice, Lead, Project, Task, Client } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ReportsPageClient } from "./reports-page-client"
+import { sanitize } from "@/lib/sanitize"
 
 export default async function ReportsPage() {
   await ensureDb()
@@ -13,11 +14,21 @@ export default async function ReportsPage() {
   }
 
   const [invoices, leads, projects, tasks, clients] = await Promise.all([
-    Invoice.find({ organizationId: org.id }).lean().exec(),
-    Lead.find({ organizationId: org.id }).lean().exec(),
-    Project.find({ organizationId: org.id }).lean().exec(),
-    Task.find({}).lean().exec(),
-    Client.find({ organizationId: org.id }).lean().exec(),
+    sanitize(
+      await Invoice.find({ organizationId: org.id }).lean().exec()
+    ),
+    sanitize(
+      await Lead.find({ organizationId: org.id }).lean().exec()
+    ),
+    sanitize(
+      await Project.find({ organizationId: org.id }).lean().exec()
+    ),
+    sanitize(
+      await Task.find({ organizationId: org.id }).lean().exec()
+    ),
+    sanitize(
+      await Client.find({ organizationId: org.id }).lean().exec()
+    ),
   ])
 
   return (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Project, Membership } from "@/lib/database"
-import { getOrganization, getSession } from "@/lib/auth"
+import { getOrganization, requireOrg, getSession } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
 
 export async function GET(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   await ensureDb()
   const body = await request.json()
-  const org = await getOrganization()
+  const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

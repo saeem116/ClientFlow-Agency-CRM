@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Task, Project, Membership } from "@/lib/database"
-import { getOrganization, getSession } from "@/lib/auth"
+import { requireOrg, getSession } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
 
 export async function POST(
@@ -9,21 +9,28 @@ export async function POST(
 ) {
   await ensureDb()
   const { id } = await params
-  const body = await request.json()
+  const body = await request.formData()
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { title, description, status, priority, dueDate, assigneeId } = body
+  const title = (body.get("title") as string) || ""
+  const description = (body.get("description") as string) || null
+  const status = (body.get("status") as string) || ""
+  const priority = (body.get("priority") as string) || ""
+  const dueDate = (body.get("dueDate") as string) || null
+  const assigneeId = (body.get("assigneeId") as string) || null
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 })
   }
 
-  // Verify project membership if projectId is being changed
-  const task = await Task.findById(id).lean() as unknown as {
+  // Fetch the task scoped to the authenticated organization. This is the
+  // authoritative tenant-isolation check: a task from another organization
+  // cannot be modified, even if its ID is known.
+  const task = await Task.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }
     title: string
     description?: string | null
@@ -40,6 +47,8 @@ export async function POST(
     return NextResponse.json({ error: "Task not found" }, { status: 404 })
   }
 
+  // If the task belongs to a project, verify that project belongs to the same
+  // organization (defense in depth; the orgId filter above is the primary gate).
   if (task.projectId) {
     const project = await Project.findOne({ _id: task.projectId, organizationId: org.id }).lean()
     if (!project) {
@@ -47,8 +56,8 @@ export async function POST(
     }
   }
 
-  const updated = await Task.findByIdAndUpdate(
-    id,
+  const updated = await Task.findOneAndUpdate(
+    { _id: id, organizationId: org.id },
     {
       title,
       description: description || null,
@@ -103,6 +112,12 @@ export async function POST(
         })
       }
     }
+  }
+
+  // Redirect back to the task detail page on success.
+  const returnTo = new URL(request.url).searchParams.get("returnTo")
+  if (returnTo) {
+    return NextResponse.redirect(new URL(returnTo, request.url))
   }
 
   return NextResponse.json(updated)

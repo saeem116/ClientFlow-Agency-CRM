@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IInvoice {
   id: string
@@ -113,4 +113,5 @@ const invoiceSchema = new Schema<IInvoiceDocument>(
 )
 
 export const Invoice = mongoose.models.Invoice || model<IInvoiceDocument>("Invoice", invoiceSchema)
+
 

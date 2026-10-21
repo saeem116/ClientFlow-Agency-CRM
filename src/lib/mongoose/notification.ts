@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface INotification {
   id: string
@@ -74,4 +74,5 @@ const notificationSchema = new Schema<INotificationDocument>(
 )
 
 export const Notification = mongoose.models.Notification || model<INotificationDocument>("Notification", notificationSchema)
+
 

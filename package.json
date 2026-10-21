@@ -1,6 +1,6 @@
 {
   "name": "clientflow",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:reset": "node scripts/reset-db.js",
-    "db:seed": "node scripts/seed-test-data.js"
+    "db:seed": "node scripts/seed-demo.js",
+    "migrate": "node database/migrations/001-create-indexes.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -48,7 +49,6 @@
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.8",
     "@types/bcryptjs": "^2.4.6",
-    "@types/mongoose": "^5.11.97",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

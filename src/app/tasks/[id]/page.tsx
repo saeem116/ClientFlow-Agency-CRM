@@ -1,6 +1,7 @@
 import { ensureDb } from "@/lib/database"
 import { Task } from "@/lib/database"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 
 export const metadata = {
   title: "Task Details - ClientFlow",
@@ -25,7 +26,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   } | null
 
   if (!task) {
-    throw new Error("Task not found")
+    notFound()
   }
 
   return (

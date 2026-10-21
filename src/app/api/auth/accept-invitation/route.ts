@@ -7,7 +7,7 @@ import {
   Organization,
 } from "@/lib/database"
 import { verifyToken } from "@/lib/mongoose/invitation"
-import { createSession } from "@/lib/auth"
+import { createSession, requireOrg } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
 
 interface InvitationLean {
@@ -74,6 +74,13 @@ export async function POST(request: NextRequest) {
       { error: "Invalid invitation token" },
       { status: 400 }
     )
+  }
+
+  // Shared demo account may view invitations but cannot accept them.
+  try {
+    await requireOrg()
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   // Check expiry

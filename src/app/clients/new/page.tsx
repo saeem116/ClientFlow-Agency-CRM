@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
 import { Client, Membership, User } from "@/lib/database"
-import { getOrganization, getSession } from "@/lib/auth"
+import { getOrganization, requireOrg, getSession } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -100,7 +100,7 @@ function ClientForm({ org, existingClients }: {
 async function createClient(formData: FormData) {
   "use server"
   await ensureDb()
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) redirect("/sign-in")
 
   const name = formData.get("name") as string

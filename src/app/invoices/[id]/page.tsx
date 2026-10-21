@@ -29,7 +29,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   } | null
 
   if (!invoice) {
-    throw new Error("Invoice not found")
+    notFound()
   }
 
   const payments = await Payment.find({ invoiceId: id }).lean()

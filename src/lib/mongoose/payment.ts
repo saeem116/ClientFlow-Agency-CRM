@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IPayment {
   id: string
@@ -66,4 +66,5 @@ const paymentSchema = new Schema<IPaymentDocument>(
 )
 
 export const Payment = mongoose.models.Payment || model<IPaymentDocument>("Payment", paymentSchema)
+
 

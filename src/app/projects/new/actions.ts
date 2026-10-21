@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { ensureDb, Project } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 
 /**
  * Server action for creating a new project.
@@ -12,7 +12,7 @@ import { getOrganization } from "@/lib/auth"
  */
 export async function createProject(formData: FormData) {
   await ensureDb()
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) redirect("/sign-in")
 
   const name = formData.get("name") as string

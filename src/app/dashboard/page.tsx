@@ -13,6 +13,7 @@ import { OutstandingPayments } from "./outstanding-payments"
 import { Plus, Users, Briefcase, DollarSign, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { sanitize } from "@/lib/sanitize"
 
 export default async function DashboardPage() {
   await ensureDb()
@@ -58,12 +59,14 @@ export default async function DashboardPage() {
     Project.countDocuments({ organizationId: orgId, status: "ACTIVE" }),
 
     // Outstanding invoices
-    Invoice.find({
-      organizationId: orgId,
-      status: { $in: ["SENT", "PARTIALLY_PAID", "OVERDUE"] },
-    })
-      .sort({ dueDate: 1 })
-      .lean(),
+    sanitize(
+      await Invoice.find({
+        organizationId: orgId,
+        status: { $in: ["SENT", "PARTIALLY_PAID", "OVERDUE"] },
+      })
+        .sort({ dueDate: 1 })
+        .lean()
+    ),
 
     // Paid invoice amounts this month
     Invoice.aggregate([
@@ -75,7 +78,7 @@ export default async function DashboardPage() {
         },
       },
       { $group: { _id: null, total: { $sum: "$paidAmount" } } },
-    ]),
+    ]).then((res) => res as Array<{ total: number }>),
 
     // Payment amounts this month
     Payment.aggregate([
@@ -95,38 +98,49 @@ export default async function DashboardPage() {
         },
       },
       { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]),
+    ]).then((res) => res as Array<{ total: number }>),
 
     // Paid invoices for last 6 months chart
-    Invoice.find({
-      organizationId: orgId,
-      status: "PAID",
-      issueDate: { $gte: sixMonthsAgo },
-    })
-      .select("issueDate paidAmount status")
-      .lean(),
+    sanitize(
+      await Invoice.find({
+        organizationId: orgId,
+        status: "PAID",
+        issueDate: { $gte: sixMonthsAgo },
+      })
+        .select("issueDate paidAmount status")
+        .lean()
+    ),
 
     // Leads by stage
-    Lead.find({ organizationId: orgId }).select("stage value").lean(),
+    sanitize(
+      await Lead.find({ organizationId: orgId }).select("stage value").lean()
+    ),
 
-    // Recent tasks (overdue first, then due soon)
-    Task.find({
-      status: { $ne: "DONE" },
-    })
-      .sort({ dueDate: 1, createdAt: -1 })
-      .limit(20)
-      .lean(),
+    // Recent tasks (overdue first, then due soon) — scoped by organization
+    sanitize(
+      await Task.find({
+        organizationId: orgId,
+        status: { $ne: "DONE" },
+      })
+        .sort({ dueDate: 1, createdAt: -1 })
+        .limit(20)
+        .lean()
+    ),
 
     // Recent activities
-    Activity.find({ organizationId: orgId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean(),
+    sanitize(
+      await Activity.find({ organizationId: orgId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean()
+    ),
 
     // All invoices for outstanding payments table
-    Invoice.find({ organizationId: orgId })
-      .sort({ createdAt: -1 })
-      .lean(),
+    sanitize(
+      await Invoice.find({ organizationId: orgId })
+        .sort({ createdAt: -1 })
+        .lean()
+    ),
 
     // Active clients before this month (for trend)
     Client.countDocuments({
@@ -157,7 +171,7 @@ export default async function DashboardPage() {
   const stages = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL_SENT", "WON", "LOST"]
   const leadsByStage: Record<string, { count: number; totalValue: number }> = {}
   stages.forEach((s) => (leadsByStage[s] = { count: 0, totalValue: 0 }))
-  for (const lead of leads) {
+  for (const lead of leads as any[]) {
     if (!leadsByStage[lead.stage]) {
       leadsByStage[lead.stage] = { count: 0, totalValue: 0 }
     }
@@ -170,8 +184,8 @@ export default async function DashboardPage() {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-    const monthRevenue = paidInvoicesLast6Months
-      .filter((inv: any) => {
+    const monthRevenue = (paidInvoicesLast6Months as any[])
+      .filter((inv) => {
         const issueDate = new Date(inv.issueDate)
         return issueDate.getMonth() === d.getMonth() && issueDate.getFullYear() === d.getFullYear() && inv.status === "PAID"
       })

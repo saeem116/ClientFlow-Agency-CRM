@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IActivity {
   id: string
@@ -89,4 +89,5 @@ const activitySchema = new Schema<IActivityDocument>(
 )
 
 export const Activity = mongoose.models.Activity || model<IActivityDocument>("Activity", activitySchema)
+
 

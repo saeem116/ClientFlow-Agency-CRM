@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IProject {
   id: string
@@ -97,4 +97,5 @@ const projectSchema = new Schema<IProjectDocument>(
 )
 
 export const Project = mongoose.models.Project || model<IProjectDocument>("Project", projectSchema)
+
 

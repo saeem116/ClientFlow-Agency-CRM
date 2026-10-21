@@ -1,7 +1,7 @@
 import { ensureDb } from "@/lib/database"
 import { Project, Client, Task, Activity } from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect, notFound } from "next/navigation"
 import { ProjectDetailPageClient } from "./project-detail-client"
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,7 +35,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   } | null
 
   if (!project) {
-    throw new Error("Project not found")
+    notFound()
   }
 
   // Fetch related data

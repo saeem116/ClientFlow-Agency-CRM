@@ -1,7 +1,13 @@
 import { ensureDb } from "@/lib/database"
 import { User, Organization, Membership } from "@/lib/database"
 
-// Clean seed function for initial user data
+/**
+ * Clean seed function for initial user data.
+ *
+ * Safety: this only runs when the database is completely empty (no users at
+ * all). It never overwrites or deletes existing records. The password is
+ * generated at runtime so no bcrypt hash is committed to source control.
+ */
 export async function seedData() {
   try {
     await ensureDb()
@@ -21,12 +27,16 @@ export async function seedData() {
       slug: "my-workspace",
     })
 
-    // Create the first user (will be the registered user)
+    // Generate a random password at runtime — never commit a bcrypt hash.
+    const { hashPassword } = await import("./bcrypt")
+    const randomPassword = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    const hashedPassword = await hashPassword(randomPassword)
+
     const user = await User.create({
       email: "user@example.com",
       name: "Registered User",
       role: "ADMIN",
-      password: "$2a$12$LQv3c1yqBWVHxkd6fqYD/xHhLuN6LhPuSFej7E9/YuYS5YQ7.9Zx6",
+      password: hashedPassword,
     })
 
     // Create membership
@@ -37,6 +47,7 @@ export async function seedData() {
     })
 
     console.log(`Created clean organization and user setup: Org ID ${org._id.toString()}, User ID ${user._id.toString()}`)
+    console.log(`Demo login: user@example.com / ${randomPassword}`)
     return { success: true, message: "Created clean initial setup" }
 
   } catch (error) {

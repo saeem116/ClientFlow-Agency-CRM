@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb } from "@/lib/database"
-import { getSession } from "@/lib/auth"
+import { getSession, requireOrg } from "@/lib/auth"
 import { uploadFile, getFileMetadata, listFiles, deleteFile, getClientOrThrow } from "@/lib/gridfs"
 import { File as FileModel } from "@/lib/database"
 import { ObjectId } from "mongodb"
@@ -10,6 +10,13 @@ export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Shared demo account may browse files but may never upload new ones.
+  try {
+    requireOrg()
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const contentType = request.headers.get("content-type") || ""

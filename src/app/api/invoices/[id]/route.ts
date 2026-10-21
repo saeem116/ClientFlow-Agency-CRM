@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Invoice, InvoiceLineItem, Payment } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +34,7 @@ export async function GET(
 export async function POST(request: NextRequest) {
   await ensureDb()
   const body = await request.json()
-  const org = await getOrganization()
+  const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -46,8 +46,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Client is required" }, { status: 400 })
   }
 
-  // Generate invoice number
-  const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 }).lean() as unknown as {
+  // Generate invoice number scoped to the authenticated organization. This
+  // prevents cross-org number collisions and makes the sequence deterministic
+  // per organization. A unique index on `number` provides the final safety
+  // net against race conditions.
+  const lastInvoice = await Invoice.findOne({
+    organizationId: org.id,
+  }).sort({ createdAt: -1 }).lean() as unknown as {
     number?: string
     createdAt?: Date
   } | null
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   // Calculate totals from line items
   let subtotal = 0
-  const invoiceLineItems = (items || []).map((item: any) => {
+  const invoiceLineItems = (items || []).map((item: Record<string, unknown>) => {
     const qty = parseFloat(item.quantity?.toString() || "1")
     const price = parseFloat(item.unitPrice?.toString() || "0")
     const amount = qty * price
@@ -115,7 +120,7 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json()
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

@@ -2,6 +2,7 @@ import { ensureDb } from "@/lib/database"
 import { Invoice, Client } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
+import { sanitize } from "@/lib/sanitize"
 
 export const metadata = {
   title: "Edit Invoice - ClientFlow",
@@ -15,20 +16,22 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+  const rawInvoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
+  const invoice = sanitize(rawInvoice) as {
     _id: { toString(): string }
     number: string
     status: string
-    total?: number
+    total?: number | null
     dueDate?: Date | null
     clientId?: { toString(): string } | null
     notes?: string | null
   } | null
   if (!invoice) notFound()
 
-  const clients = await Client.find({ organizationId: org.id })
+  const rawClients = await Client.find({ organizationId: org.id })
     .sort({ updatedAt: -1 })
     .lean()
+  const clients = sanitize(rawClients) as any[]
 
   return (
     <div className="space-y-6">
@@ -50,7 +53,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
 function EditInvoiceForm({ invoice, clients }: { invoice: any; clients: any[] }) {
   return (
     <div className="rounded-lg border border-slate-200 p-6">
-      <form action={`/api/invoices/${invoice._id.toString()}/update`} method="POST">
+      <form action={`/api/invoices/${invoice._id.toString()}/update?returnTo=/invoices/${invoice._id.toString()}`} method="POST">
         <input type="hidden" name="id" value={invoice._id.toString()} />
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
@@ -63,7 +66,7 @@ function EditInvoiceForm({ invoice, clients }: { invoice: any; clients: any[] })
             >
               <option value="">Select a client</option>
               {clients.map((client) => (
-                <option key={client._id.toString()} value={client._id.toString()}>
+                <option key={client._id?.toString()} value={client._id?.toString()}>
                   {client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"}
                 </option>
               ))}

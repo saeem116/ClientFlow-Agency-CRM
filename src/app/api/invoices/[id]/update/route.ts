@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Invoice, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { ensureDb, Invoice } from "@/lib/database"
+import { requireOrg } from "@/lib/auth"
 
 export async function POST(
   request: NextRequest,
@@ -8,45 +8,40 @@ export async function POST(
 ) {
   await ensureDb()
   const { id } = await params
-  const body = await request.json()
+  const body = await request.formData()
 
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { clientId, status, dueDate, total, notes } = body
+  const status = (body.get("status") as string) || undefined
+  const dueDate = (body.get("dueDate") as string) || undefined
+  const notes = (body.get("notes") as string) || undefined
+  const total = (body.get("total") as string) || undefined
+  const returnTo = new URL(request.url).searchParams.get("returnTo")
 
-  const invoice = await Invoice.findById(id).lean() as unknown as {
-    _id: { toString(): string }
-    number: string
-    status: string
-    total?: number | null
-    paidAmount?: number | null
-    dueDate?: Date | null
-    clientId?: { toString(): string }
-    organizationId: { toString(): string }
-    notes?: string | null
-  } | null
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id })
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
   }
 
-  if (invoice.organizationId?.toString() !== org.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
-  }
+  const updates: Record<string, unknown> = {}
+  if (status !== undefined) updates.status = status
+  if (dueDate !== undefined) updates.dueDate = dueDate ? new Date(dueDate) : invoice.dueDate
+  if (notes !== undefined) updates.notes = notes
+  if (total !== undefined) updates.total = parseFloat(total)
 
   const updated = await Invoice.findByIdAndUpdate(
     id,
-    {
-      clientId,
-      status,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      total: parseFloat(total?.toString() || "0"),
-      notes: notes || null,
-    },
+    updates,
     { new: true, runValidators: true }
   ).lean()
+
+  // Redirect back to the invoice detail page on success.
+  if (returnTo) {
+    return NextResponse.redirect(new URL(returnTo, request.url))
+  }
 
   return NextResponse.json(updated)
 }

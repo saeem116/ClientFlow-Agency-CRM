@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
 import { Invoice, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -96,7 +96,7 @@ function InvoiceForm({ org, clients }: {
 async function createInvoice(formData: FormData) {
   "use server"
   await ensureDb()
-  const org = await getOrganization()
+  const org = await requireOrg()
   if (!org) redirect("/sign-in")
 
   const clientId = formData.get("clientId") as string

@@ -28,6 +28,7 @@ export interface AuthOrg {
 export interface AuthContextType {
   user: AuthUser | null
   org: AuthOrg | null
+  isDemo: boolean
   loading: boolean
   error: string | null
   /** Re-validate the session against the server. Resolves once the request
@@ -46,13 +47,16 @@ export function AuthProvider({
   children,
   initialUser,
   initialOrg,
+  initialIsDemo,
 }: {
   children: ReactNode
   initialUser: Session["user"] | null
   initialOrg: { id: string; name: string; slug: string } | null
+  initialIsDemo: boolean
 }) {
   const [user, setUserState] = useState<AuthUser | null>(initialUser ?? null)
   const [org, setOrgState] = useState<AuthOrg | null>(initialOrg ?? null)
+  const [isDemo, setIsDemo] = useState<boolean>(initialIsDemo ?? false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,33 +67,31 @@ export function AuthProvider({
       const response = await fetch("/api/auth/me", {
         method: "GET",
         headers: { Accept: "application/json" },
-        // Always include credentials so the httpOnly session cookie is sent.
         credentials: "include",
       })
       if (!response.ok) {
         setUserState(null)
         setOrgState(null)
+        setIsDemo(false)
         return
       }
       const data = await response.json()
       setUserState(data.user ?? null)
       setOrgState(data.org ?? null)
+      setIsDemo(!!data.isDemo)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to refresh session")
       setUserState(null)
       setOrgState(null)
+      setIsDemo(false)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  // Re-validate on mount so client-side navigation (e.g. router.push from
-  // /sign-in) reflects the freshly-set cookie immediately. This is the
-  // mechanism that makes the sidebar render without a manual refresh.
+  // Re-validate on mount so client-side navigation reflects the freshly-set
+  // cookie immediately.
   useEffect(() => {
-    // Only refresh if the server-rendered state is missing but we might
-    // actually be authenticated (e.g. just completed sign-in). If the server
-    // already gave us a user, skip to avoid an unnecessary request.
     if (user) return
     let cancelled = false
     ;(async () => {
@@ -112,7 +114,7 @@ export function AuthProvider({
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, org, loading, error, refresh, setUser, setOrg }}>
+    <AuthContext.Provider value={{ user, org, isDemo, loading, error, refresh, setUser, setOrg }}>
       {children}
     </AuthContext.Provider>
   )

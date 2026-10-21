@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface IClient {
   id: string
@@ -121,4 +121,5 @@ const clientSchema = new Schema<IClientDocument>(
 )
 
 export const Client = mongoose.models.Client || model<IClientDocument>("Client", clientSchema)
+
 

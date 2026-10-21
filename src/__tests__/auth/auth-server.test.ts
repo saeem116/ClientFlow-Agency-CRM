@@ -91,6 +91,7 @@ describe('getSession (server-side validation)', () => {
     const token = encodeSession({
       userId: 'u_nonexistent',
       organizationId: testOrgId,
+      context: 'production',
       timestamp: Date.now(),
     })
     __setCookieHeader(`session=${token}`)
@@ -102,6 +103,7 @@ describe('getSession (server-side validation)', () => {
     const token = encodeSession({
       userId: testUserId,
       organizationId: otherOrg._id.toString(),
+      context: 'production',
       timestamp: Date.now(),
     })
     __setCookieHeader(`session=${token}`)
@@ -113,6 +115,7 @@ describe('getSession (server-side validation)', () => {
     const token = encodeSession({
       userId: testUserId,
       organizationId: testOrgId,
+      context: 'production',
       timestamp: Date.now() - 8 * 24 * 60 * 60 * 1000,
     })
     __setCookieHeader(`session=${token}`)
@@ -123,6 +126,7 @@ describe('getSession (server-side validation)', () => {
     const token = encodeSession({
       userId: testUserId,
       organizationId: testOrgId,
+      context: 'production',
       timestamp: Date.now(),
     })
     __setCookieHeader(`session=${token}`)
@@ -140,7 +144,7 @@ describe('createSession (server-side cookie write)', () => {
   }
 
   it('writes an httpOnly session cookie with a 7-day maxAge', async () => {
-    await createSession(testUserId, testOrgId)
+    await createSession(testUserId, testOrgId, 'production')
     const cookies = __getCookies()
     expect(cookies.session).toBeTruthy()
     // The cookie value must be the URL-safe base64 token.
@@ -166,6 +170,7 @@ describe('getOrganization (server-side)', () => {
     const token = encodeSession({
       userId: testUserId,
       organizationId: testOrgId,
+      context: 'production',
       timestamp: Date.now(),
     })
     __setCookieHeader(`session=${token}`)
@@ -183,7 +188,7 @@ describe('signOut (server-side)', () => {
   }
 
   it('deletes the session cookie', async () => {
-    await createSession(testUserId, testOrgId)
+    await createSession(testUserId, testOrgId, 'production')
     expect(__getCookies().session).toBeTruthy()
     // signOut calls redirect() which throws; catch and ignore.
     try {

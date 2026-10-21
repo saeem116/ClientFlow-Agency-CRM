@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface ILead {
   id: string
@@ -112,4 +112,5 @@ const leadSchema = new Schema<ILeadDocument>(
 )
 
 export const Lead = mongoose.models.Lead || model<ILeadDocument>("Lead", leadSchema)
+
 

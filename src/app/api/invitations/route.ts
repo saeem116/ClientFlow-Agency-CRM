@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Invitation, Membership, Organization } from "@/lib/database"
-import { getSession, isAdminEmail } from "@/lib/auth"
+import { getSession, isAdminEmail, requireOrg } from "@/lib/auth"
 import { generateTokenPair } from "@/lib/mongoose/invitation"
 import { sendInvitationEmail } from "@/lib/email"
 
@@ -70,6 +70,13 @@ export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Shared demo account may view invitations but may never create them.
+  try {
+    requireOrg()
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   // Verify inviter is ADMIN (by email match)

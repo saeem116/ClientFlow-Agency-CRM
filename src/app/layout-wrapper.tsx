@@ -49,7 +49,7 @@ export function LayoutWrapper({
   org: { id: string; name: string; slug: string } | null
 }) {
   return (
-    <AuthProvider initialUser={session?.user ?? null} initialOrg={org}>
+    <AuthProvider initialUser={session?.user ?? null} initialOrg={org} initialIsDemo={session?.isDemo ?? false}>
       <ShellRouter session={session} org={org}>
         {children}
       </ShellRouter>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Task, Project } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   await ensureDb()
@@ -13,17 +13,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Find all projects for this org to scope tasks
-  const projects = await Project.find({ organizationId: org.id }).select("_id").lean()
-  const projectIds = projects.map((p: any) => p._id.toString())
+  // Tasks are scoped to the authenticated user's organization. This is the
+  // authoritative tenant-isolation boundary: a user from Org A can never see
+  // tasks belonging to Org B, even if they know a task's ID.
+  const filter: Record<string, unknown> = { organizationId: org.id }
 
-  const filter: Record<string, unknown> = {}
-  if (projectIds.length > 0) {
-    filter.projectId = { $in: projectIds }
-  }
   if (projectId && projectId !== "null") {
     filter.projectId = projectId
   }
+
   if (query) {
     filter.$or = [
       { title: { $regex: query, $options: "i" } },
@@ -42,7 +40,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   await ensureDb()
   const body = await request.json()
-  const org = await getOrganization()
+  const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -70,6 +68,7 @@ export async function POST(request: NextRequest) {
     priority: priority || "MEDIUM",
     dueDate: dueDate ? new Date(dueDate) : null,
     status: "BACKLOG",
+    organizationId: org.id,
   })
 
   return NextResponse.json({ id: task._id.toString(), ...task.toObject() })

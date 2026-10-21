@@ -11,6 +11,8 @@ import {
   SESSION_MAX_AGE_MS,
   type SessionPayload,
 } from "./session-token"
+import { requireNotDemoAccount, getDemoAccountEmail } from "./demo-account"
+import { connectDemoDb } from "./demo-mongoose"
 
 export interface SessionUser {
   id: string
@@ -23,15 +25,24 @@ export interface SessionUser {
 
 export interface Session {
   user: SessionUser
+  /** Whether this session belongs to the shared public demo account. */
+  isDemo: boolean
+  /** Which database the session was resolved from: "production" or "demo". */
+  context: "production" | "demo"
+}
+
+/** The shape returned by {@link getOrganization} / {@link requireOrg}. */
+export interface OrganizationContext {
+  id: string
+  name: string
+  slug: string
+  memberships: never[]
 }
 
 const SESSION_COOKIE_NAME = "session"
 
 /**
  * Check if the given email matches the configured admin email.
- *
- * Normalizes both sides to lowercase to avoid case-sensitivity issues.
- * Returns false when ADMIN_EMAIL is not configured, which is the safe default.
  */
 export async function isAdminEmail(email: string | null | undefined): Promise<boolean> {
   const adminEmail = process.env.ADMIN_EMAIL
@@ -39,33 +50,6 @@ export async function isAdminEmail(email: string | null | undefined): Promise<bo
   return email?.trim().toLowerCase() === adminEmail.trim().toLowerCase()
 }
 
-/**
- * Read and validate the session cookie for the current request.
- *
- * The session token is opaque base64 (NOT signed). It is only ever written by
- * our own auth API routes and is httpOnly, so the only realistic abuse vector
- * is tampering/expiry. We therefore:
- *   - reject malformed tokens,
- *   - reject tokens whose embedded `userId` no longer resolves to a user,
- *   - reject tokens whose embedded `organizationId` no longer matches the
- *     user's active membership (handles org deletion / role changes),
- *   - reject tokens older than `SESSION_MAX_AGE_MS`.
- *
- * Never trust the client to supply auth state: every check happens here.
- */
-/**
- * Return a fully-qualified avatar URL that works even when the browser
- * requests it from next/image (which does not carry cookies for protected
- * origins). The server-side session is used during sign-in/sign-up to build
- * the URL; the runtime build-time env var provides the origin used for
- * rendering the initial HTML and for any client-side fetches that need an
- * absolute path.
- *
- * When NEXT_PUBLIC_AVATAR_BASE_URL is configured (recommended for production
- * and local dev), the URL is absolute so the image loader can reach it.
- * Otherwise we fall back to a relative path — this works only when the
- * browser sends cookies with the request.
- */
 function buildAvatarUrl(avatarId: string | null | undefined, userId: string): string | null {
   if (!avatarId) return null
   if (typeof avatarId === "string" && avatarId.startsWith("http")) return avatarId
@@ -76,6 +60,18 @@ function buildAvatarUrl(avatarId: string | null | undefined, userId: string): st
   return `/api/avatars/${userId}`
 }
 
+/**
+ * Resolve a session from the current request's cookie.
+ *
+ * The session token now contains a `context` field ("production" or "demo")
+ * that is set at sign-in time and verified on every request. This means:
+ *   - A production session ALWAYS uses the production database.
+ *   - A demo session ALWAYS uses the demo database.
+ *   - There is NO fallback — the context is signed and cannot be forged.
+ *
+ * Backward compatibility: old tokens without `context` are treated as
+ * production sessions (they were all production before this change).
+ */
 export async function getSession(): Promise<Session | null> {
   await ensureDb()
   const headersList = await headers()
@@ -90,39 +86,71 @@ export async function getSession(): Promise<Session | null> {
     }
   }
 
-  if (!sessionToken) {
-    return null
-  }
+  if (!sessionToken) return null
 
   const payload = decodeSession(sessionToken)
-  if (!payload) {
-    return null
-  }
-  if (isSessionExpired(payload)) {
-    return null
+  if (!payload || isSessionExpired(payload)) return null
+
+  // Determine context from the signed token (or default to "production" for old tokens)
+  const context: "production" | "demo" = payload.context === "demo" ? "demo" : "production"
+
+  if (context === "production") {
+    // Production session: look up in production database.
+    let user = await User.findById(payload.userId).lean() as unknown as {
+      _id: { toString(): string }
+      email: string
+      name: string | null
+      avatar: string | null
+      role: string
+    } | null
+
+    if (!user) return null
+
+    const membership = await Membership.findOne({
+      userId: user._id.toString(),
+      organizationId: payload.organizationId,
+    }).lean() as unknown as { role: string; userId: { toString(): string }; organizationId: { toString(): string } } | null
+
+    if (!membership) return null
+
+    return {
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        avatar: buildAvatarUrl(user.avatar, user._id.toString()),
+        role: user.role,
+        organizationId: payload.organizationId,
+      },
+      isDemo: false,
+      context: "production",
+    }
   }
 
-  const user = await User.findById(payload.userId).lean() as unknown as {
+  // Demo session: look up in demo database ONLY. Never touch production.
+  const demoMongoose = await connectDemoDb()
+  if (!demoMongoose) return null // DEMO_MONGODB_URI not configured
+
+  const { User: DemoUser, Membership: DemoMembership } = await import("./database-demo")
+  const UserModel = await DemoUser()
+  const MemModel = await DemoMembership()
+
+  const user = await UserModel.findById(payload.userId).lean() as unknown as {
     _id: { toString(): string }
     email: string
     name: string | null
     avatar: string | null
     role: string
   } | null
-  if (!user) {
-    return null
-  }
 
-  // Re-validate that the user still belongs to the organization recorded in
-  // the token. If the org was deleted or the membership removed, the session
-  // is no longer valid even though the cookie itself is intact.
-  const _membership = await Membership.findOne({
+  if (!user) return null
+
+  const membership = await MemModel.findOne({
     userId: user._id.toString(),
     organizationId: payload.organizationId,
-  }).lean() as unknown as { role: string; userId: { toString(): string }; organizationId: { toString(): string } } | null
-  if (!_membership) {
-    return null
-  }
+  }).lean() as unknown as { role: string } | null
+
+  if (!membership) return null
 
   return {
     user: {
@@ -132,42 +160,36 @@ export async function getSession(): Promise<Session | null> {
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
       organizationId: payload.organizationId,
-    }
+    },
+    isDemo: true,
+    context: "demo",
   }
 }
 
-export async function createSession(userId: string, organizationId: string): Promise<void> {
+export async function createSession(userId: string, organizationId: string, context: "production" | "demo" = "production"): Promise<void> {
   const sessionData: SessionPayload = {
     userId,
     organizationId,
+    context,
     timestamp: Date.now(),
   }
-
   const sessionToken = encodeSession(sessionData)
   const cookieStore = await cookies()
   cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: Math.floor(SESSION_MAX_AGE_MS / 1000), // 7 days
+    maxAge: Math.floor(SESSION_MAX_AGE_MS / 1000),
     path: "/",
   })
 }
 
 export async function validateSession(): Promise<{ valid: boolean; user: SessionUser | null; error: string | null }> {
   const session = await getSession()
-  if (!session) {
-    return { valid: false, user: null, error: "No valid session found" }
-  }
+  if (!session) return { valid: false, user: null, error: "No valid session found" }
   return { valid: true, user: session.user, error: null }
 }
 
-/**
- * Server-side helper that returns the authenticated user for the current
- * request, or `null`. Used by the `/api/auth/me` endpoint, which is the single
- * source of truth the client polls to refresh its auth state. The client never
- * reads the httpOnly cookie directly.
- */
 export async function getCurrentUser(): Promise<Session | null> {
   return getSession()
 }
@@ -178,10 +200,6 @@ export async function signOut(): Promise<void> {
   redirect("/sign-in")
 }
 
-/**
- * Look up a user by email (case-insensitive).
- * Returns the user as a plain object or null if not found.
- */
 export async function getUserByEmail(email: string): Promise<{
   _id: { toString(): string }
   email: string
@@ -199,13 +217,6 @@ export async function getUserByEmail(email: string): Promise<{
   } | null
 }
 
-/**
- * Create a new user (no password — email-based auth only), set up their
- * personal organization, add them to the target organization with the given
- * role, and establish a server-side session.
- *
- * Returns the session user on success, or an error message on failure.
- */
 export async function createUserAndSession(
   email: string,
   role: string,
@@ -213,19 +224,14 @@ export async function createUserAndSession(
 ): Promise<{ user: SessionUser | null; error: string | null }> {
   await ensureDb()
 
-  // Check if user already exists
   const existingUser = await User.findOne({ email: email.toLowerCase().trim() }).lean() as unknown as {
     _id: { toString(): string }
     email: string
-    name: string | null
-    avatar: string | null
-    role: string
   } | null
   if (existingUser) {
     return { user: null, error: "User with this email already exists" }
   }
 
-  // Create user with no password (email-based auth only)
   const user = await User.create({
     email: email.toLowerCase().trim(),
     name: null,
@@ -233,36 +239,30 @@ export async function createUserAndSession(
     role: "MEMBER",
   })
 
-  // Create personal organization for the new user
   const personalOrg = await Organization.create({
     name: `${email.split("@")[0]}'s Workspace`,
     slug: `${email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`,
   })
 
-  // Add user to the invited organization
   await Membership.create({
     userId: user._id,
     organizationId: organizationId,
     role: role as "ADMIN" | "MEMBER" | "CLIENT",
   })
 
-  // Also create membership in their personal org
   await Membership.create({
     userId: user._id,
     organizationId: personalOrg._id,
     role: "ADMIN",
   })
 
-  // Establish the server-side session cookie
-  await createSession(user._id.toString(), organizationId)
+  await createSession(user._id.toString(), organizationId, "production")
 
   return {
     user: {
       id: user._id.toString(),
       email: user.email,
       name: user.name,
-      // Same normalization as above — URL carries user ID so the retrieval
-      // endpoint can find the file via metadata.uploaderId.
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
       organizationId: organizationId,
@@ -271,10 +271,39 @@ export async function createUserAndSession(
   }
 }
 
+export async function requireOrg(): Promise<OrganizationContext | null> {
+  const org = await getOrganization()
+  if (!org) return null
+  const session = await getSession()
+  if (session) {
+    requireNotDemoAccount(session.user.email)
+  }
+  return org
+}
+
 export async function getOrganization() {
   await ensureDb()
   const session = await getSession()
   if (!session) return null
+
+  // Use the database matching the session context.
+  if (session.isDemo) {
+    const { Membership: DemoMembership } = await import("./database-demo")
+    const MemModel = await DemoMembership()
+    const membership = await MemModel.findOne({
+      userId: session.user.id,
+    }).populate("organizationId")
+
+    if (!membership) return null
+
+    const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
+    return {
+      id: org._id.toString(),
+      name: org.name,
+      slug: org.slug,
+      memberships: [],
+    }
+  }
 
   const membership = await Membership.findOne({
     userId: session.user.id,
@@ -293,7 +322,64 @@ export async function getOrganization() {
 
 // Authentication functions
 export async function signIn(email: string, password: string): Promise<{ user: SessionUser | null; error: string | null }> {
+  const demoEmail = getDemoAccountEmail()
+  const isDemoLogin = demoEmail ? email.trim().toLowerCase() === demoEmail : false
+
+  if (isDemoLogin) {
+    // Demo login: authenticate against demo database ONLY.
+    const demoMongoose = await connectDemoDb()
+    if (!demoMongoose) {
+      return { user: null, error: "Invalid email or password" }
+    }
+
+    const { User: DemoUser, Membership: DemoMembership } = await import("./database-demo")
+    const UserModel = await DemoUser()
+    const MemModel = await DemoMembership()
+
+    const user = await UserModel.findOne({ email }).lean() as unknown as {
+      _id: { toString(): string }
+      email: string
+      name: string | null
+      avatar: string | null
+      password: string | null
+      role: string
+    } | null
+
+    if (!user || !user.password) {
+      return { user: null, error: "Invalid email or password" }
+    }
+
+    const isValidPassword = await verifyPassword(password, user.password)
+    if (!isValidPassword) {
+      return { user: null, error: "Invalid email or password" }
+    }
+
+    const membership = await MemModel.findOne({
+      userId: user._id.toString(),
+    }).populate("organizationId")
+
+    if (!membership) {
+      return { user: null, error: "User has no organization access" }
+    }
+
+    const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
+    const sessionUser = {
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      avatar: buildAvatarUrl(user.avatar, user._id.toString()),
+      role: user.role,
+      organizationId: org._id.toString(),
+    }
+
+    await createSession(user._id.toString(), org._id.toString(), "demo")
+
+    return { user: sessionUser, error: null }
+  }
+
+  // Production login: authenticate against production database ONLY.
   await ensureDb()
+
   const user = await User.findOne({ email }).lean() as unknown as {
     _id: { toString(): string }
     email: string
@@ -303,13 +389,7 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     role: string
   } | null
 
-  if (!user) {
-    // Return generic error without revealing which field was wrong (security best practice)
-    return { user: null, error: "Invalid email or password" }
-  }
-
-  if (!user.password) {
-    // User exists but has no password (should not happen with our signUp flow)
+  if (!user || !user.password) {
     return { user: null, error: "Invalid email or password" }
   }
 
@@ -318,7 +398,6 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     return { user: null, error: "Invalid email or password" }
   }
 
-  // Get the user's primary organization
   const membership = await Membership.findOne({
     userId: user._id.toString(),
   }).populate("organizationId")
@@ -337,33 +416,30 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     organizationId: org._id.toString(),
   }
 
-  // Establish the server-side session cookie
-  await createSession(user._id.toString(), org._id.toString())
+  await createSession(user._id.toString(), org._id.toString(), "production")
 
-  return {
-    user: sessionUser,
-    error: null
-  }
+  return { user: sessionUser, error: null }
 }
 
 export async function signUp(email: string, name: string, password: string): Promise<{ user: SessionUser | null; error: string | null }> {
   await ensureDb()
-  // Check if user already exists
+
+  // Block demo account registration in production.
+  const demoEmail = getDemoAccountEmail()
+  if (demoEmail && email.trim().toLowerCase() === demoEmail) {
+    return { user: null, error: "This email is reserved" }
+  }
+
   const existingUser = await User.findOne({ email }).lean() as unknown as {
     _id: { toString(): string }
     email: string
-    name: string | null
-    avatar: string | null
-    role: string
   } | null
   if (existingUser) {
     return { user: null, error: "User with this email already exists" }
   }
 
-  // Hash password
   const hashedPassword = await hashPassword(password)
 
-  // Create user
   const user = await User.create({
     email,
     name,
@@ -371,28 +447,24 @@ export async function signUp(email: string, name: string, password: string): Pro
     role: "MEMBER",
   })
 
-  // Create organization for the new user
   const organization = await Organization.create({
     name: `${name}'s Workspace`,
     slug: `${name.toLowerCase().replace(/\s+/g, "-")}-${Math.random().toString(36).substring(2, 8)}`,
   })
 
-  // Create membership with ADMIN role
   await Membership.create({
     userId: user._id,
     organizationId: organization._id,
     role: "ADMIN",
   })
 
-  // Establish the server-side session cookie
-  await createSession(user._id.toString(), organization._id.toString())
+  await createSession(user._id.toString(), organization._id.toString(), "production")
 
   return {
     user: {
       id: user._id.toString(),
       email: user.email,
       name: user.name,
-      // Same normalization — URL carries user ID, not GridFS file ID.
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
       organizationId: organization._id.toString(),

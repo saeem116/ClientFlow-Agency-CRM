@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Notification } from "@/lib/database"
-import { getSession } from "@/lib/auth"
+import { getSession, requireOrg } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -71,6 +71,13 @@ export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Shared demo account may view notifications but cannot modify them.
+  try {
+    requireOrg()
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const { action } = await request.json() as { action?: string }

@@ -3,6 +3,7 @@ import { Project, Client } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
 import { ProjectEditForm } from "../project-edit-form"
+import { sanitize } from "@/lib/sanitize"
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   await ensureDb()
@@ -11,7 +12,8 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
 
-  const project = await Project.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
+  const rawProject = await Project.findOne({ _id: id, organizationId: org.id }).lean()
+  const project = sanitize(rawProject) as {
     _id: { toString(): string }
     name: string
     description?: string | null
@@ -27,9 +29,10 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 
   if (!project) notFound()
 
-  const clients = await Client.find({ organizationId: org.id })
+  const rawClients = await Client.find({ organizationId: org.id })
     .sort({ updatedAt: -1 })
     .lean()
+  const clients = sanitize(rawClients) as any[]
 
   const clientName = project.clientId
     ? `Project ${project._id.toString()}`
@@ -58,7 +61,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
         } : null,
       }}
       clients={clients.map((c: any) => ({
-        id: c._id.toString(),
+        id: c._id?.toString() || "",
         companyName: c.companyName || null,
         firstName: c.firstName || null,
         lastName: c.lastName || null,

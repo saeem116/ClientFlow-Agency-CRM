@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type Document, type Types } from "mongoose"
+import mongoose, { Schema, model, type Document, type Types } from "mongoose"
 
 export interface ITask {
   id: string
@@ -13,6 +13,7 @@ export interface ITask {
   projectId: string | null
   milestoneId: string | null
   assigneeId: string | null
+  organizationId: string | null
 }
 
 export interface ITaskDocument extends Document {
@@ -22,11 +23,10 @@ export interface ITaskDocument extends Document {
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   dueDate: Date | null
   completedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
   projectId: Types.ObjectId | null
   milestoneId: Types.ObjectId | null
   assigneeId: Types.ObjectId | null
+  organizationId: Types.ObjectId | null
 }
 
 const taskSchema = new Schema<ITaskDocument>(
@@ -79,6 +79,12 @@ const taskSchema = new Schema<ITaskDocument>(
       default: null,
       index: true,
     },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -92,4 +98,3 @@ const taskSchema = new Schema<ITaskDocument>(
 )
 
 export const Task = mongoose.models.Task || model<ITaskDocument>("Task", taskSchema)
-

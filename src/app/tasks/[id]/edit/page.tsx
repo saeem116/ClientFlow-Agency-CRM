@@ -2,6 +2,7 @@ import { ensureDb } from "@/lib/database"
 import { Task } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
+import { sanitize } from "@/lib/sanitize"
 
 export const metadata = {
   title: "Edit Task - ClientFlow",
@@ -12,7 +13,11 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   await ensureDb()
   const { id } = await params
 
-  const task = await Task.findById(id).lean() as unknown as {
+  const org = await getOrganization()
+  if (!org) redirect("/sign-in")
+
+  const rawTask = await Task.findById(id).lean()
+  const task = sanitize(rawTask) as {
     _id: { toString(): string }
     title: string
     description?: string | null
@@ -42,7 +47,7 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
 function EditTaskForm({ task }: { task: any }) {
   return (
     <div className="rounded-lg border border-slate-200 p-6">
-      <form action={`/api/tasks/${task._id.toString()}/update`} method="POST">
+      <form action={`/api/tasks/${task._id.toString()}/update?returnTo=/tasks/${task._id.toString()}`} method="POST">
         <input type="hidden" name="id" value={task._id.toString()} />
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">

@@ -86,7 +86,6 @@ const invitationSchema = new Schema<IInvitationDocument>(
   }
 )
 
-// Prevent OverwriteModelError
 export const Invitation =
   mongoose.models.Invitation ||
   model<IInvitationDocument>("Invitation", invitationSchema)
@@ -135,3 +134,4 @@ export async function verifyToken(token: string, hash: string): Promise<boolean>
   }
   return result === 0
 }
+

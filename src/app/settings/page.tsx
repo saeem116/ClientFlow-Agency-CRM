@@ -3,6 +3,7 @@ import { Membership, Organization } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { SettingsPageClient } from "./settings-page-client"
+import { sanitize } from "@/lib/sanitize"
 
 function memberAvatarUrl(avatarId: string | null | undefined, userId: string): string | null {
   if (!avatarId) return null
@@ -25,11 +26,12 @@ export default async function SettingsPage() {
     slug: string
   } | null
 
-  const memberships = await Membership.find({ organizationId: org.id })
+  const rawMemberships = await Membership.find({ organizationId: org.id })
     .populate("userId", "name email avatar")
     .populate("organizationId", "name slug")
     .lean()
     .exec()
+  const memberships = sanitize(rawMemberships) as any[]
 
   return (
     <SettingsPageClient

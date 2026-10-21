@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
 import { Task, Project } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, requireOrg } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -111,6 +111,8 @@ function TaskForm({ org, projects }: {
 async function createTask(formData: FormData) {
   "use server"
   await ensureDb()
+  const org = await requireOrg()
+  if (!org) redirect("/sign-in")
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -127,6 +129,7 @@ async function createTask(formData: FormData) {
     priority: (priority as any) || "MEDIUM",
     dueDate: dueDate ? new Date(dueDate) : null,
     status: "BACKLOG",
+    organizationId: org.id,
   })
 
   redirect("/tasks")

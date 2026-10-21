@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
 
   const q = query
 
-  // Search across all entity types in parallel, scoped to the user's organization
+  // Search across all entity types in parallel, scoped to the user's organization.
+  // Tasks are scoped by organizationId so users cannot discover records from
+  // other organizations through the global search endpoint.
   const [clients, projects, tasks, invoices, leads] = await Promise.all([
     Client.find({
       organizationId: org.id,
@@ -37,6 +39,7 @@ export async function GET(request: NextRequest) {
       ],
     }).limit(5).lean(),
     Task.find({
+      organizationId: org.id,
       $or: [
         { title: { $regex: q, $options: "i" } },
         { description: { $regex: q, $options: "i" } },
@@ -58,36 +61,42 @@ export async function GET(request: NextRequest) {
   ])
 
   // Build a unified result list with navigation hrefs
+  const resultClients = clients as unknown as Array<{ _id: { toString(): string }; firstName?: string; lastName?: string; companyName?: string; email?: string }>
+  const resultProjects = projects as unknown as Array<{ _id: { toString(): string }; name: string; description?: string }>
+  const resultTasks = tasks as unknown as Array<{ _id: { toString(): string }; title: string; status: string }>
+  const resultInvoices = invoices as unknown as Array<{ _id: { toString(): string }; number: string; status: string }>
+  const resultLeads = leads as unknown as Array<{ _id: { toString(): string }; title: string; stage: string; email?: string }>
+
   const results = [
-    ...(clients as any[]).map((c) => ({
+    ...resultClients.map((c) => ({
       id: c._id.toString(),
       type: "Client" as const,
       title: c.companyName || `${c.firstName || ""} ${c.lastName || ""}`.trim() || "Unnamed",
       subtitle: c.email || undefined,
       href: `/clients/${c._id.toString()}`,
     })),
-    ...(projects as any[]).map((p) => ({
+    ...resultProjects.map((p) => ({
       id: p._id.toString(),
       type: "Project" as const,
       title: p.name,
       subtitle: p.description || undefined,
       href: `/projects/${p._id.toString()}`,
     })),
-    ...(tasks as any[]).map((t) => ({
+    ...resultTasks.map((t) => ({
       id: t._id.toString(),
       type: "Task" as const,
       title: t.title,
       subtitle: t.status,
       href: "/tasks",
     })),
-    ...(invoices as any[]).map((i) => ({
+    ...resultInvoices.map((i) => ({
       id: i._id.toString(),
       type: "Invoice" as const,
       title: i.number,
       subtitle: `${i.status}`,
       href: `/invoices/${i._id.toString()}`,
     })),
-    ...(leads as any[]).map((l) => ({
+    ...resultLeads.map((l) => ({
       id: l._id.toString(),
       type: "Lead" as const,
       title: l.title,

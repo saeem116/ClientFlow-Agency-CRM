@@ -41,7 +41,7 @@ describe('auth-context', () => {
 
     let captured: AuthContextType | null = null
     render(
-      <AuthProvider initialUser={userShape} initialOrg={orgShape}>
+      <AuthProvider initialUser={userShape} initialOrg={orgShape} initialIsDemo={false}>
         <Harness onAuth={(a) => (captured = a)} />
       </AuthProvider>
     )
@@ -64,7 +64,7 @@ describe('auth-context', () => {
     )
 
     render(
-      <AuthProvider initialUser={null} initialOrg={null}>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness onAuth={() => {}} />
       </AuthProvider>
     )
@@ -82,7 +82,7 @@ describe('auth-context', () => {
 
     let captured: AuthContextType | null = null
     render(
-      <AuthProvider initialUser={null} initialOrg={null}>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness onAuth={(a) => (captured = a)} />
       </AuthProvider>
     )
@@ -108,7 +108,7 @@ describe('auth-context', () => {
 
     let captured: AuthContextType | null = null
     render(
-      <AuthProvider initialUser={null} initialOrg={null}>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness onAuth={(a) => (captured = a)} />
       </AuthProvider>
     )
@@ -136,7 +136,7 @@ describe('auth-context', () => {
 
     let captured: AuthContextType | null = null
     render(
-      <AuthProvider initialUser={null} initialOrg={null}>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness
           onAuth={(a) => {
             captured = a
@@ -168,7 +168,7 @@ describe('auth-context', () => {
 
     let captured: AuthContextType = null as any
     render(
-      <AuthProvider initialUser={null} initialOrg={null}>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness
           onAuth={(a) => {
             captured = a
