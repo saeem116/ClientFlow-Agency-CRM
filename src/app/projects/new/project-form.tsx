@@ -9,10 +9,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save } from "lucide-react"
 import { createProject } from "./actions"
 
+interface ClientOption {
+  id: string
+  firstName: string | null
+  lastName: string | null
+  companyName: string | null
+  email: string | null
+  phone: string | null
+  website: string | null
+  address: string | null
+  city: string | null
+  country: string | null
+  notes: string | null
+  status: string
+}
+
 interface ProjectFormProps {
   org: { id: string; name: string }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  clients: any[]
+  clients: ClientOption[]
 }
 
 export function ProjectForm({ org, clients }: ProjectFormProps) {
@@ -58,7 +72,7 @@ export function ProjectForm({ org, clients }: ProjectFormProps) {
               {clients.map((client) => {
                 const name = client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"
                 return (
-                  <SelectItem key={client._id.toString()} value={client._id.toString()}>{name}</SelectItem>
+                  <SelectItem key={client.id} value={client.id}>{name}</SelectItem>
                 )
               })}
             </SelectContent>

@@ -25,6 +25,22 @@ export default async function NewInvoicePage() {
     .sort({ updatedAt: -1 })
     .lean()
 
+  // Convert Mongoose documents to plain serializable objects before passing to a Client Component
+  const plainClients = (clients || []).map((c: any) => ({
+    id: c._id.toString(),
+    firstName: c.firstName || null,
+    lastName: c.lastName || null,
+    companyName: c.companyName || null,
+    email: c.email || null,
+    phone: c.phone || null,
+    website: c.website || null,
+    address: c.address || null,
+    city: c.city || null,
+    country: c.country || null,
+    notes: c.notes || null,
+    status: c.status || "active",
+  }))
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -44,7 +60,7 @@ export default async function NewInvoicePage() {
           <CardTitle>Invoice Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <InvoiceForm org={org} clients={clients} />
+          <InvoiceForm org={org} clients={plainClients} />
         </CardContent>
       </Card>
     </div>
@@ -53,7 +69,20 @@ export default async function NewInvoicePage() {
 
 function InvoiceForm({ org, clients }: {
   org: { id: string; name: string }
-  clients: any[]
+  clients: Array<{
+    id: string
+    firstName: string | null
+    lastName: string | null
+    companyName: string | null
+    email: string | null
+    phone: string | null
+    website: string | null
+    address: string | null
+    city: string | null
+    country: string | null
+    notes: string | null
+    status: string
+  }>
 }) {
   return (
     <form action={createInvoice} className="space-y-6">
@@ -69,7 +98,7 @@ function InvoiceForm({ org, clients }: {
               {clients.map((client) => {
                 const name = client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"
                 return (
-                  <SelectItem key={client._id.toString()} value={client._id.toString()}>{name}</SelectItem>
+                  <SelectItem key={client.id} value={client.id}>{name}</SelectItem>
                 )
               })}
             </SelectContent>

@@ -31,7 +31,16 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   const rawClients = await Client.find({ organizationId: org.id })
     .sort({ updatedAt: -1 })
     .lean()
-  const clients = sanitize(rawClients) as any[]
+  // Convert Mongoose documents to plain serializable objects for Client Components
+  const clients = (rawClients || []).map((c: any) => ({
+    id: c._id.toString(),
+    firstName: c.firstName || null,
+    lastName: c.lastName || null,
+    companyName: c.companyName || null,
+    email: c.email || null,
+    phone: c.phone || null,
+    status: c.status || "active",
+  }))
 
   return (
     <div className="space-y-6">
@@ -66,7 +75,7 @@ function EditInvoiceForm({ invoice, clients }: { invoice: any; clients: any[] })
             >
               <option value="">Select a client</option>
               {clients.map((client) => (
-                <option key={client._id?.toString()} value={client._id?.toString()}>
+                <option key={client.id} value={client.id}>
                   {client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed"}
                 </option>
               ))}

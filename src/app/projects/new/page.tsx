@@ -22,6 +22,22 @@ export default async function NewProjectPage() {
     .sort({ updatedAt: -1 })
     .lean()
 
+  // Convert Mongoose documents to plain serializable objects before passing to a Client Component
+  const plainClients = (clients || []).map((c: any) => ({
+    id: c._id.toString(),
+    firstName: c.firstName || null,
+    lastName: c.lastName || null,
+    companyName: c.companyName || null,
+    email: c.email || null,
+    phone: c.phone || null,
+    website: c.website || null,
+    address: c.address || null,
+    city: c.city || null,
+    country: c.country || null,
+    notes: c.notes || null,
+    status: c.status || "active",
+  }))
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -41,7 +57,7 @@ export default async function NewProjectPage() {
           <CardTitle>Project Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProjectForm org={org} clients={clients} />
+          <ProjectForm org={org} clients={plainClients} />
         </CardContent>
       </Card>
     </div>

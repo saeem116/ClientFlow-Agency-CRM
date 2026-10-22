@@ -32,7 +32,16 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   const rawClients = await Client.find({ organizationId: org.id })
     .sort({ updatedAt: -1 })
     .lean()
-  const clients = sanitize(rawClients) as any[]
+  // Convert Mongoose documents to plain serializable objects for Client Components
+  const clients = (rawClients || []).map((c: any) => ({
+    id: c._id.toString(),
+    firstName: c.firstName || null,
+    lastName: c.lastName || null,
+    companyName: c.companyName || null,
+    email: c.email || null,
+    phone: c.phone || null,
+    status: c.status || "active",
+  }))
 
   const clientName = project.clientId
     ? `Project ${project._id.toString()}`
