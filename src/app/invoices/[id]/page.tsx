@@ -53,48 +53,48 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Invoice {invoice.number}</h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">Invoice {invoice.number}</h1>
+          <p className="text-slate-500 dark:text-[var(--muted-foreground)] mt-1">
             Created on {new Date(invoice.issueDate).toLocaleDateString()} • {clientName}
           </p>
         </div>
-        <a href="/invoices" className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        <a href="/invoices" className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-[var(--border)] bg-white dark:bg-[var(--card)] px-4 py-2 text-sm font-medium text-slate-700 dark:text-[var(--foreground)] hover:bg-slate-50 dark:hover:bg-[var(--muted)]">
           ← Back to Invoices
         </a>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="font-medium text-slate-900 mb-3">Invoice Summary</h3>
+        <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
+          <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Invoice Summary</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-500">Status:</span>
+              <span className="text-slate-500 dark:text-[var(--muted-foreground)]">Status:</span>
               <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
-                invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" :
-                invoice.status === "OVERDUE" ? "bg-red-100 text-red-700" :
-                invoice.status === "PARTIALLY_PAID" ? "bg-amber-100 text-amber-700" :
-                "bg-slate-100 text-slate-700"
+                invoice.status === "PAID" ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" :
+                invoice.status === "OVERDUE" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" :
+                invoice.status === "PARTIALLY_PAID" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" :
+                "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
               }`}>
                 {invoice.status}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Total:</span>
+              <span className="text-slate-500 dark:text-[var(--muted-foreground)]">Total:</span>
               <span className="font-semibold">${invoice.total?.toFixed(2) || "0.00"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Paid:</span>
+              <span className="text-slate-500 dark:text-[var(--muted-foreground)]">Paid:</span>
               <span className="font-semibold text-emerald-600">${invoice.paidAmount?.toFixed(2) || "0.00"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Balance:</span>
+              <span className="text-slate-500 dark:text-[var(--muted-foreground)]">Balance:</span>
               <span className={`font-semibold ${balance > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                 ${balance.toFixed(2)}
               </span>
             </div>
             {invoice.dueDate && (
               <div className="flex justify-between">
-                <span className="text-slate-500">Due Date:</span>
+                <span className="text-slate-500 dark:text-[var(--muted-foreground)]">Due Date:</span>
                 <span className={isOverdue ? "text-red-600 font-semibold" : ""}>
                   {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : ""}
                   {isOverdue && " (Overdue)"}
@@ -104,18 +104,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="font-medium text-slate-900 mb-3">Client Information</h3>
+        <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
+          <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Client Information</h3>
           <div className="flex items-center gap-2">
             <div>
-              <p className="font-medium text-slate-900">{clientName}</p>
-              <p className="text-sm text-slate-500">{client?.email || "—"}</p>
+              <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">{clientName}</p>
+              <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">{client?.email || "—"}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="font-medium text-slate-900 mb-3">Actions</h3>
+        <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
+          <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Actions</h3>
           <div className="space-y-2">
             {balance > 0 && invoice.status !== "VOIDED" && (
               <a
@@ -128,7 +128,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             {invoice.status === "DRAFT" && (
               <a
                 href={`/invoices/${invoice._id.toString()}/edit`}
-                className="block w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="block w-full rounded-md border border-slate-300 dark:border-[var(--border)] bg-white dark:bg-[var(--card)] px-4 py-2 text-center text-sm font-medium text-slate-700 dark:text-[var(--foreground)] hover:bg-slate-50 dark:hover:bg-[var(--muted)]"
               >
                 Edit Invoice
               </a>
@@ -138,14 +138,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       </div>
 
       {payments.length > 0 && (
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="font-medium text-slate-900 mb-3">Payment History</h3>
+        <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
+          <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Payment History</h3>
           <div className="space-y-3">
             {payments.map((payment: any) => (
-              <div key={payment._id.toString()} className="flex items-center justify-between rounded-md bg-slate-50 p-3">
+              <div key={payment._id.toString()} className="flex items-center justify-between rounded-md bg-slate-50 dark:bg-[var(--muted)] p-3">
                 <div>
-                  <p className="font-medium text-slate-900">${payment.amount?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">${payment.amount?.toFixed(2) || "0.00"}</p>
+                  <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">
                     {new Date(payment.date).toLocaleDateString()} • {payment.method || "N/A"}
                   </p>
                 </div>
@@ -156,9 +156,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       )}
 
       {invoice.notes && (
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="font-medium text-slate-900 mb-3">Notes</h3>
-          <p className="text-slate-600">{invoice.notes}</p>
+        <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
+          <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Notes</h3>
+          <p className="text-slate-600 dark:text-[var(--muted-foreground)]">{invoice.notes}</p>
         </div>
       )}
     </div>
