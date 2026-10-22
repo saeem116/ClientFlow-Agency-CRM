@@ -171,12 +171,12 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
-          <p className="text-slate-500 mt-1">Configure your organization and preferences</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">Settings</h1>
+          <p className="text-slate-500 dark:text-[var(--muted-foreground)] mt-1">Configure your organization and preferences</p>
         </div>
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-slate-500">No organization found. Please contact support.</p>
+            <p className="text-slate-500 dark:text-[var(--muted-foreground)]">No organization found. Please contact support.</p>
           </CardContent>
         </Card>
       </div>
@@ -229,14 +229,14 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-1">Configure your organization and preferences</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">Settings</h1>
+        <p className="text-slate-500 dark:text-[var(--muted-foreground)] mt-1">Configure your organization and preferences</p>
       </div>
 
       {/* Tabs */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex gap-1 border-b border-slate-200">
+          <div className="flex gap-1 border-b border-slate-200 dark:border-[var(--border)] overflow-x-auto whitespace-nowrap">
             {[
               { id: "general", label: "General", icon: <Settings className="h-4 w-4" /> },
               { id: "profile", label: "Profile", icon: <User className="h-4 w-4" /> },
@@ -262,18 +262,18 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
             <div className="space-y-6 max-w-2xl">
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Your Profile</h3>
-                <p className="text-slate-500 mb-4">
+                <p className="text-slate-500 dark:text-[var(--muted-foreground)] mb-4">
                   Update your name and avatar. These are shown across the app, including the header.
                 </p>
 
                 {profileError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-4">
+                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 mb-4">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-sm">{profileError}</span>
                   </div>
                 )}
                 {profileSuccess && (
-                  <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 mb-4">
+                  <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-400 mb-4">
                     <Check className="h-4 w-4" />
                     <span className="text-sm">Profile saved successfully!</span>
                   </div>
@@ -385,7 +385,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                         setPendingAvatar(e.target.value)
                       }}
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground dark:text-[var(--muted-foreground)]">
                       Or use the upload button above to store your avatar in MongoDB.
                     </p>
                   </div>
@@ -398,7 +398,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                       disabled
                       className="bg-muted"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground dark:text-[var(--muted-foreground)]">
                       Email cannot be changed here. Contact support to update it.
                     </p>
                   </div>
@@ -420,7 +420,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                     {pendingAvatarRemoval && (
                       <button
                         type="button"
-                        className="text-sm text-slate-500 hover:text-slate-700"
+                        className="text-sm text-slate-500 dark:text-[var(--muted-foreground)] hover:text-slate-700 dark:hover:text-[var(--foreground)]"
                         onClick={() => {
                           setPendingAvatarRemoval(false)
                           setPendingAvatar(user?.avatar || "")
@@ -433,7 +433,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                     {!pendingAvatarRemoval && profileAvatar && (
                       <button
                         type="button"
-                        className="text-sm text-slate-500 hover:text-slate-700"
+                        className="text-sm text-slate-500 dark:text-[var(--muted-foreground)] hover:text-slate-700 dark:hover:text-[var(--foreground)]"
                         onClick={() => {
                           setPendingAvatar(profileAvatar)
                           setPendingAvatarUrl(profileAvatar)
@@ -471,22 +471,22 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                 <Button className="mt-4">Save Changes</Button>
               </div>
 
-              <hr className="border-slate-200" />
+              <hr className="border-slate-200 dark:border-[var(--border)]" />
 
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Billing & Subscription</h3>
-                <p className="text-slate-500 mb-4">
+                <p className="text-slate-500 dark:text-[var(--muted-foreground)] mb-4">
                   Billing integration requires external credentials. Configure your payment provider
                   (Stripe, Paddle, etc.) in the environment variables.
                 </p>
-                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <p className="text-sm text-muted-foreground">
+                <div className="p-4 bg-slate-50 dark:bg-[var(--muted)] rounded-lg border border-slate-200 dark:border-[var(--border)]">
+                  <p className="text-sm text-muted-foreground dark:text-[var(--muted-foreground)]">
                     Required env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
                   </p>
                 </div>
               </div>
 
-              <hr className="border-slate-200" />
+              <hr className="border-slate-200 dark:border-[var(--border)]" />
 
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Integrations</h3>
@@ -497,10 +497,10 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                     { name: "File Storage", env: "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET", status: "not configured" },
                     { name: "Webhooks", env: "WEBHOOK_SECRET", status: "not configured" },
                   ].map((int) => (
-                    <div key={int.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <div key={int.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-[var(--muted)] rounded-lg">
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">{int.name}</p>
-                        <p className="text-xs text-slate-500">{int.env}</p>
+                        <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">{int.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-[var(--muted-foreground)]">{int.env}</p>
                       </div>
                       <Badge variant="secondary">{int.status}</Badge>
                     </div>
@@ -524,15 +524,15 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                 {org.memberships?.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[var(--muted)] rounded-lg"
                   >
                     <div className="flex items-center gap-4">
                       <Avatar name={m.user?.name} image={m.user?.avatar} size="md" />
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
+                        <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">
                           {m.user?.name || "Unknown"}
                         </p>
-                        <p className="text-sm text-slate-500">{m.user?.email}</p>
+                        <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">{m.user?.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -569,14 +569,14 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
 
                     <div className="p-4 space-y-4">
                       {inviteSuccess && (
-                        <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700">
+                        <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-400">
                           <Check className="h-4 w-4" />
                           <span className="text-sm">Invitation sent successfully!</span>
                         </div>
                       )}
 
                       {inviteError && (
-                        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
                           <AlertCircle className="h-4 w-4" />
                           <span className="text-sm">{inviteError}</span>
                         </div>
@@ -606,7 +606,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                           <option value="MEMBER">Member</option>
                           <option value="ADMIN">Admin</option>
                         </select>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground dark:text-[var(--muted-foreground)]">
                           Admins can manage team members and settings.
                         </p>
                       </div>
@@ -642,18 +642,18 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                 </div>
               )}
 
-              <hr className="border-slate-200" />
+              <hr className="border-slate-200 dark:border-[var(--border)]" />
 
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Roles & Permissions</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left p-3 font-medium text-slate-500">Permission</th>
-                        <th className="text-center p-3 font-medium text-slate-500">Admin</th>
-                        <th className="text-center p-3 font-medium text-slate-500">Member</th>
-                        <th className="text-center p-3 font-medium text-slate-500">Client</th>
+                      <tr className="border-b border-slate-200 dark:border-[var(--border)]">
+                        <th className="text-left p-3 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Permission</th>
+                        <th className="text-center p-3 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Admin</th>
+                        <th className="text-center p-3 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Member</th>
+                        <th className="text-center p-3 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Client</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -669,11 +669,11 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                         "Manage Settings",
                         "Manage Billing",
                       ].map((perm) => (
-                        <tr key={perm} className="hover:bg-slate-50">
-                          <td className="p-3 text-slate-700">{perm}</td>
+                        <tr key={perm} className="hover:bg-slate-50 dark:hover:bg-[var(--muted)]">
+                          <td className="p-3 text-slate-700 dark:text-[var(--foreground)]">{perm}</td>
                           <td className="p-3 text-center text-emerald-600">✓</td>
                           <td className="p-3 text-center text-emerald-600">✓</td>
-                          <td className="p-3 text-center text-slate-400">✗</td>
+                          <td className="p-3 text-center text-slate-400 dark:text-[var(--muted-foreground)]">✗</td>
                         </tr>
                       ))}
                     </tbody>
@@ -688,7 +688,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
             <div className="space-y-6 max-w-2xl">
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Notification Preferences</h3>
-                <p className="text-slate-500 mb-4">
+                <p className="text-slate-500 dark:text-[var(--muted-foreground)] mb-4">
                   Configure when you receive notifications. Email notifications require SMTP configuration.
                 </p>
                 <div className="space-y-4">
@@ -704,11 +704,11 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                   ].map((notif) => (
                     <div
                       key={notif.label}
-                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-[var(--muted)] rounded-lg"
                     >
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">{notif.label}</p>
-                        <p className="text-sm text-slate-500">{notif.desc}</p>
+                        <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">{notif.label}</p>
+                        <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">{notif.desc}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -747,16 +747,16 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                     </Button>
                   ))}
                 </div>
-                <p className="mt-3 text-sm text-slate-500">
+                <p className="mt-3 text-sm text-slate-500 dark:text-[var(--muted-foreground)]">
                   Current theme: <span className="font-medium text-slate-700 dark:text-slate-300">{resolvedTheme}</span>
                   {theme === "system" && " (following system preference)"}
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-[var(--muted-foreground)]">
                   Current density: <span className="font-medium text-slate-700 dark:text-slate-300">{density}</span>
                 </p>
               </div>
 
-              <hr className="border-slate-200" />
+              <hr className="border-slate-200 dark:border-[var(--border)]" />
 
               <div>
                 <h3 className="font-medium text-[var(--foreground)] mb-4">Density</h3>
@@ -772,12 +772,12 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                       className="h-20 flex-col gap-2"
                       onClick={() => setDensity(d.value)}
                     >
-                      <div className={`w-full h-16 rounded-lg border-2 bg-slate-50 ${
-                        density === d.value ? "border-primary" : "border-slate-200"
+                      <div className={`w-full h-16 rounded-lg border-2 ${
+                        density === d.value ? "bg-slate-50 dark:bg-[var(--muted)] border-primary" : "bg-slate-50 dark:bg-[var(--muted)] border-slate-200 dark:border-[var(--border)]"
                       }`}>
-                        <div className={`h-4 bg-slate-200 rounded mb-2 ${d.mt1}`} />
-                        <div className={`h-4 bg-slate-200 rounded ${d.mt2}`} />
-                        <div className={`h-4 bg-slate-200 rounded ${d.mt3}`} />
+                        <div className={`h-4 bg-slate-200 dark:bg-[var(--muted)] rounded mb-2 ${d.mt1}`} />
+                        <div className={`h-4 bg-slate-200 dark:bg-[var(--muted)] rounded ${d.mt2}`} />
+                        <div className={`h-4 bg-slate-200 dark:bg-[var(--muted)] rounded ${d.mt3}`} />
                       </div>
                       <span className="text-sm font-medium">{d.label}</span>
                     </Button>
