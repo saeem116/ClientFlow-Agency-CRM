@@ -272,7 +272,7 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           {/* Projects Tab */}
           {activeTab === "projects" && (
             <div className="space-y-4">
-              {client.projects?.length === 0 ? (
+              {!client.projects || client.projects.length === 0 ? (
                 <div className="text-center py-12">
                   <FolderKanban className="mx-auto h-12 w-12 text-slate-300" />
                   <h3 className="mt-4 text-lg font-medium text-slate-900">No projects yet</h3>
@@ -320,7 +320,7 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           {/* Invoices Tab */}
           {activeTab === "invoices" && (
             <div className="space-y-4">
-              {client.invoices?.length === 0 ? (
+              {!client.invoices || client.invoices.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="mx-auto h-12 w-12 text-slate-300" />
                   <h3 className="mt-4 text-lg font-medium text-slate-900">No invoices yet</h3>
@@ -493,7 +493,7 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           {/* Activity Tab */}
           {activeTab === "activity" && (
             <div className="space-y-4">
-              {client.activities?.length === 0 ? (
+              {!client.activities || client.activities.length === 0 ? (
                 <div className="text-center py-12">
                   <Clock className="mx-auto h-12 w-12 text-slate-300" />
                   <h3 className="mt-4 text-lg font-medium text-slate-900">No activity yet</h3>
