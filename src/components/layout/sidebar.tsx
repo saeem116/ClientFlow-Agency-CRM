@@ -73,7 +73,7 @@ export function Sidebar({
           variant="outline"
           size="icon"
           onClick={() => onMobileOpenChange?.(!mobileOpen)}
-          className="bg-white shadow-md"
+          className="bg-white dark:bg-[var(--card)] shadow-md border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>

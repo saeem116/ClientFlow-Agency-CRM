@@ -199,12 +199,12 @@ export function Header({
       case "client_created":
         return "text-purple-500"
       default:
-        return "text-slate-500"
+        return "text-slate-500 dark:text-slate-400"
     }
   }
 
   return (
-    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-background/80 dark:bg-[var(--background)]/90 backdrop-blur-lg border-b border-[var(--border)] px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
       {/* Left side - title and mobile menu */}
       <div className="flex items-center gap-4">
         {/* Mobile sidebar toggle */}
@@ -249,8 +249,8 @@ export function Header({
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-popover rounded-lg shadow-lg border border-border py-1 z-50">
-              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="absolute right-0 top-full mt-2 w-80 bg-popover dark:bg-[var(--popover)] rounded-lg shadow-lg border border-[var(--border)] py-1 z-50">
+              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
                 <p className="text-sm font-semibold">Notifications</p>
                 {unreadCount > 0 && (
                   <button
@@ -287,7 +287,7 @@ export function Header({
                           onClick={() => markAsRead(notif.id)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`mt-0.5 ${getIconColor(notif.type)}`}>
+                            <div className={`mt-0.5 ${getIconColor(notif.type)} dark:text-opacity-80`}>
                               <Icon className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -321,7 +321,7 @@ export function Header({
                   )}
                 </div>
               </ScrollArea>
-              <div className="px-4 py-2 border-t border-border">
+              <div className="px-4 py-2 border-t border-[var(--border)]">
                 <Link
                   href="/settings?tab=notifications"
                   className="text-xs text-center block text-muted-foreground hover:text-foreground"
@@ -356,8 +356,8 @@ export function Header({
 
           {/* User dropdown */}
           {mobileMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-popover rounded-lg shadow-lg border border-border py-1 z-50">
-              <div className="px-4 py-3 border-b border-border">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-popover dark:bg-[var(--popover)] rounded-lg shadow-lg border border-[var(--border)] py-1 z-50">
+              <div className="px-4 py-3 border-b border-[var(--border)]">
                 <p className="text-sm font-medium text-popover-foreground">{userName}</p>
                 <p className="text-xs text-muted-foreground">{userEmail}</p>
               </div>
@@ -379,7 +379,7 @@ export function Header({
                   Profile
                 </Link>
               </div>
-              <div className="border-t border-border py-1">
+              <div className="border-t border-[var(--border)] py-1">
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-3 w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
