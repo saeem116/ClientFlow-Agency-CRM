@@ -143,3 +143,27 @@ export async function PATCH(
 
   return NextResponse.json(updated)
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await ensureDb()
+  const { id } = await params
+
+  const org = await requireOrg()
+  if (!org) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const invoice = await Invoice.findOneAndDelete({ _id: id, organizationId: org.id })
+  if (!invoice) {
+    return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
+  }
+
+  // Cascade-delete related line items and payments
+  await InvoiceLineItem.deleteMany({ invoiceId: id })
+  await Payment.deleteMany({ invoiceId: id })
+
+  return NextResponse.json({ success: true, message: "Invoice deleted successfully" })
+}

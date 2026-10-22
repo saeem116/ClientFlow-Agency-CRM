@@ -1,10 +1,26 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, FileText, DollarSign, AlertCircle, CheckCircle2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Plus, Search, FileText, DollarSign, AlertCircle, CheckCircle2, MoreHorizontal, Trash2, Eye, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency, formatDate } from "@/lib/utils"
 
@@ -35,6 +51,31 @@ const statusConfig: Record<string, { variant: "default" | "secondary" | "destruc
 
 export function InvoicesPageClient({ invoices }: InvoicesPageClientProps) {
   const [search, setSearch] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
+
+  const handleDeleteInvoice = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/invoices/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || "Failed to delete invoice")
+        return
+      }
+      setDeleteTarget(null)
+      router.refresh()
+    } catch {
+      alert("Failed to delete invoice. Please try again.")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (!search) return true
@@ -188,11 +229,27 @@ export function InvoicesPageClient({ invoices }: InvoicesPageClientProps) {
                           )}
                         </td>
                         <td className="p-4 text-right">
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/invoices/${invoice.id}`}>
-                              <FileText className="h-4 w-4" />
-                            </Link>
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/invoices/${invoice.id}`} className="cursor-pointer">
+                                  <Eye className="mr-2 h-4 w-4" /> View
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive cursor-pointer focus:text-destructive"
+                                onClick={() => setDeleteTarget(invoice)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     )
@@ -203,6 +260,42 @@ export function InvoicesPageClient({ invoices }: InvoicesPageClientProps) {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete invoice?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <strong>{deleteTarget?.number}</strong> and all associated
+              line items and payments. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteInvoice}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
