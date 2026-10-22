@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Save, X } from "lucide-react"
+import { Save, X } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -106,7 +106,7 @@ async function createLead(formData: FormData) {
   await Lead.create({
     title,
     value: value ? parseFloat(value) : undefined,
-    source: (source as any) || "OTHER",
+    source: (source as "WEBSITE" | "REFERRAL" | "SOCIAL_MEDIA" | "EMAIL" | "PHONE" | "OTHER") || "OTHER",
     notes: notes || null,
     stage: "NEW",
     organizationId: org.id,

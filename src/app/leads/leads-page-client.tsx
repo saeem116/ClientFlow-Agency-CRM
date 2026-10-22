@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Search, DollarSign, Users, TrendingUp, Mail, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
+import { LeadCard } from "./leads-card"
 
 type LeadStage = "NEW" | "CONTACTED" | "QUALIFIED" | "PROPOSAL_SENT" | "WON" | "LOST"
 
-interface Lead {
+export interface Lead {
   id: string
   title: string
   email?: string | null
@@ -31,9 +32,10 @@ const stages: { key: LeadStage; label: string; icon: React.ReactNode; color: str
 
 interface LeadsPageClientProps {
   leads: Lead[]
+  isDemo?: boolean
 }
 
-export function LeadsPageClient({ leads }: LeadsPageClientProps) {
+export function LeadsPageClient({ leads, isDemo = false }: LeadsPageClientProps) {
   const [search, setSearch] = useState("")
 
   const filteredLeads = leads.filter((lead) =>
@@ -61,11 +63,13 @@ export function LeadsPageClient({ leads }: LeadsPageClientProps) {
           <h1 className="text-2xl font-semibold text-[var(--foreground)]">Leads</h1>
           <p className="text-slate-500 dark:text-[var(--muted-foreground)] mt-1">Track and manage your sales pipeline</p>
         </div>
-        <Button asChild>
-          <Link href="/leads/new">
-            <Plus className="mr-2 h-4 w-4" /> New Lead
-          </Link>
-        </Button>
+        {!isDemo && (
+          <Button asChild>
+            <Link href="/leads/new">
+              <Plus className="mr-2 h-4 w-4" /> New Lead
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -140,32 +144,7 @@ export function LeadsPageClient({ leads }: LeadsPageClientProps) {
                   </div>
                   <div className="space-y-3 flex-1 min-h-[200px]">
                     {stageLeads.map((lead) => (
-                      <div
-                        key={lead.id}
-                        className="bg-white dark:bg-[var(--card)] border border-slate-200 dark:border-[var(--border)] rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <h4 className="font-medium text-[var(--foreground)] mb-1">{lead.title}</h4>
-                        {lead.email && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{lead.email}</p>
-                        )}
-                        {lead.client && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                            Client: {lead.client.name}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between text-xs">
-                          {lead.value && (
-                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                              {formatCurrency(lead.value)}
-                            </span>
-                          )}
-                          {lead.followUpAt && (
-                            <span className="text-slate-500">
-                              Follow up: {formatDate(lead.followUpAt)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <LeadCard key={lead.id} lead={lead} />
                     ))}
                     {stageLeads.length === 0 && (
                       <div className="text-center text-slate-400 py-8 text-sm">

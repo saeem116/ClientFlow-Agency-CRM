@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import '@testing-library/jest-dom'
 
 // Force the test connection to a dedicated test database.
 //

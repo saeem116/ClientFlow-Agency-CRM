@@ -51,3 +51,7 @@ dev.db
 
 # local test fixtures (if any)
 scripts/test-*.jpg
+
+# large artifacts
+*.zip
+clientflow-submission.zip
