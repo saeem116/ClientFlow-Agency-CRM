@@ -2,11 +2,20 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar } from "@/components/ui/avatar"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Plus, Edit, Mail, Phone, MapPin, Globe, FileText, FolderKanban, DollarSign, Clock, MoreHorizontal, Upload, Trash2, Download, AlertCircle, CheckCircle2, Loader2, X, Image as ImageIcon } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency, formatDate, formatRelativeTime } from "@/lib/utils"
@@ -31,7 +40,10 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 B"
@@ -94,6 +106,29 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
     }
   }
 
+  const handleDeleteClient = async () => {
+    setDeleting(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/clients/${client.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        setError(data.error || "Failed to delete client")
+        return
+      }
+      router.push("/clients")
+      router.refresh()
+    } catch {
+      setError("Failed to delete client. Please try again.")
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   const getFileIcon = (contentType: string) => {
     if (contentType.startsWith("image/")) return <ImageIcon className="h-5 w-5" />
     return <FileText className="h-5 w-5" />
@@ -125,6 +160,14 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
             <Link href={`/clients/${client.id}/edit`}>
               <Edit className="mr-2 h-4 w-4" /> Edit
             </Link>
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
           </Button>
         </div>
       </div>
@@ -518,6 +561,42 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete client?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <strong>{client.name}</strong> and all of their
+              associated data. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClient}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

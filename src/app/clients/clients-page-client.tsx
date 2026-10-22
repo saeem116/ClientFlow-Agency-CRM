@@ -1,10 +1,26 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, Plus, Search, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Users, Plus, Search, MoreHorizontal, Trash2, Eye, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 
@@ -26,6 +42,9 @@ interface ClientsPageClientProps {
 
 export function ClientsPageClient({ clients }: ClientsPageClientProps) {
   const [search, setSearch] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
 
   const filteredClients = clients.filter((client) => {
     if (!search) return true
@@ -37,6 +56,28 @@ export function ClientsPageClient({ clients }: ClientsPageClientProps) {
       (client.phone || "").toLowerCase().includes(q)
     )
   })
+
+  const handleDeleteClient = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/clients/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || "Failed to delete client")
+        return
+      }
+      setDeleteTarget(null)
+      router.refresh()
+    } catch {
+      alert("Failed to delete client. Please try again.")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -129,11 +170,27 @@ export function ClientsPageClient({ clients }: ClientsPageClientProps) {
                         {formatDate(client.updatedAt)}
                       </td>
                       <td className="p-4 text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/clients/${client.id}`}>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/clients/${client.id}`} className="cursor-pointer">
+                                <Eye className="mr-2 h-4 w-4" /> View
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive cursor-pointer focus:text-destructive"
+                              onClick={() => setDeleteTarget(client)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -143,6 +200,42 @@ export function ClientsPageClient({ clients }: ClientsPageClientProps) {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete client?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <strong>{deleteTarget?.name}</strong> and all of their
+              associated data including projects, invoices, and files. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClient}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
