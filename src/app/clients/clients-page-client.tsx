@@ -118,7 +118,7 @@ export function ClientsPageClient({ clients }: ClientsPageClientProps) {
               <h3 className="mt-4 text-lg font-medium text-[var(--foreground)]">
                 {clients.length === 0 ? "No clients yet" : "No clients found"}
               </h3>
-              <p className="mt-2 text-slate-500">
+              <p className="mt-2 text-slate-500 dark:text-[var(--muted-foreground)]">
                 {clients.length === 0
                   ? "Get started by adding your first client."
                   : "Try adjusting your search or create a new client."}

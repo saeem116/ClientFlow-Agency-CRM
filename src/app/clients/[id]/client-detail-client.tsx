@@ -149,10 +149,10 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           <Avatar name={client.name} size="xl" />
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-slate-900">{client.name}</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">{client.name}</h1>
               <Badge variant={client.status === "active" ? "success" : "secondary"}>{client.status}</Badge>
             </div>
-            <p className="text-slate-500 mt-1">{client.companyName || "Individual"}</p>
+            <p className="text-slate-500 dark:text-[var(--muted-foreground)] mt-1">{client.companyName || "Individual"}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -178,8 +178,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Billed</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatCurrency(totalBilled)}</p>
+                <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">Total Billed</p>
+                <p className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">{formatCurrency(totalBilled)}</p>
               </div>
               <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                 <DollarSign className="h-5 w-5 text-blue-600" />
@@ -191,8 +191,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Paid</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatCurrency(totalPaid)}</p>
+                <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">Total Paid</p>
+                <p className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">{formatCurrency(totalPaid)}</p>
               </div>
               <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
                 <DollarSign className="h-5 w-5 text-emerald-600" />
@@ -204,8 +204,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Outstanding</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatCurrency(outstanding)}</p>
+                <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">Outstanding</p>
+                <p className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">{formatCurrency(outstanding)}</p>
               </div>
               <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
                 <DollarSign className="h-5 w-5 text-amber-600" />
@@ -217,8 +217,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Active Projects</p>
-                <p className="text-2xl font-semibold text-slate-900">{activeProjects}</p>
+                <p className="text-sm text-slate-500 dark:text-[var(--muted-foreground)]">Active Projects</p>
+                <p className="text-2xl font-semibold text-slate-900 dark:text-[var(--foreground)]">{activeProjects}</p>
               </div>
               <div className="p-3 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
                 <FolderKanban className="h-5 w-5 text-violet-600" />
@@ -247,28 +247,28 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-4">
-                  <h4 className="font-medium text-slate-900">Contact Information</h4>
+                  <h4 className="font-medium text-slate-900 dark:text-[var(--foreground)]">Contact Information</h4>
                   <div className="space-y-3">
                     {client.email && (
-                      <div className="flex items-center gap-3 text-slate-600">
+                      <div className="flex items-center gap-3 text-slate-600 dark:text-[var(--muted-foreground)]">
                         <Mail className="h-4 w-4 text-slate-400" />
                         <span>{client.email}</span>
                       </div>
                     )}
                     {client.phone && (
-                      <div className="flex items-center gap-3 text-slate-600">
+                      <div className="flex items-center gap-3 text-slate-600 dark:text-[var(--muted-foreground)]">
                         <Phone className="h-4 w-4 text-slate-400" />
                         <span>{client.phone}</span>
                       </div>
                     )}
                     {client.address && (
-                      <div className="flex items-center gap-3 text-slate-600">
+                      <div className="flex items-center gap-3 text-slate-600 dark:text-[var(--muted-foreground)]">
                         <MapPin className="h-4 w-4 text-slate-400" />
                         <span>{client.address}, {client.city || ""} {client.country || ""}</span>
                       </div>
                     )}
                     {client.website && (
-                      <div className="flex items-center gap-3 text-slate-600">
+                      <div className="flex items-center gap-3 text-slate-600 dark:text-[var(--muted-foreground)]">
                         <Globe className="h-4 w-4 text-slate-400" />
                         <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                           {client.website}
@@ -279,21 +279,21 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="font-medium text-slate-900">Quick Stats</h4>
+                  <h4 className="font-medium text-slate-900 dark:text-[var(--foreground)]">Quick Stats</h4>
                   <div className="space-y-3">
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-slate-600 dark:text-[var(--muted-foreground)]">
                       <span>Projects</span>
                       <span className="font-medium">{client.projects?.length || 0} ({completedProjects} completed)</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-slate-600 dark:text-[var(--muted-foreground)]">
                       <span>Invoices</span>
                       <span className="font-medium">{client.invoices?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-slate-600 dark:text-[var(--muted-foreground)]">
                       <span>Leads</span>
                       <span className="font-medium">{client.leads?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-slate-600 dark:text-[var(--muted-foreground)]">
                       <span>Last Activity</span>
                       <span className="font-medium">
                         {client.activities?.[0] ? formatRelativeTime(client.activities[0].createdAt) : "Never"}
@@ -305,7 +305,7 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
 
               {client.notes && (
                 <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <h4 className="font-medium text-slate-900">Notes</h4>
+                  <h4 className="font-medium text-slate-900 dark:text-[var(--foreground)]">Notes</h4>
                   <p className="text-slate-600 dark:text-slate-400">{client.notes}</p>
                 </div>
               )}
@@ -318,8 +318,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
               {!client.projects || client.projects.length === 0 ? (
                 <div className="text-center py-12">
                   <FolderKanban className="mx-auto h-12 w-12 text-slate-300" />
-                  <h3 className="mt-4 text-lg font-medium text-slate-900">No projects yet</h3>
-                  <p className="mt-2 text-slate-500">Create a project for this client.</p>
+                  <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-[var(--foreground)]">No projects yet</h3>
+                  <p className="mt-2 text-slate-500 dark:text-[var(--muted-foreground)]">Create a project for this client.</p>
                   <Button asChild className="mt-4">
                     <Link href={`/projects/new?clientId=${client.id}`}>
                       <Plus className="mr-2 h-4 w-4" /> New Project
@@ -366,8 +366,8 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
               {!client.invoices || client.invoices.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="mx-auto h-12 w-12 text-slate-300" />
-                  <h3 className="mt-4 text-lg font-medium text-slate-900">No invoices yet</h3>
-                  <p className="mt-2 text-slate-500">Create an invoice for this client.</p>
+                  <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-[var(--foreground)]">No invoices yet</h3>
+                  <p className="mt-2 text-slate-500 dark:text-[var(--muted-foreground)]">Create an invoice for this client.</p>
                   <Button asChild className="mt-4">
                     <Link href={`/invoices/new?clientId=${client.id}`}>
                       <Plus className="mr-2 h-4 w-4" /> New Invoice
@@ -379,13 +379,13 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-200">
-                        <th className="text-left p-4 font-medium text-slate-500">Invoice #</th>
-                        <th className="text-left p-4 font-medium text-slate-500">Date</th>
-                        <th className="text-right p-4 font-medium text-slate-500">Total</th>
-                        <th className="text-right p-4 font-medium text-slate-500">Paid</th>
-                        <th className="text-right p-4 font-medium text-slate-500">Balance</th>
-                        <th className="text-left p-4 font-medium text-slate-500">Status</th>
-                        <th className="text-right p-4 font-medium text-slate-500">Actions</th>
+                        <th className="text-left p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Invoice #</th>
+                        <th className="text-left p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Date</th>
+                        <th className="text-right p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Total</th>
+                        <th className="text-right p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Paid</th>
+                        <th className="text-right p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Balance</th>
+                        <th className="text-left p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Status</th>
+                        <th className="text-right p-4 font-medium text-slate-500 dark:text-[var(--muted-foreground)]">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -402,11 +402,11 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
                         const balance = Number(inv.total) - Number(inv.paidAmount)
 
                         return (
-                          <tr key={inv.id} className="hover:bg-slate-50">
+                          <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-[var(--muted)]">
                             <td className="p-4 font-mono text-sm">{inv.number}</td>
-                            <td className="p-4 text-slate-600">{formatDate(inv.issueDate)}</td>
+                            <td className="p-4 text-slate-600 dark:text-[var(--muted-foreground)]">{formatDate(inv.issueDate)}</td>
                             <td className="p-4 text-right font-medium">{formatCurrency(inv.total)}</td>
-                            <td className="p-4 text-right text-slate-600">{formatCurrency(inv.paidAmount)}</td>
+                            <td className="p-4 text-right text-slate-600 dark:text-[var(--muted-foreground)]">{formatCurrency(inv.paidAmount)}</td>
                             <td className="p-4 text-right font-medium">{formatCurrency(balance)}</td>
                             <td className="p-4"><Badge variant={cfg.variant}>{inv.status}</Badge></td>
                             <td className="p-4 text-right">
@@ -539,7 +539,7 @@ export function ClientDetailPageClient({ client, initialFiles = [] }: ClientDeta
               {!client.activities || client.activities.length === 0 ? (
                 <div className="text-center py-12">
                   <Clock className="mx-auto h-12 w-12 text-slate-300" />
-                  <h3 className="mt-4 text-lg font-medium text-slate-900">No activity yet</h3>
+                  <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-[var(--foreground)]">No activity yet</h3>
                 </div>
               ) : (
                 <div className="space-y-3">
