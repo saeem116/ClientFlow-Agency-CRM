@@ -47,21 +47,48 @@ if (Test-Path $StagingDir) {
 }
 New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
 
-# Copy all files to staging, then remove excluded items
+# Copy all files to staging
 Write-Host "Copying files to staging..." -ForegroundColor Gray
 Copy-Item -Path "$ProjectRoot\*" -Destination $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
 
-# Exclude patterns
-$Excludes = @(
+# ─────────────────────────────────────────────────────────────────────
+# Phase 1: Remove directories that must never be included.
+# These are top-level or subdirectory names — safe to delete entirely.
+# ─────────────────────────────────────────────────────────────────────
+$DirExcludes = @(
     "node_modules",
     ".next",
     ".git",
+    "coverage",
+    ".vscode",
+    ".idea",
+    ".vercel"
+)
+foreach ($dirName in $DirExcludes) {
+    $target = Join-Path $StagingDir $dirName
+    if (Test-Path $target) {
+        Remove-Item $target -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# Also remove any .next/* and out/* subdirectories that might exist deeper
+Get-ChildItem -Path $StagingDir -Directory -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -in @('.next','out','build','node_modules') } |
+    ForEach-Object { Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+
+# ─────────────────────────────────────────────────────────────────────
+# Phase 2: Remove specific files that must not be included.
+# We use exact paths — never wildcards on directory names — to avoid
+# accidentally matching and deleting unintended parent directories.
+# ─────────────────────────────────────────────────────────────────────
+$FileExcludes = @(
+    # Environment files (exact names only — do NOT use *.env* here)
     ".env",
     ".env.local",
     ".env.test",
     ".env.production",
-    ".env.*",
-    "*.log",
+    ".env.development",
+    # Build / lint / debug output logs
     "build-output.txt",
     "nextbuild_out.txt",
     "tsc_out.txt",
@@ -70,31 +97,59 @@ $Excludes = @(
     "dev.db",
     "*.tsbuildinfo",
     "next-env.d.ts",
-    "coverage",
-    ".vscode",
-    ".idea",
-    "scripts/test-*.jpg",
-    "scripts/test-*.png",
-    "scripts/test-*.bin",
+    # Diagnostic / one-off scripts (SMTP/avatar probes)
+    "scripts\debug-avatar.mjs",
+    "scripts\smtp-header-inspect.mjs",
+    "scripts\test-avatar.mjs",
+    "scripts\test-avatar-cache.mjs",
+    "scripts\test-avatar-e2e.mjs",
+    "scripts\test-avatar-e2e-v2.mjs",
+    "scripts\test-avatar-end-to-end.mjs",
+    "scripts\test-avatar-ui.mjs",
+    "scripts\test-debug.mjs",
+    "scripts\test-files.mjs",
+    "scripts\test-full.mjs",
+    "scripts\test-replace-avatar.mjs",
+    "scripts\verify-avatar.mjs",
+    "scripts\verify-smtp.mjs",
+    # Extra docs / notes not part of the submission
     "DARK_MODE_FIXES.md",
     "README_reset_note.txt",
-    "public/file.svg",
-    "public/globe.svg",
-    "public/next.svg",
-    "public/vercel.svg",
-    "public/window.svg"
+    # Public placeholder SVGs (large, not needed)
+    "public\file.svg",
+    "public\globe.svg",
+    "public\next.svg",
+    "public\vercel.svg",
+    "public\window.svg",
+    # Test image fixtures
+    "scripts\test-*.jpg",
+    "scripts\test-*.png",
+    "scripts\test-*.bin",
+    # Private key / cert files
+    "*.pem",
+    "*.key",
+    "*.crt",
+    "*.p12",
+    "*.pfx"
 )
 
-foreach ($pattern in $Excludes) {
-    $items = Get-ChildItem -Path $StagingDir -Filter $pattern -Recurse -ErrorAction SilentlyContinue
-    foreach ($item in $items) {
-        if ($item.PSIsContainer) {
-            Remove-Item -Path $item.FullName -Recurse -Force -ErrorAction SilentlyContinue
-        } else {
-            Remove-Item -Path $item.FullName -Force -ErrorAction SilentlyContinue
-        }
-    }
+foreach ($pattern in $FileExcludes) {
+    # Build the full path pattern: staging root + backslash + pattern
+    $fullPattern = Join-Path $StagingDir $pattern
+    Get-ChildItem -Path $fullPattern -File -ErrorAction SilentlyContinue |
+        Remove-Item -Force -ErrorAction SilentlyContinue
 }
+
+# Also remove any .env* files that might exist at any level (e.g. .env.example is OK, but real .env files are not)
+# .env.example is intentionally kept — it documents required variables
+Get-ChildItem -Path $StagingDir -Filter ".env" -File -Recurse -ErrorAction SilentlyContinue |
+    Remove-Item -Force -ErrorAction SilentlyContinue
+Get-ChildItem -Path $StagingDir -Filter ".env.*" -File -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -ne '.env.example' -and $_.Name -ne '.env.template' } |
+    Remove-Item -Force -ErrorAction SilentlyContinue
+
+Write-Host "Staging prepared." -ForegroundColor Gray
+Write-Host ""
 
 # Create ZIP archive
 Write-Host "Compressing archive..." -ForegroundColor Gray
@@ -114,13 +169,17 @@ Write-Host "Archive size: ${SizeMB} MB" -ForegroundColor Cyan
 Write-Host "Location: ${OutputZip}" -ForegroundColor Cyan
 Write-Host ""
 
-# List contents
-Write-Host "=== Archive Contents ===" -ForegroundColor Cyan
+# List key contents
+Write-Host "=== Archive Contents (sample) ===" -ForegroundColor Cyan
 $zip = [System.IO.Compression.ZipFile]::OpenRead($OutputZip)
-$zip.Entries | ForEach-Object { Write-Host "  $($_.FullName)" }
-$zip.Dispose()
+$entries = $zip.Entries | Sort-Object FullName
+$total = $entries.Count
+Write-Host "Total entries: $total" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Total entries: $($zip.Entries.Count)" -ForegroundColor Yellow
+Write-Host "scripts/: $(($entries | Where-Object { $_.FullName -like 'scripts\*' }).Count) entries"
+Write-Host "src/app/leads/: $(($entries | Where-Object { $_.FullName -like 'src\app\leads\*' }).Count) entries"
+Write-Host "src/app/api/leads/: $(($entries | Where-Object { $_.FullName -like 'src\app\api\leads\*' }).Count) entries"
+$zip.Dispose()
 Write-Host ""
 
 # Scan for secrets
@@ -131,17 +190,22 @@ $secretsFound = $false
 $tempExtract = Join-Path $env:TEMP "clientflow-scan-$$"
 Expand-Archive -Path $OutputZip -DestinationPath $tempExtract -Force
 
-# Check for MongoDB connection strings
-$mongoPattern = 'mongodb(\+srv)?://[^"''\s]*:[^"''\s]*@'
-if (Get-ChildItem -Path $tempExtract -Recurse -Include *.ts,*.js,*.mjs,*.json,*.env* -ErrorAction SilentlyContinue |
-    Select-String -Pattern $mongoPattern -ErrorAction SilentlyContinue) {
+# Check for MongoDB connection strings.
+# Negative lookahead excludes documented placeholders (user, pass, <user>, <pass>,
+# u, p, etc.) so usage examples in scripts/ and test fixtures don't trip the
+# scan. Real credentials have non-placeholder usernames and are still flagged.
+$mongoPattern = 'mongodb(\+srv)?://(?!(?:user|username|password|pass|<user>|<pass>|u|p|xxx|placeholder|your-username|your-password|example):[^@\s]*@)[^"''\s]*:[^"''\s]*@'
+$mongoMatches = Get-ChildItem -Path $tempExtract -Recurse -Include *.ts,*.js,*.mjs,*.json -ErrorAction SilentlyContinue |
+    Select-String -Pattern $mongoPattern -ErrorAction SilentlyContinue
+if ($mongoMatches) {
     Write-Host "WARNING: MongoDB connection string found in archive!" -ForegroundColor Yellow
     $secretsFound = $true
+    $mongoMatches | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber)" -ForegroundColor Gray }
+} else {
+    Write-Host "MongoDB scan: PASS — no real credentials found." -ForegroundColor Green
 }
 
 # Check for common secret patterns (skip test files and the script itself)
-# Match only actual assignments of long random-looking values (16+ chars) to secret vars,
-# not references like `const { SMTP_PASS } = process.env`.
 $secretPattern = '(API_KEY|AUTH_SECRET)\s*=\s*["''][^"''\s]{16,}|SMTP_PASS\s*=\s*["''][^"''\s]{8,}'
 $scanFiles = Get-ChildItem -Path $tempExtract -Recurse -Include *.ts,*.js,*.mjs,*.json -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notmatch '(__tests__|\.test\.|\.spec\.|create-submission)' }
@@ -150,37 +214,41 @@ if ($secretMatches) {
     Write-Host "WARNING: Potential secret pattern found in archive!" -ForegroundColor Yellow
     $secretMatches | ForEach-Object { Write-Host "  $($_.Path)" -ForegroundColor Gray }
     $secretsFound = $true
+} else {
+    Write-Host "Secret assignment scan: PASS — no hardcoded secrets found." -ForegroundColor Green
 }
 
-# Check for .env files
-if (Get-ChildItem -Path $tempExtract -Recurse -Filter ".env*" -ErrorAction SilentlyContinue) {
-    Write-Host "WARNING: .env file found in archive!" -ForegroundColor Yellow
+# Check for .env files (files only, not directories)
+$envFiles = Get-ChildItem -Path $tempExtract -Filter ".env*" -File -Recurse -ErrorAction SilentlyContinue
+if ($envFiles) {
+    Write-Host "WARNING: .env file(s) found in archive!" -ForegroundColor Yellow
+    $envFiles | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Gray }
     $secretsFound = $true
+} else {
+    Write-Host ".env scan: PASS — no .env files found." -ForegroundColor Green
 }
 
 # Check for private key files
 $keyPattern = '\.(pem|key|crt|p12|pfx)$'
-if (Get-ChildItem -Path $tempExtract -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.Extension -match $keyPattern }) {
-    Write-Host "WARNING: Private key file found in archive!" -ForegroundColor Yellow
+$keyFiles = Get-ChildItem -Path $tempExtract -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Extension -match $keyPattern }
+if ($keyFiles) {
+    Write-Host "WARNING: Private key file(s) found in archive!" -ForegroundColor Yellow
+    $keyFiles | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Gray }
     $secretsFound = $true
+} else {
+    Write-Host "Private key scan: PASS — no key files found." -ForegroundColor Green
 }
 
 # Clean up temp extraction
 Remove-Item $tempExtract -Recurse -Force
 
+Write-Host ""
 if (-not $secretsFound) {
-    Write-Host "No secrets detected in archive." -ForegroundColor Green
+    Write-Host "=== Archive READY FOR SUBMISSION ===" -ForegroundColor Green
+    Write-Host "Location: ${OutputZip}" -ForegroundColor Cyan
+    Write-Host "Size: ${SizeMB} MB" -ForegroundColor Cyan
 } else {
     Write-Host "Secrets detected! Remove them before submission." -ForegroundColor Red
     exit 1
 }
-
-Write-Host ""
-Write-Host "=== Archive ready for submission ===" -ForegroundColor Green
-Write-Host ""
-Write-Host "To verify the archive, run:" -ForegroundColor Gray
-Write-Host "  Get-ChildItem '$OutputZip'"
-Write-Host ""
-Write-Host "To extract and test:" -ForegroundColor Gray
-Write-Host "  Expand-Archive -Path '$OutputZip' -DestinationPath 'C:\temp\clientflow-submission' -Force"

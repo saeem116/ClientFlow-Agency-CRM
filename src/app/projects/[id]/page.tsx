@@ -1,5 +1,5 @@
 import { ensureDb } from "@/lib/database"
-import { Project, Client, Task, Activity } from "@/lib/database"
+import { Project, Client, Task, Milestone, Activity } from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { ProjectDetailPageClient } from "./project-detail-client"
@@ -47,6 +47,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     email?: string | null
   } | null
   const tasks = await Task.find({ projectId: id }).sort({ status: 1, dueDate: 1 }).lean()
+  const milestones = await Milestone.find({ projectId: id }).sort({ dueDate: 1, createdAt: 1 }).lean()
   const activities = await Activity.find({ projectId: id }).sort({ createdAt: -1 }).limit(20).lean()
 
   const clientName = client
@@ -84,7 +85,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           status: t.status,
           assignee: t.assigneeId ? { id: t.assigneeId.toString(), name: "User", email: "" } : null,
         })),
-        milestones: [],
+        milestones: milestones.map((m: any) => ({
+          id: m._id.toString(),
+          title: m.title,
+          description: m.description || null,
+          dueDate: m.dueDate || null,
+          completedAt: m.completedAt || null,
+        })),
         activities: activities.map((a: any) => ({
           id: a._id.toString(),
           type: a.type,

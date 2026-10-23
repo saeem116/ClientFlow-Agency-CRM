@@ -3,9 +3,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   FolderKanban,
@@ -20,6 +23,7 @@ import {
   Clock,
   User,
   MoreHorizontal,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency, formatDate } from "@/lib/utils"
@@ -44,8 +48,16 @@ const priorityConfig: Record<string, { variant: any; label: string }> = {
 }
 
 export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
   const [localTasks, setLocalTasks] = useState<any[]>(project.tasks || [])
+  const [milestones, setMilestones] = useState<any[]>(project.milestones || [])
+  const [showMilestoneForm, setShowMilestoneForm] = useState(false)
+  const [editingMilestone, setEditingMilestone] = useState<any | null>(null)
+  const [milestoneForm, setMilestoneForm] = useState({ title: "", description: "", dueDate: "" })
+  const [savingMilestone, setSavingMilestone] = useState(false)
+  const [milestoneError, setMilestoneError] = useState<string | null>(null)
+  const [deletingMilestoneId, setDeletingMilestoneId] = useState<string | null>(null)
 
   // Calculate task progress
   const totalTasks = localTasks.length || 0
@@ -53,8 +65,8 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   // Calculate milestone progress
-  const totalMilestones = project.milestones?.length || 0
-  const completedMilestones = project.milestones?.filter((m: any) => m.completedAt).length || 0
+  const totalMilestones = milestones.length || 0
+  const completedMilestones = milestones.filter((m: any) => m.completedAt).length || 0
 
   // Overdue check
   const statusCfg = statusConfig[project.status] || { variant: "secondary", label: project.status, color: "text-slate-600" }
@@ -91,6 +103,116 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
     } catch (error) {
       console.error("Error updating task:", error)
       // Optionally show error toast/notification
+    }
+  }
+
+  const openMilestoneForm = (milestone?: any) => {
+    if (milestone) {
+      setEditingMilestone(milestone)
+      setMilestoneForm({
+        title: milestone.title || "",
+        description: milestone.description || "",
+        dueDate: milestone.dueDate ? new Date(milestone.dueDate).toISOString().slice(0, 10) : "",
+      })
+    } else {
+      setEditingMilestone(null)
+      setMilestoneForm({ title: "", description: "", dueDate: "" })
+    }
+    setMilestoneError(null)
+    setShowMilestoneForm(true)
+  }
+
+  const closeMilestoneForm = () => {
+    setShowMilestoneForm(false)
+    setEditingMilestone(null)
+    setMilestoneForm({ title: "", description: "", dueDate: "" })
+    setMilestoneError(null)
+  }
+
+  const handleSaveMilestone = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!milestoneForm.title.trim()) {
+      setMilestoneError("Title is required")
+      return
+    }
+    setSavingMilestone(true)
+    setMilestoneError(null)
+    try {
+      const body = {
+        title: milestoneForm.title.trim(),
+        description: milestoneForm.description.trim() || null,
+        dueDate: milestoneForm.dueDate || null,
+        projectId: project.id,
+      }
+      const url = editingMilestone
+        ? `/api/milestones/${editingMilestone.id}`
+        : "/api/milestones"
+      const method = editingMilestone ? "PATCH" : "POST"
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setMilestoneError(data.error || "Failed to save milestone")
+        return
+      }
+      if (editingMilestone) {
+        setMilestones((prev) =>
+          prev.map((m) => (m.id === editingMilestone.id ? { ...m, ...data } : m))
+        )
+      } else {
+        setMilestones((prev) => [...prev, data])
+      }
+      closeMilestoneForm()
+    } catch (error) {
+      console.error("Error saving milestone:", error)
+      setMilestoneError("Failed to save milestone. Please try again.")
+    } finally {
+      setSavingMilestone(false)
+    }
+  }
+
+  const handleToggleComplete = async (milestone: any) => {
+    const newCompletedAt = milestone.completedAt ? null : new Date().toISOString()
+    try {
+      const response = await fetch(`/api/milestones/${milestone.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completedAt: newCompletedAt }),
+      })
+      if (!response.ok) {
+        console.error("Failed to update milestone completion")
+        return
+      }
+      const updated = await response.json()
+      setMilestones((prev) =>
+        prev.map((m) => (m.id === milestone.id ? { ...m, ...updated } : m))
+      )
+    } catch (error) {
+      console.error("Error updating milestone:", error)
+    }
+  }
+
+  const handleDeleteMilestone = async (milestone: any) => {
+    if (!confirm(`Delete milestone "${milestone.title}"? This cannot be undone.`)) return
+    setDeletingMilestoneId(milestone.id)
+    try {
+      const response = await fetch(`/api/milestones/${milestone.id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || "Failed to delete milestone")
+        return
+      }
+      setMilestones((prev) => prev.filter((m) => m.id !== milestone.id))
+    } catch (error) {
+      console.error("Error deleting milestone:", error)
+      alert("Failed to delete milestone. Please try again.")
+    } finally {
+      setDeletingMilestoneId(null)
     }
   }
 
@@ -352,12 +474,12 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-slate-900 dark:text-slate-100">Project Milestones</h4>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => openMilestoneForm()}>
                   <Plus className="mr-2 h-4 w-4" /> Add Milestone
                 </Button>
               </div>
 
-              {project.milestones?.length === 0 ? (
+              {milestones.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="mx-auto h-12 w-12 text-slate-300" />
                   <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-slate-100">
@@ -367,49 +489,146 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {project.milestones.map((milestone: any) => {
-                    const milestoneTotalTasks = milestone.tasks?.length || 0
-                    const milestoneCompletedTasks = milestone.tasks?.filter(
-                      (t: any) => t.status === "DONE"
-                    ).length || 0
-                    const milestoneProgress =
-                      milestoneTotalTasks > 0
-                        ? Math.round((milestoneCompletedTasks / milestoneTotalTasks) * 100)
-                        : 0
+                  {milestones.map((milestone: any) => {
                     const isComplete = !!milestone.completedAt
+                    const isDeleting = deletingMilestoneId === milestone.id
 
                     return (
                       <div
                         key={milestone.id}
                         className="flex items-center gap-4 p-4 bg-white dark:bg-[var(--card)] border border-slate-200 dark:border-[var(--border)] rounded-lg"
                       >
-                        <div className="flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleComplete(milestone)}
+                          className="flex-shrink-0"
+                          aria-label={isComplete ? "Mark incomplete" : "Mark complete"}
+                        >
                           {isComplete ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                           ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 hover:border-primary" />
                           )}
-                        </div>
-                        <div className="flex-1 min-w-0">
+                        </button>
+                        <div
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => openMilestoneForm(milestone)}
+                        >
                           <div className="flex items-center justify-between">
                             <h5 className="font-medium text-slate-900 dark:text-slate-100">
                               {milestone.title}
                             </h5>
-                            <span className="text-xs text-slate-500">
-                              Tasks: {milestoneCompletedTasks}/{milestoneTotalTasks}
-                            </span>
+                            {milestone.dueDate && (
+                              <span className="text-xs text-slate-500">
+                                Due: {formatDate(milestone.dueDate)}
+                              </span>
+                            )}
                           </div>
-                          {milestone.dueDate && (
+                          {milestone.description && (
                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                              Due: {formatDate(milestone.dueDate)}
+                              {milestone.description}
                             </p>
                           )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openMilestoneForm(milestone)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          disabled={isDeleting}
+                          onClick={() => handleDeleteMilestone(milestone)}
+                        >
+                          {isDeleting ? (
+                            <span className="text-xs">Deleting…</span>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     )
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Milestone Form Dialog */}
+          {showMilestoneForm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={closeMilestoneForm}
+              />
+              <div className="relative w-full max-w-lg bg-white dark:bg-[var(--card)] rounded-xl border border-slate-200 dark:border-[var(--border)] shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {editingMilestone ? "Edit Milestone" : "Add Milestone"}
+                  </h3>
+                  <button
+                    onClick={closeMilestoneForm}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <form onSubmit={handleSaveMilestone} className="space-y-4">
+                  {milestoneError && (
+                    <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-md p-2">
+                      {milestoneError}
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    <label htmlFor="milestone-title" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Title *
+                    </label>
+                    <Input
+                      id="milestone-title"
+                      value={milestoneForm.title}
+                      onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })}
+                      placeholder="Milestone title"
+                      disabled={savingMilestone}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="milestone-description" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Description
+                    </label>
+                    <Textarea
+                      id="milestone-description"
+                      value={milestoneForm.description}
+                      onChange={(e) => setMilestoneForm({ ...milestoneForm, description: e.target.value })}
+                      placeholder="Milestone details..."
+                      disabled={savingMilestone}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="milestone-dueDate" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Due Date
+                    </label>
+                    <Input
+                      id="milestone-dueDate"
+                      type="date"
+                      value={milestoneForm.dueDate}
+                      onChange={(e) => setMilestoneForm({ ...milestoneForm, dueDate: e.target.value })}
+                      disabled={savingMilestone}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button type="button" variant="outline" onClick={closeMilestoneForm} disabled={savingMilestone}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={savingMilestone}>
+                      {savingMilestone ? "Saving…" : editingMilestone ? "Save Changes" : "Create Milestone"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 

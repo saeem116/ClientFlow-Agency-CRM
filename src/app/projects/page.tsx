@@ -1,5 +1,5 @@
 import { ensureDb } from "@/lib/database"
-import { Project } from "@/lib/database"
+import { Project, Milestone } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ProjectsPageClient } from "./projects-page-client"
@@ -16,6 +16,18 @@ export default async function ProjectsPage() {
     .sort({ updatedAt: -1 })
     .lean()
     .exec()
+
+  const projectIds = projects.map((p: any) => p._id)
+  const milestones = await Milestone.find({ projectId: { $in: projectIds } }).lean() as any[]
+  const milestonesByProject = new Map<string, any[]>()
+  for (const m of milestones) {
+    const pid = m.projectId?.toString() ?? ""
+    if (!milestonesByProject.has(pid)) milestonesByProject.set(pid, [])
+    milestonesByProject.get(pid)!.push({
+      id: m._id.toString(),
+      completedAt: m.completedAt || null,
+    })
+  }
 
   // Normalize client to match the Project interface expected by the client component
   const normalizedProjects = projects.map((project: any) => ({
@@ -39,7 +51,7 @@ export default async function ProjectsPage() {
         }
       : null,
     tasks: [],
-    milestones: [],
+    milestones: milestonesByProject.get(project._id.toString()) || [],
   }))
 
   return <ProjectsPageClient projects={normalizedProjects} />
