@@ -177,8 +177,10 @@ else
   echo "Secret assignment scan: PASS — no hardcoded secrets found."
 fi
 
-# .env files (files only)
-if unzip -l "${OUTPUT_ZIP}" | grep -qE '\.env([./]|$)' | grep -v '\.example' | grep -q .; then
+# .env files (files only).
+# .env.example and .env.template are intentionally kept — they document
+# required variables and contain no real credentials.
+if unzip -l "${OUTPUT_ZIP}" | grep -E '\.env([./]|$)' | grep -v '\.example' | grep -v '\.template' | grep -q .; then
   echo "WARNING: .env file found in archive!"
   SECRETS_FOUND=1
 else

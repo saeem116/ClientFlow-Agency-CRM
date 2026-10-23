@@ -218,8 +218,11 @@ if ($secretMatches) {
     Write-Host "Secret assignment scan: PASS — no hardcoded secrets found." -ForegroundColor Green
 }
 
-# Check for .env files (files only, not directories)
-$envFiles = Get-ChildItem -Path $tempExtract -Filter ".env*" -File -Recurse -ErrorAction SilentlyContinue
+# Check for .env files (files only, not directories).
+# .env.example and .env.template are intentionally kept — they document
+# required variables and contain no real credentials.
+$envFiles = Get-ChildItem -Path $tempExtract -Filter ".env*" -File -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -ne '.env.example' -and $_.Name -ne '.env.template' }
 if ($envFiles) {
     Write-Host "WARNING: .env file(s) found in archive!" -ForegroundColor Yellow
     $envFiles | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Gray }
