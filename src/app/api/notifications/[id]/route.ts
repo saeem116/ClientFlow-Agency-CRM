@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Notification } from "@/lib/database"
 import { getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -11,17 +11,19 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await ensureDb()
-
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  // Use the correct database context (demo vs production) based on the session
+  const models = await getModels(session)
+  const NotificationModel = models.Notification
+
   const { id } = await params
 
   // Find notification and verify it belongs to the current user
-  const notification = await Notification.findOne({
+  const notification = await NotificationModel.findOne({
     _id: id,
     userId: session.user.id,
   }).lean() as unknown as { _id: { toString(): string }; readAt?: Date; type: string; title: string; message: string; link?: string; createdAt: Date } | null
@@ -37,7 +39,7 @@ export async function PATCH(
   }
 
   if (Object.keys(updateData).length > 0) {
-    await Notification.findByIdAndUpdate(id, updateData)
+    await NotificationModel.findByIdAndUpdate(id, updateData)
     revalidatePath("/dashboard")
     revalidatePath("/settings")
   }

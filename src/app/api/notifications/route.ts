@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Notification } from "@/lib/database"
 import { getSession, requireOrg } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -8,12 +8,14 @@ import { revalidatePath } from "next/cache"
  * Returns all notifications for the authenticated user.
  */
 export async function GET(request: NextRequest) {
-  await ensureDb()
-
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // Use the correct database context (demo vs production) based on the session
+  const models = await getModels(session)
+  const NotificationModel = models.Notification
 
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
@@ -22,17 +24,17 @@ export async function GET(request: NextRequest) {
 
   // Fetch user's notifications with pagination
   const [notifications, total] = await Promise.all([
-    Notification.find({ userId: session.user.id })
+    NotificationModel.find({ userId: session.user.id })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()
       .exec(),
-    Notification.countDocuments({ userId: session.user.id }).exec(),
+    NotificationModel.countDocuments({ userId: session.user.id }).exec(),
   ])
 
   // Count unread
-  const unreadCount = await Notification.countDocuments({
+  const unreadCount = await NotificationModel.countDocuments({
     userId: session.user.id,
     readAt: null,
   }).exec()
@@ -66,12 +68,14 @@ export async function GET(request: NextRequest) {
  * Marks all notifications as read for the authenticated user.
  */
 export async function POST(request: NextRequest) {
-  await ensureDb()
-
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // Use the correct database context (demo vs production) based on the session
+  const models = await getModels(session)
+  const NotificationModel = models.Notification
 
   // Shared demo account may view notifications but cannot modify them.
   try {
@@ -84,7 +88,7 @@ export async function POST(request: NextRequest) {
 
   if (action === "markAllRead") {
     // Mark all unread notifications as read
-    await Notification.updateMany(
+    await NotificationModel.updateMany(
       { userId: session.user.id, readAt: null },
       { readAt: new Date() }
     )

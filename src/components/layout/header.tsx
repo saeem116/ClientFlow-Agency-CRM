@@ -323,7 +323,7 @@ export function Header({
               </ScrollArea>
               <div className="px-4 py-2 border-t border-[var(--border)]">
                 <Link
-                  href="/settings?tab=notifications"
+                  href="/notifications"
                   className="text-xs text-center block text-muted-foreground hover:text-foreground"
                   onClick={() => setShowNotifications(false)}
                 >

@@ -1,6 +1,7 @@
 "use server"
 
-import { Notification } from "./mongoose"
+import { getSession } from "./auth"
+import { getModels } from "./database-scoped"
 
 export interface NotificationPayload {
   userId: string
@@ -13,10 +14,20 @@ export interface NotificationPayload {
 
 /**
  * Create a notification in MongoDB for a given user within an organization.
+ * Uses the correct database context (demo vs production) based on the current session.
  */
 export async function createNotification(payload: NotificationPayload): Promise<void> {
   try {
-    await Notification.create({
+    const session = await getSession()
+    if (!session) {
+      console.error("Failed to create notification: no session")
+      return
+    }
+
+    const models = await getModels(session)
+    const NotificationModel = models.Notification
+
+    await NotificationModel.create({
       userId: payload.userId,
       organizationId: payload.organizationId,
       type: payload.type,
