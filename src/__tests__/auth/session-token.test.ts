@@ -36,10 +36,16 @@ describe('session-token', () => {
     setNodeEnv(originalNodeEnv)
   })
 
+  // ObjectId-format fixtures (24 hex chars) — decodeSession now validates that
+  // userId and organizationId are real ObjectId strings, so non-ObjectId test
+  // values like 'u_123' are rejected. These fixtures match the Mongoose schema.
+  const VALID_USER_ID = '507f1f77bcf86cd799439011'
+  const VALID_ORG_ID = '507f1f77bcf86cd799439012'
+
   it('encodes and decodes a round-trip payload with a valid signature', () => {
     const payload: SessionPayload = {
-      userId: 'u_123',
-      organizationId: 'o_456',
+      userId: VALID_USER_ID,
+      organizationId: VALID_ORG_ID,
       context: 'production',
       timestamp: 1_700_000_000_000,
     }
@@ -52,8 +58,8 @@ describe('session-token', () => {
 
   it('rejects a token whose signature was tampered with', () => {
     const payload: SessionPayload = {
-      userId: 'u_123',
-      organizationId: 'o_456',
+      userId: VALID_USER_ID,
+      organizationId: VALID_ORG_ID,
       context: 'production',
       timestamp: Date.now(),
     }
@@ -65,8 +71,8 @@ describe('session-token', () => {
 
   it('rejects a token forged with a different secret', () => {
     const payload: SessionPayload = {
-      userId: 'u_123',
-      organizationId: 'o_456',
+      userId: VALID_USER_ID,
+      organizationId: VALID_ORG_ID,
       context: 'production',
       timestamp: Date.now(),
     }
@@ -86,15 +92,37 @@ describe('session-token', () => {
     expect(decodeSession('eyJ1c2VySWQiOiJ1In0.abc')).toBeNull()
   })
 
+  it('rejects a payload whose organizationId is not a valid ObjectId', () => {
+    const payload = {
+      userId: VALID_USER_ID,
+      organizationId: '[object Object]',
+      context: 'production' as const,
+      timestamp: Date.now(),
+    }
+    const token = encodeSession(payload)
+    expect(decodeSession(token)).toBeNull()
+  })
+
+  it('rejects a payload whose userId is not a valid ObjectId', () => {
+    const payload = {
+      userId: 'u_123',
+      organizationId: VALID_ORG_ID,
+      context: 'production' as const,
+      timestamp: Date.now(),
+    }
+    const token = encodeSession(payload)
+    expect(decodeSession(token)).toBeNull()
+  })
+
   it('reports a fresh session as not expired', () => {
-    const payload: SessionPayload = { userId: 'u', organizationId: 'o', context: 'production', timestamp: Date.now() }
+    const payload: SessionPayload = { userId: VALID_USER_ID, organizationId: VALID_ORG_ID, context: 'production', timestamp: Date.now() }
     expect(isSessionExpired(payload)).toBe(false)
   })
 
   it('reports an old session as expired', () => {
     const payload: SessionPayload = {
-      userId: 'u',
-      organizationId: 'o',
+      userId: VALID_USER_ID,
+      organizationId: VALID_ORG_ID,
       context: 'production',
       timestamp: Date.now() - SESSION_MAX_AGE_MS - 1000,
     }
@@ -103,8 +131,8 @@ describe('session-token', () => {
 
   it('honours a custom max age', () => {
     const payload: SessionPayload = {
-      userId: 'u',
-      organizationId: 'o',
+      userId: VALID_USER_ID,
+      organizationId: VALID_ORG_ID,
       context: 'production',
       timestamp: Date.now() - 5000,
     }

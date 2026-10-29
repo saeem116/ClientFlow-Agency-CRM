@@ -10,6 +10,7 @@ import {
   decodeSession,
   isSessionExpired,
   SESSION_MAX_AGE_MS,
+  isValidObjectId,
   type SessionPayload,
 } from "./session-token"
 import { requireNotDemoAccount, getDemoAccountEmail } from "./demo-account"
@@ -55,6 +56,20 @@ export interface OrganizationContext {
 }
 
 const SESSION_COOKIE_NAME = "session"
+
+/**
+ * Validate that a session payload carries real ObjectId strings for both
+ * userId and organizationId.
+ *
+ * This is the boundary check that prevents a malformed payload (e.g.
+ * `organizationId: "[object Object]"` produced by calling `.toString()` on a
+ * populated Mongoose document) from ever reaching a Membership query. If either
+ * field is not a 24-character hex string, the session is rejected before any
+ * database lookup, so a CastError can never surface during SSR.
+ */
+function validateSessionIds(payload: SessionPayload): payload is SessionPayload {
+  return isValidObjectId(payload.userId) && isValidObjectId(payload.organizationId)
+}
 
 /**
  * Check if the given email matches the configured admin email.
@@ -106,12 +121,17 @@ export async function getSession(): Promise<Session | null> {
   const payload = decodeSession(sessionToken)
   if (!payload || isSessionExpired(payload)) return null
 
+  // Reject payloads whose IDs are not valid ObjectId strings. A malformed
+  // value (e.g. "[object Object]") must never reach Mongoose, where it would
+  // throw a CastError during server-side rendering.
+  if (!validateSessionIds(payload)) return null
+
   // Determine context from the signed token (or default to "production" for old tokens)
   const context: "production" | "demo" = payload.context === "demo" ? "demo" : "production"
 
   if (context === "production") {
     // Production session: look up in production database.
-    let user = await User.findById(payload.userId).lean() as unknown as {
+    const user = await User.findById(payload.userId).lean() as unknown as {
       _id: { toString(): string }
       email: string
       name: string | null
@@ -188,6 +208,15 @@ export async function getSession(): Promise<Session | null> {
 }
 
 export async function createSession(userId: string, organizationId: string, context: "production" | "demo" = "production"): Promise<void> {
+  // Prevent malformed IDs (e.g. "[object Object]") from ever being encoded
+  // into a signed session token. If either id is not a valid ObjectId string,
+  // log and throw rather than silently corrupting the session.
+  if (!isValidObjectId(userId)) {
+    throw new Error(`Invalid session userId: expected a 24-hex-character ObjectId, got ${JSON.stringify(userId)}`)
+  }
+  if (!isValidObjectId(organizationId)) {
+    throw new Error(`Invalid session organizationId: expected a 24-hex-character ObjectId, got ${JSON.stringify(organizationId)}`)
+  }
   const sessionData: SessionPayload = {
     userId,
     organizationId,

@@ -105,6 +105,10 @@ export function decodeSession(token: string): SessionPayload | null {
     const parsed = JSON.parse(json)
     if (!parsed || typeof parsed !== "object") return null
     if (typeof parsed.userId !== "string" || typeof parsed.organizationId !== "string") return null
+    // Reject payloads whose IDs are not valid ObjectId strings. A malformed
+    // value (e.g. "[object Object]" from a populated-doc toString() bug) must
+    // never reach Mongoose — it would throw a CastError during SSR.
+    if (!isValidObjectId(parsed.userId) || !isValidObjectId(parsed.organizationId)) return null
     if (typeof parsed.context !== "string" || !["production", "demo"].includes(parsed.context)) return null
     if (typeof parsed.timestamp !== "number") return null
     return parsed as SessionPayload
@@ -112,6 +116,24 @@ export function decodeSession(token: string): SessionPayload | null {
     return null
   }
 }
+
+/**
+ * Strict ObjectId format check: 24 hexadecimal characters.
+ *
+ * This matches the MongoDB ObjectId wire format and is consistent with the
+ * ObjectId field types used across every Mongoose schema in this project
+ * (Membership.organizationId, User._id, etc.).
+ *
+ * Used to reject malformed session payloads — e.g. `organizationId:
+ * "[object Object]"` — BEFORE they reach Mongoose, where a CastError would
+ * surface during server-side rendering. A non-24-hex string is never a valid
+ * ObjectId and is therefore never safe to pass to a Mongoose query.
+ */
+export function isValidObjectId(id: unknown): id is string {
+  return typeof id === "string" && OBJECT_ID_HEX_RE.test(id)
+}
+
+const OBJECT_ID_HEX_RE = /^[0-9a-fA-F]{24}$/
 
 /**
  * Returns true when the session payload has lived longer than `maxAgeMs`.
