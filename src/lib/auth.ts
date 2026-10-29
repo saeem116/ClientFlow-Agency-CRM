@@ -425,7 +425,11 @@ export async function signIn(email: string, password: string): Promise<{ user: S
         return { user: null, error: "User has no organization access" }
       }
 
-      const orgId = (membership.organizationId as unknown as { toString(): string })?.toString()
+      // After .populate("organizationId").lean(), membership.organizationId is
+      // the full Organization object, not a plain string. Extract ._id.toString()
+      // to avoid storing "[object Object]" in the session token.
+      const popOrg = membership.organizationId as unknown as { _id: { toString(): string } } | null
+      const orgId = popOrg?._id?.toString() || ''
       if (!orgId) {
         return { user: null, error: "Organization data missing" }
       }
@@ -509,7 +513,11 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       return { user: null, error: "User has no organization access" }
     }
 
-    const orgId = (membership.organizationId as unknown as { toString(): string })?.toString()
+    // After .populate("organizationId").lean(), membership.organizationId is
+    // the full Organization object, not a plain string. Extract ._id.toString()
+    // to avoid storing "[object Object]" in the session token.
+    const popOrg = membership.organizationId as unknown as { _id: { toString(): string } } | null
+    const orgId = popOrg?._id?.toString() || ''
     if (!orgId) {
       return { user: null, error: "Organization data missing" }
     }
