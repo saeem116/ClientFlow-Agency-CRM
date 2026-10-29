@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Invoice, InvoiceLineItem, Payment } from "@/lib/database"
-import { getOrganization, requireOrg } from "@/lib/auth"
+import { ensureDb } from "@/lib/database"
+import { getOrganization, requireOrg, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +9,12 @@ export async function GET(
 ) {
   await ensureDb()
   const { id } = await params
+
+  const session = await getSession()
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const InvoiceLineItem = models.InvoiceLineItem
+  const Payment = models.Payment
 
   const org = await getOrganization()
   if (!org) {
@@ -33,13 +40,17 @@ export async function GET(
 
 export async function POST(request: NextRequest) {
   await ensureDb()
-  const body = await request.json()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const InvoiceLineItem = models.InvoiceLineItem
   const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const body = await request.json()
   const { clientId, dueDate, notes, lineItems: items } = body
 
   if (!clientId) {
@@ -117,6 +128,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Invoice = models.Invoice
   const { id } = await params
   const body = await request.json()
 
@@ -149,6 +163,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const InvoiceLineItem = models.InvoiceLineItem
+  const Payment = models.Payment
   const { id } = await params
 
   const org = await requireOrg()

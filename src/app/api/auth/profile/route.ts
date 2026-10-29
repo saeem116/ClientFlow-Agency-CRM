@@ -16,7 +16,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  let body: { name?: unknown; avatar?: unknown }
+  let body: { name?: unknown; avatar?: unknown; phone?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -51,6 +51,17 @@ export async function PATCH(request: NextRequest) {
     update.avatar = typeof body.avatar === "string" ? body.avatar.trim() || null : null
   }
 
+  if (body.phone !== undefined) {
+    if (body.phone !== null && typeof body.phone !== "string") {
+      return NextResponse.json(
+        { error: "Phone must be a string or null" },
+        { status: 400 }
+      )
+    }
+    update.phone =
+      typeof body.phone === "string" ? body.phone.trim() || null : null
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json(
       { error: "No valid fields to update" },
@@ -70,6 +81,7 @@ export async function PATCH(request: NextRequest) {
       name: string | null
       avatar: string | null
       role: string
+      phone: string | null
     } | null
 
   if (!updated) {
@@ -83,6 +95,7 @@ export async function PATCH(request: NextRequest) {
       name: updated.name,
       avatar: updated.avatar,
       role: updated.role,
+      phone: updated.phone,
       organizationId: session.user.organizationId,
     },
   })

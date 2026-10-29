@@ -1,11 +1,14 @@
 import { ensureDb } from "@/lib/database"
-import { Invoice } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { InvoicesPageClient } from "./invoices-page-client"
 
 export default async function InvoicesPage() {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Invoice = models.Invoice
   const org = await getOrganization()
 
   if (!org) {
@@ -13,6 +16,7 @@ export default async function InvoicesPage() {
   }
 
   const invoices = await Invoice.find({ organizationId: org.id })
+    .populate({ path: "clientId", select: "companyName firstName lastName" })
     .sort({ issueDate: -1 })
     .lean()
     .exec()
@@ -33,8 +37,14 @@ export default async function InvoicesPage() {
     taxRate: invoice.taxRate || 0,
     taxAmount: invoice.taxAmount || 0,
     client: {
-      id: invoice.clientId?.toString() || "",
-      name: invoice.clientName || "Unnamed",
+      id:
+        (invoice.clientId && typeof invoice.clientId === "object"
+          ? invoice.clientId._id?.toString()
+          : invoice.clientId?.toString()) || "",
+      name:
+        (invoice.clientId && typeof invoice.clientId === "object"
+          ? invoice.clientId.companyName || invoice.clientId.firstName || invoice.clientId.lastName || "Unnamed"
+          : invoice.client?.companyName || invoice.clientName || "Unnamed"),
     },
     payments: [],
   }))

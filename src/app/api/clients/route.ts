@@ -1,16 +1,21 @@
-import { NextRequest } from "next/server"
-import { ensureDb, Client, Membership } from "@/lib/database"
+import { NextRequest, NextResponse } from "next/server"
+import { ensureDb, Membership } from "@/lib/database"
 import { getOrganization, requireOrg, getSession } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
+import { getModels } from "@/lib/database-scoped"
 
 export async function GET(request: NextRequest) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Client = models.Client
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get("q")?.trim()
 
   const org = await getOrganization()
   if (!org) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const searchQuery: Record<string, unknown> = { organizationId: org.id }
@@ -42,22 +47,25 @@ export async function GET(request: NextRequest) {
     _count: { invoices: 0 },
   }))
 
-  return Response.json(results)
+  return NextResponse.json(results)
 }
 
 export async function POST(request: NextRequest) {
   await ensureDb()
-  const body = await request.json()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Client = models.Client
   const org = await requireOrg()
 
   if (!org) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const body = await request.json()
   const { firstName, lastName, companyName, email, phone, website, address, city, country, notes, status } = body
 
   if (!email) {
-    return Response.json({ error: "Email is required" }, { status: 400 })
+    return NextResponse.json({ error: "Email is required" }, { status: 400 })
   }
 
   const client = await Client.create({
@@ -77,7 +85,6 @@ export async function POST(request: NextRequest) {
   })
 
   // Notify other org members about new client
-  const session = await getSession()
   if (session) {
     const orgMembers = await Membership.find({ organizationId: org.id }).lean()
     for (const member of orgMembers) {
@@ -94,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return Response.json({
+  return NextResponse.json({
     id: client._id.toString(),
     ...(client as any).toObject ? (client as any).toObject() : client,
   })

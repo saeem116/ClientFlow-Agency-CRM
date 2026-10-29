@@ -1,11 +1,15 @@
 import { ensureDb } from "@/lib/database"
-import { Project, Milestone } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { ProjectsPageClient } from "./projects-page-client"
 
 export default async function ProjectsPage() {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Project = models.Project
+  const Milestone = models.Milestone
   const org = await getOrganization()
 
   if (!org) {
@@ -13,6 +17,7 @@ export default async function ProjectsPage() {
   }
 
   const projects = await Project.find({ organizationId: org.id })
+    .populate({ path: "clientId", select: "companyName firstName lastName" })
     .sort({ updatedAt: -1 })
     .lean()
     .exec()
@@ -44,12 +49,17 @@ export default async function ProjectsPage() {
     clientId: project.clientId?.toString() || "",
     organizationId: project.organizationId?.toString() || "",
     createdById: project.createdById?.toString() || null,
-    client: project.client
+    client: project.clientId && typeof project.clientId === "object"
       ? {
-          id: project.client._id?.toString() || "unknown",
-          name: project.client.companyName || "Unnamed",
+          id: project.clientId._id?.toString() || project.clientId.id || "unknown",
+          name: project.clientId.companyName || "Unnamed",
         }
-      : null,
+      : project.client
+        ? {
+            id: project.client._id?.toString() || "unknown",
+            name: project.client.companyName || "Unnamed",
+          }
+        : null,
     tasks: [],
     milestones: milestonesByProject.get(project._id.toString()) || [],
   }))

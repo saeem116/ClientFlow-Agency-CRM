@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Project, Client, Task, Milestone, Activity } from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect, notFound } from "next/navigation"
 import { ProjectDetailPageClient } from "./project-detail-client"
 
@@ -16,6 +16,20 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const org = await getOrganization()
   if (!org) {
     redirect("/sign-in")
+  }
+
+  const models = await getModels(session)
+  const Project = models.Project
+  const Client = models.Client
+  const Task = models.Task
+  const Milestone = models.Milestone
+  const Activity = models.Activity
+
+  // Reject malformed ObjectIds cleanly (Mongoose CastError would otherwise
+  // surface as a 500). A non-existent or inaccessible record returns 404.
+  const mongoose = await import("mongoose")
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    notFound()
   }
 
   const project = await Project.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
@@ -57,6 +71,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <ProjectDetailPageClient
+      isDemo={session?.isDemo ?? false}
       project={{
         id: project._id.toString(),
         name: project.name,

@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar } from "@/components/ui/avatar"
-import { UserPlus, Mail, Settings, Bell, Palette, X, Check, AlertCircle, User, Save, Camera, Trash2, Loader2 } from "lucide-react"
+import { UserPlus, Mail, Settings, Bell, Palette, X, Check, AlertCircle, User, Save, Camera, Trash2, Loader2, Eye, EyeOff } from "lucide-react"
 import { useTheme } from "@/components/providers/theme-provider"
 import { useAuth } from "@/lib/auth-context"
 
@@ -25,9 +26,28 @@ interface SettingsPageClientProps {
 }
 
 export function SettingsPageClient({ org }: SettingsPageClientProps) {
-  const [activeTab, setActiveTab] = useState("general")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const validTabs = ["general", "profile", "team", "notifications", "appearance"]
+  const [activeTab, setActiveTab] = useState(
+    tabParam && validTabs.includes(tabParam) ? tabParam : "general"
+  )
   const { theme, setTheme, resolvedTheme, density, setDensity } = useTheme()
-  const { user, refresh } = useAuth()
+  const { user, refresh, isDemo } = useAuth()
+
+  // Keep the URL in sync with the active tab so direct navigation and
+  // refreshes preserve the selected tab (e.g. /settings?tab=profile).
+  const selectTab = (tab: string) => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams.toString())
+    if (tab === "general") {
+      params.delete("tab")
+    } else {
+      params.set("tab", tab)
+    }
+    router.replace(`/settings?${params.toString()}`, { scroll: false })
+  }
 
   // Invite member state
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -57,6 +77,17 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
   // Holds a temporary object URL for the in-progress upload preview.
   // Revoked once the server confirms success or on unmount/error.
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  // Password change state
+  const [changePasswordCurrent, setChangePasswordCurrent] = useState("")
+  const [changePasswordNew, setChangePasswordNew] = useState("")
+  const [changePasswordConfirm, setChangePasswordConfirm] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
 
   // Revoke the temporary preview URL when the component unmounts to avoid memory leaks.
   useEffect(() => {
@@ -167,6 +198,38 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
     setPendingAvatar("") // clear staged value so Save sends null
   }
 
+  const handlePasswordChange = async () => {
+    setPasswordError("")
+    setPasswordSuccess(false)
+    setPasswordSaving(true)
+    try {
+      const response = await fetch("/api/auth/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: changePasswordCurrent,
+          newPassword: changePasswordNew,
+          confirmPassword: changePasswordConfirm,
+        }),
+        credentials: "include",
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setPasswordError(data.error || "Failed to change password")
+        return
+      }
+      setChangePasswordCurrent("")
+      setChangePasswordNew("")
+      setChangePasswordConfirm("")
+      setPasswordSuccess(true)
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch {
+      setPasswordError("An error occurred. Please try again.")
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
   if (!org) {
     return (
       <div className="space-y-6">
@@ -249,7 +312,7 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                 variant={activeTab === tab.id ? "default" : "ghost"}
                 size="sm"
                 className="gap-2 border-b-2 border-transparent hover:border-primary/50"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => selectTab(tab.id)}
               >
                 {tab.icon} {tab.label}
               </Button>
@@ -447,6 +510,132 @@ export function SettingsPageClient({ org }: SettingsPageClientProps) {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Change Password Card (inside Profile tab) */}
+          {activeTab === "profile" && (
+            <>
+              <hr className="border-slate-200 dark:border-[var(--border)]" />
+              <div className="pt-2">
+                <h3 className="font-medium text-[var(--foreground)] mb-4">Change Password</h3>
+
+                {isDemo && (
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-700 dark:text-amber-400 mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">
+                      The demo account is read-only. You can view your settings but cannot change your password.
+                    </span>
+                  </div>
+                )}
+
+                {passwordError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">{passwordError}</span>
+                  </div>
+                )}
+                {passwordSuccess && (
+                  <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-400 mb-4">
+                    <Check className="h-4 w-4" />
+                    <span className="text-sm">Password changed successfully!</span>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="current-password"
+                        type={showCurrentPassword ? "text" : "password"}
+                        placeholder="Enter your current password"
+                        value={changePasswordCurrent}
+                        onChange={(e) => setChangePasswordCurrent(e.target.value)}
+                        disabled={passwordSaving || isDemo}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword((v) => !v)}
+                        disabled={isDemo}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
+                        aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="At least 8 characters"
+                        value={changePasswordNew}
+                        onChange={(e) => setChangePasswordNew(e.target.value)}
+                        disabled={passwordSaving || isDemo}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword((v) => !v)}
+                        disabled={isDemo}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
+                        aria-label={showNewPassword ? "Hide password" : "Show password"}
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground dark:text-[var(--muted-foreground)]">
+                      Password must be at least 8 characters long.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Re-enter your new password"
+                        value={changePasswordConfirm}
+                        onChange={(e) => setChangePasswordConfirm(e.target.value)}
+                        disabled={passwordSaving || isDemo}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        disabled={isDemo}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handlePasswordChange}
+                    disabled={passwordSaving || isDemo}
+                  >
+                    {passwordSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Changing...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Change Password
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
 
           {/* General Tab */}

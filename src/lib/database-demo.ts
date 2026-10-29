@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: null },
   password: { type: String, default: null },
   role: { type: String, enum: ["ADMIN", "MEMBER", "CLIENT"], default: "MEMBER", required: true },
+  phone: { type: String, default: null, trim: true },
 }, { timestamps: true })
 
 const organizationSchema = new mongoose.Schema({
@@ -125,6 +126,47 @@ const paymentSchema = new mongoose.Schema({
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, { timestamps: true })
 
+const milestoneSchema = new mongoose.Schema({
+  title: { type: String, required: true, trim: true },
+  description: { type: String, default: null },
+  dueDate: { type: Date, default: null },
+  completedAt: { type: Date, default: null },
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true, index: true },
+}, { timestamps: true })
+
+const activitySchema = new mongoose.Schema({
+  type: { type: String, required: true, index: true },
+  title: { type: String, required: true, trim: true },
+  description: { type: String, default: null },
+  metadata: { type: mongoose.Schema.Types.Mixed, default: null },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", default: null, index: true },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client", default: null, index: true },
+  leadId: { type: mongoose.Schema.Types.ObjectId, ref: "Lead", default: null, index: true },
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project", default: null, index: true },
+  createdById: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+}, { timestamps: true })
+
+const notificationSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
+  type: { type: String, required: true, index: true },
+  title: { type: String, required: true, trim: true },
+  message: { type: String, default: null },
+  readAt: { type: Date, default: null, index: true },
+  link: { type: String, default: null, trim: true },
+}, { timestamps: true })
+
+const invitationSchema = new mongoose.Schema({
+  email: { type: String, required: true, lowercase: true, trim: true, index: true },
+  role: { type: String, enum: ["ADMIN", "MEMBER", "CLIENT"], required: true, default: "MEMBER" },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
+  invitedById: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  tokenHash: { type: String, required: true },
+  tokenPrefix: { type: String, required: true, index: true },
+  expiresAt: { type: Date, required: true, index: true },
+  status: { type: String, enum: ["PENDING", "ACCEPTED", "EXPIRED", "REVOKED"], default: "PENDING", index: true },
+}, { timestamps: true })
+
 // ─── Lazy model getters ───────────────────────────────────────────────────────
 // Each getter connects to the demo DB on first call, then caches the model.
 
@@ -136,9 +178,13 @@ const schemaMap: Record<string, mongoose.Schema> = {
   Lead: leadSchema,
   Project: projectSchema,
   Task: taskSchema,
+  Milestone: milestoneSchema,
   Invoice: invoiceSchema,
   InvoiceLineItem: invoiceLineItemSchema,
   Payment: paymentSchema,
+  Activity: activitySchema,
+  Notification: notificationSchema,
+  Invitation: invitationSchema,
 }
 
 const modelCache = new Map<string, mongoose.Model<any>>()
@@ -165,6 +211,11 @@ export const Client = () => getModel("Client")
 export const Lead = () => getModel("Lead")
 export const Project = () => getModel("Project")
 export const Task = () => getModel("Task")
+export const Milestone = () => getModel("Milestone")
 export const Invoice = () => getModel("Invoice")
 export const InvoiceLineItem = () => getModel("InvoiceLineItem")
 export const Payment = () => getModel("Payment")
+export const Activity = () => getModel("Activity")
+export const Notification = () => getModel("Notification")
+export const Invitation = () => getModel("Invitation")
+// File is GridFS-based and not needed for demo reads; production gets it from the main DB.

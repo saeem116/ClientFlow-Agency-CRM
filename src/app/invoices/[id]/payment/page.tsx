@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Payment, Invoice, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 
 export const metadata = {
@@ -12,8 +12,14 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
   const org = await getOrganization()
-  if (!org) redirect("/sign-in")
+  if (!org || !session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const Client = models.Client
+  const Payment = models.Payment
 
   const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }

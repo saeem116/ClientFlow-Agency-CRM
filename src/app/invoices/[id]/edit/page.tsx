@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Invoice, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { sanitize } from "@/lib/sanitize"
 
@@ -13,8 +13,13 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
   const org = await getOrganization()
-  if (!org) redirect("/sign-in")
+  if (!org || !session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const Client = models.Client
 
   const rawInvoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean()
   const invoice = sanitize(rawInvoice) as {

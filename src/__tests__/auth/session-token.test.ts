@@ -112,26 +112,11 @@ describe('session-token', () => {
     expect(isSessionExpired(payload, 10000)).toBe(false)
   })
 
-  it('getSessionSecret throws in production when AUTH_SECRET is missing', () => {
-    const saved = process.env.AUTH_SECRET
-    delete process.env.AUTH_SECRET
-    setNodeEnv('production')
-    expect(() => getSessionSecret()).toThrow('AUTH_SECRET is not defined')
-    if (saved) {
-      process.env.AUTH_SECRET = saved
-    } else {
-      delete process.env.AUTH_SECRET
-    }
-    setNodeEnv(undefined)
-  })
-
-  it('getSessionSecret returns a dev fallback in non-production', () => {
+  it('throws when AUTH_SECRET is missing in non-production', () => {
     const saved = process.env.AUTH_SECRET
     delete process.env.AUTH_SECRET
     setNodeEnv('development')
-    const secret = getSessionSecret()
-    expect(typeof secret).toBe('string')
-    expect(secret.length).toBeGreaterThan(0)
+    expect(() => getSessionSecret()).toThrow('AUTH_SECRET is not defined')
     if (saved) {
       process.env.AUTH_SECRET = saved
     } else {

@@ -26,7 +26,10 @@ export async function DELETE(
 
   const { id } = await params
 
-  const invitation = await Invitation.findById(id).lean() as unknown as InvitationLean | null
+  // Authoritative tenant isolation: an invitation is only revocable by someone
+  // in the same organization that owns it. This prevents a user from revoking
+  // invitations belonging to another organization even if they know the ID.
+  const invitation = await Invitation.findOne({ _id: id, organizationId: session.user.organizationId }).lean() as unknown as InvitationLean | null
   if (!invitation) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }

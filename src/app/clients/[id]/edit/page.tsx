@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { ClientEditForm } from "./client-edit-form"
 
@@ -8,8 +8,12 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
   const org = await getOrganization()
-  if (!org) redirect("/sign-in")
+  if (!org || !session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Client = models.Client
 
   const client = await Client.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }

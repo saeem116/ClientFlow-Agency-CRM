@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Client, File as FileModel, Project, Milestone, Task, Invoice, Activity } from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { ClientDetailPageClient } from "./client-detail-client"
 
@@ -17,6 +17,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!org) {
     redirect("/sign-in")
   }
+
+  const models = await getModels(session)
+  const Client = models.Client
+  const File = models.File
+  const Project = models.Project
+  const Milestone = models.Milestone
+  const Task = models.Task
+  const Invoice = models.Invoice
+  const Activity = models.Activity
 
   const client = await Client.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }
@@ -52,7 +61,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     Milestone.find({ projectId: { $in: projectIds } }).lean() as unknown as Promise<any[]>,
   ])
 
-  const files = await FileModel.find({ clientId: id, organizationId: org.id }).lean() as any[]
+  const files = await File.find({ clientId: id, organizationId: org.id }).lean() as any[]
 
   const tasksByProject = new Map<string, any[]>()
   for (const t of tasks) {

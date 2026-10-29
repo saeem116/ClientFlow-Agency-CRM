@@ -1,26 +1,23 @@
-import { ensureDb, Task, Project } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { ensureDb } from "@/lib/database"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { TasksPageClient } from "./tasks-page-client"
 
 export default async function TasksPage() {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Task = models.Task
+  const Project = models.Project
   const org = await getOrganization()
 
   if (!org) {
     redirect("/sign-in")
   }
 
-  // Find all projects for this org to scope tasks
-  const projects = await Project.find({ organizationId: org.id }).select("_id").lean()
-  const projectIds = projects.map((p: any) => p._id.toString())
-
-  const tasks = await Task.find({
-    $or: [
-      { projectId: { $in: projectIds } },
-      { projectId: null },
-    ],
-  })
+  // Tasks are scoped by organizationId in the schema; query directly by org
+  const tasks = await Task.find({ organizationId: org.id })
     .sort({ dueDate: 1, createdAt: -1 })
     .lean()
     .exec()

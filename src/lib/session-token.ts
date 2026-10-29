@@ -19,6 +19,7 @@
  */
 
 import { createHmac } from "node:crypto"
+import { requireAuthSecret } from "./session-secret"
 
 /** "production" = resolved from MONGODB_URI; "demo" = resolved from DEMO_MONGODB_URI */
 type SessionContext = "production" | "demo"
@@ -37,18 +38,12 @@ export const SESSION_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000 // 7 days
 /**
  * Return the HMAC secret used to sign session tokens.
  *
- * Falls back to a dev-only default when AUTH_SECRET is unset in non-production
- * environments. In production, an unset AUTH_SECRET is a hard error because
- * unsigned tokens would allow session forgery.
+ * There is no fallback. An unset or too-short AUTH_SECRET throws immediately,
+ * so a missing configuration can never result in tokens being signed or
+ * accepted with an insecure default secret. See {@link requireAuthSecret}.
  */
 export function getSessionSecret(): string {
-  const secret = process.env.AUTH_SECRET
-  if (secret) return secret
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET is not defined in environment variables")
-  }
-  // Dev fallback — never used in production.
-  return "dev-secret-change-in-production"
+  return requireAuthSecret()
 }
 
 /**

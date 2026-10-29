@@ -1,7 +1,8 @@
 import { ensureDb } from "@/lib/database"
-import { Task } from "@/lib/database"
+import { getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 export const metadata = {
   title: "Task Details - ClientFlow",
@@ -11,6 +12,12 @@ export const metadata = {
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   await ensureDb()
   const { id } = await params
+
+  const session = await getSession()
+  if (!session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Task = models.Task
 
   const task = await Task.findById(id).lean() as unknown as {
     _id: { toString(): string }

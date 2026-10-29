@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Lead } from "@/lib/database"
-import { getOrganization, requireOrg } from "@/lib/auth"
+import { ensureDb, Membership } from "@/lib/database"
+import { getOrganization, requireOrg, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 
 export async function GET(request: NextRequest) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Lead = models.Lead
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get("q")?.trim()
   const stage = searchParams.get("stage")
@@ -34,13 +39,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   await ensureDb()
-  const body = await request.json()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Lead = models.Lead
   const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const body = await request.json()
   const { title, description, email, phone, value, source, notes, followUpAt } = body
 
   if (!title) {

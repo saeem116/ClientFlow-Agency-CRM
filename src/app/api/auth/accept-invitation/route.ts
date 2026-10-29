@@ -163,29 +163,20 @@ export async function POST(request: NextRequest) {
   // Create session for the newly invited user
   await createSession((user as any)._id.toString(), organizationId)
 
-  // Notify existing members of the organization
-  const orgMembers = await Membership.find({ organizationId })
-    .lean()
-    .then((members) =>
-      members.filter((m) => m.userId.toString() !== invitedById)
-    )
-
-  for (const member of orgMembers) {
-    if (member.userId.toString() !== invitedById) {
-      await createNotification({
-        userId: member.userId.toString(),
-        organizationId: organizationId,
-        type: "member_joined",
-        title: "New Team Member",
-        message: `${email} has joined your organization`,
-        link: `/settings?tab=team`,
-      })
-    }
-  }
-
+  const userId = (user as any)._id.toString()
+  const userLean = user as any
   return NextResponse.json({
     success: true,
     message: "Invitation accepted successfully",
     redirectUrl: "/dashboard",
+    user: {
+      id: userId,
+      email: userLean.email,
+      name: userLean.name,
+      avatar: userLean.avatar,
+      role: userLean.role,
+      organizationRole: role,
+      organizationId,
+    },
   })
 }

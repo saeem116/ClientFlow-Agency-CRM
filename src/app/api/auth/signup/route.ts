@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         avatar: user.avatar ?? null,
         role: user.role,
+        organizationRole: "ADMIN",
         organizationId: organization._id.toString(),
       },
     })

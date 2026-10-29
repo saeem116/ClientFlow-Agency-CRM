@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, User } from "@/lib/database"
+import { ensureDb, User, Membership } from "@/lib/database"
 import { getSession } from "@/lib/auth"
 import { isAdminEmail } from "@/lib/auth"
 
@@ -48,15 +48,32 @@ export async function GET(request: NextRequest) {
     User.countDocuments(filter).exec(),
   ])
 
-  const sanitized = users.map((u: Record<string, unknown>) => ({
-    id: (u._id as { toString(): string }).toString(),
-    email: u.email as string,
-    name: (u.name as string | null) ?? null,
-    avatar: (u.avatar as string | null) ?? null,
-    role: (u.role as string) ?? "MEMBER",
-    createdAt: (u.createdAt as Date).toISOString(),
-    updatedAt: (u.updatedAt as Date).toISOString(),
-  }))
+  // Fetch memberships for these users to show their organization roles
+  const userIds = users.map((u: Record<string, unknown>) => (u._id as { toString(): string }).toString())
+  const memberships = await Membership.find({ userId: { $in: userIds } }).lean().exec()
+
+  // Group memberships by userId
+  const membershipsByUser = new Map<string, Array<{ role: string; organizationId: string }>>()
+  for (const m of memberships) {
+    const uid = m.userId.toString()
+    if (!membershipsByUser.has(uid)) membershipsByUser.set(uid, [])
+    membershipsByUser.get(uid)!.push({ role: m.role, organizationId: m.organizationId.toString() })
+  }
+
+  const sanitized = users.map((u: Record<string, unknown>) => {
+    const userId = (u._id as { toString(): string }).toString()
+    const userMemberships = membershipsByUser.get(userId) || []
+    return {
+      id: userId,
+      email: u.email as string,
+      name: (u.name as string | null) ?? null,
+      avatar: (u.avatar as string | null) ?? null,
+      role: (u.role as string) ?? "MEMBER",
+      organizationRoles: userMemberships.map(m => ({ role: m.role, organizationId: m.organizationId })),
+      createdAt: (u.createdAt as Date).toISOString(),
+      updatedAt: (u.updatedAt as Date).toISOString(),
+    }
+  })
 
   return NextResponse.json({
     users: sanitized,

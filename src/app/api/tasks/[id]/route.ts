@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Task } from "@/lib/database"
 import { getOrganization, requireOrg } from "@/lib/auth"
+import { DemoAccountReadOnlyError } from "@/lib/demo-account"
 
 export async function GET(
   request: NextRequest,
@@ -44,14 +45,32 @@ export async function PATCH(
 ) {
   await ensureDb()
   const { id } = await params
-  const body = await request.json()
+
+  let body: { status?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+  }
   const { status } = body
 
-  if (!["BACKLOG", "IN_PROGRESS", "IN_REVIEW", "DONE"].includes(status)) {
+  if (!status || !["BACKLOG", "IN_PROGRESS", "IN_REVIEW", "DONE"].includes(status as string)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 })
   }
 
-  const org = await requireOrg()
+  // requireOrg() enforces both authentication and the shared-demo-account
+  // read-only guard. For the demo account it throws DemoAccountReadOnlyError,
+  // which we catch here and return as a clean 403 instead of letting it
+  // propagate as an unhandled rejection (which Next.js would render as a 500).
+  let org: Awaited<ReturnType<typeof requireOrg>>
+  try {
+    org = await requireOrg()
+  } catch (err) {
+    if (err instanceof DemoAccountReadOnlyError) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    throw err
+  }
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

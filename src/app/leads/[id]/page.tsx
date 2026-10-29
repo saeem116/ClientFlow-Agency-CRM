@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Lead, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { LeadDetailPageClient } from "./lead-detail-client"
 
@@ -8,8 +8,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
+  if (!session?.user) redirect("/sign-in")
+
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Lead = models.Lead
+  const Client = models.Client
 
   const lead = await Lead.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }

@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Task } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { sanitize } from "@/lib/sanitize"
 
@@ -13,8 +13,12 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
   const org = await getOrganization()
-  if (!org) redirect("/sign-in")
+  if (!org || !session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Task = models.Task
 
   const rawTask = await Task.findById(id).lean()
   const task = sanitize(rawTask) as {

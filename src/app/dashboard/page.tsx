@@ -1,8 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import {
-  Client, Project, Invoice, Payment, Lead, Activity, Task,
-} from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { KPICard } from "./kpi-cards"
 import { RevenueChart } from "./revenue-chart"
@@ -30,6 +28,16 @@ export default async function DashboardPage() {
       </div>
     )
   }
+
+  // Pick the correct models for the session context (production vs demo).
+  const models = await getModels(session)
+  const Client = models.Client
+  const Project = models.Project
+  const Invoice = models.Invoice
+  const Payment = models.Payment
+  const Lead = models.Lead
+  const Task = models.Task
+  const Activity = models.Activity
 
   const orgId = org.id
   const now = new Date()
@@ -78,7 +86,7 @@ export default async function DashboardPage() {
         },
       },
       { $group: { _id: null, total: { $sum: "$paidAmount" } } },
-    ]).then((res) => res as Array<{ total: number }>),
+    ]).then((res) => res as unknown as Array<{ total: number }>),
 
     // Payment amounts this month
     Payment.aggregate([
@@ -98,7 +106,7 @@ export default async function DashboardPage() {
         },
       },
       { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]).then((res) => res as Array<{ total: number }>),
+    ]).then((res) => res as unknown as Array<{ total: number }>),
 
     // Paid invoices for last 6 months chart
     sanitize(
@@ -116,28 +124,35 @@ export default async function DashboardPage() {
       await Lead.find({ organizationId: orgId }).select("stage value").lean()
     ),
 
-    // Recent tasks (overdue first, then due soon) — scoped by organization
+    // Recent tasks (overdue first, then due soon) — scoped by organization.
+    // Populate project so TaskList can link to it; normalize _id → id.
     sanitize(
       await Task.find({
         organizationId: orgId,
         status: { $ne: "DONE" },
       })
+        .populate({ path: "projectId", select: "_id name" })
         .sort({ dueDate: 1, createdAt: -1 })
         .limit(20)
         .lean()
     ),
 
     // Recent activities
+    // Populate client/project so ActivityFeed can link to them; normalize _id → id.
     sanitize(
       await Activity.find({ organizationId: orgId })
+        .populate({ path: "clientId", select: "_id firstName lastName companyName" })
+        .populate({ path: "projectId", select: "_id name" })
         .sort({ createdAt: -1 })
         .limit(10)
         .lean()
     ),
 
-    // All invoices for outstanding payments table
+    // All invoices for outstanding payments table.
+    // Populate client so OutstandingPayments can link to it; normalize _id → id.
     sanitize(
       await Invoice.find({ organizationId: orgId })
+        .populate({ path: "clientId", select: "_id firstName lastName companyName" })
         .sort({ createdAt: -1 })
         .lean()
     ),
@@ -166,6 +181,63 @@ export default async function DashboardPage() {
   const revenueThisMonth =
     (paidInvoicesThisMonth[0]?.total || 0) +
     (paymentsThisMonth[0]?.total || 0)
+
+  // Normalize tasks for TaskList: Mongoose .lean() returns _id, the component
+  // expects id; populate projectId so the project link renders.
+  const recentTasksNormalized = (recentTasks as any[]).map((t: any) => ({
+    id: t._id?.toString() || t.id,
+    title: t.title,
+    status: t.status,
+    priority: t.priority,
+    dueDate: t.dueDate || null,
+    project: t.projectId
+      ? {
+          id: t.projectId._id?.toString() || t.projectId.id,
+          name: t.projectId.name,
+        }
+      : null,
+  }))
+
+  // Normalize invoices for OutstandingPayments: _id → id, populate client.
+  const allInvoicesNormalized = (allInvoicesForOutstanding as any[]).map((inv: any) => ({
+    id: inv._id?.toString() || inv.id,
+    number: inv.number,
+    status: inv.status,
+    total: inv.total,
+    paidAmount: inv.paidAmount || 0,
+    dueDate: inv.dueDate || null,
+    client: inv.clientId
+      ? {
+          id: inv.clientId._id?.toString() || inv.clientId.id,
+          firstName: inv.clientId.firstName || null,
+          lastName: inv.clientId.lastName || null,
+          companyName: inv.clientId.companyName || null,
+        }
+      : null,
+  }))
+
+  // Normalize activities for ActivityFeed: _id → id, populate relations.
+  const recentActivitiesNormalized = (recentActivities as any[]).map((a: any) => ({
+    id: a._id?.toString() || a.id,
+    type: a.type,
+    title: a.title,
+    description: a.description || null,
+    createdAt: a.createdAt || a.created_at,
+    client: a.clientId
+      ? {
+          id: a.clientId._id?.toString() || a.clientId.id,
+          firstName: a.clientId.firstName || null,
+          lastName: a.clientId.lastName || null,
+          companyName: a.clientId.companyName || null,
+        }
+      : null,
+    project: a.projectId
+      ? {
+          id: a.projectId._id?.toString() || a.projectId.id,
+          name: a.projectId.name,
+        }
+      : null,
+  }))
 
   // Lead pipeline data
   const stages = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL_SENT", "WON", "LOST"]
@@ -310,17 +382,17 @@ export default async function DashboardPage() {
         {/* Right Column - 4 cols */}
         <div className="lg:col-span-4 space-y-6">
           <LeadPipeline data={leadsByStage} />
-          <OutstandingPayments invoices={allInvoicesForOutstanding as any[]} />
+          <OutstandingPayments invoices={allInvoicesNormalized} />
         </div>
 
         {/* Tasks - Full width on mobile, 8 cols on lg */}
         <div className="lg:col-span-8">
-          <TaskList tasks={recentTasks as any[]} />
+          <TaskList tasks={recentTasksNormalized} />
         </div>
 
         {/* Activity Feed - 4 cols on lg, sized to content */}
         <div className="lg:col-span-4">
-          <ActivityFeed activities={recentActivities as any[]} />
+          <ActivityFeed activities={recentActivitiesNormalized} />
         </div>
       </div>
     </div>

@@ -30,6 +30,8 @@ import { formatCurrency, formatDate } from "@/lib/utils"
 
 interface ProjectDetailClientProps {
   project: any
+  /** True when the signed-in user is the shared public demo account. */
+  isDemo?: boolean
 }
 
 const statusConfig: Record<string, { variant: any; label: string; color: string }> = {
@@ -47,7 +49,7 @@ const priorityConfig: Record<string, { variant: any; label: string }> = {
   URGENT: { variant: "destructive", label: "Urgent" },
 }
 
-export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
+export function ProjectDetailPageClient({ project, isDemo = false }: ProjectDetailClientProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
   const [localTasks, setLocalTasks] = useState<any[]>(project.tasks || [])
@@ -57,7 +59,11 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
   const [milestoneForm, setMilestoneForm] = useState({ title: "", description: "", dueDate: "" })
   const [savingMilestone, setSavingMilestone] = useState(false)
   const [milestoneError, setMilestoneError] = useState<string | null>(null)
+  const [milestoneToggleError, setMilestoneToggleError] = useState<string | null>(null)
   const [deletingMilestoneId, setDeletingMilestoneId] = useState<string | null>(null)
+  const [savingTaskId, setSavingTaskId] = useState<string | null>(null)
+  const [taskError, setTaskError] = useState<string | null>(null)
+  const [togglingMilestoneId, setTogglingMilestoneId] = useState<string | null>(null)
 
   // Calculate task progress
   const totalTasks = localTasks.length || 0
@@ -80,8 +86,12 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
   const handleTaskToggle = async (taskId: string, currentStatus: string) => {
     const newStatus = currentStatus === "DONE" ? "BACKLOG" : "DONE"
 
+    // Prevent duplicate requests while an update is already in flight.
+    if (savingTaskId === taskId) return
+
+    setSavingTaskId(taskId)
+    setTaskError(null)
     try {
-      // Call the API to update the task
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: {
@@ -90,8 +100,19 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
         body: JSON.stringify({ status: newStatus }),
       })
 
+      // Read the response body so the user sees the actual server message
+      // instead of a generic "Failed to update task".
+      let errorMessage = "Failed to update task"
+      try {
+        const data = await response.json()
+        if (data?.error) errorMessage = data.error
+      } catch {
+        // Non-JSON body — fall back to the generic message.
+      }
+
       if (!response.ok) {
-        throw new Error("Failed to update task")
+        setTaskError(errorMessage)
+        return
       }
 
       const updatedTask = await response.json()
@@ -102,7 +123,9 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
       ))
     } catch (error) {
       console.error("Error updating task:", error)
-      // Optionally show error toast/notification
+      setTaskError("Failed to update task. Please try again.")
+    } finally {
+      setSavingTaskId(null)
     }
   }
 
@@ -176,22 +199,43 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
 
   const handleToggleComplete = async (milestone: any) => {
     const newCompletedAt = milestone.completedAt ? null : new Date().toISOString()
+
+    // Prevent duplicate requests while an update is already in flight.
+    if (togglingMilestoneId === milestone.id) return
+
+    setTogglingMilestoneId(milestone.id)
+    setMilestoneToggleError(null)
     try {
       const response = await fetch(`/api/milestones/${milestone.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completedAt: newCompletedAt }),
       })
+
+      // Read the response body so the user sees the actual server message
+      // instead of a generic "Failed to update milestone completion".
+      let errorMessage = "Failed to update milestone completion"
+      try {
+        const data = await response.json()
+        if (data?.error) errorMessage = data.error
+      } catch {
+        // Non-JSON body — fall back to the generic message.
+      }
+
       if (!response.ok) {
-        console.error("Failed to update milestone completion")
+        setMilestoneToggleError(errorMessage)
         return
       }
+
       const updated = await response.json()
       setMilestones((prev) =>
         prev.map((m) => (m.id === milestone.id ? { ...m, ...updated } : m))
       )
     } catch (error) {
       console.error("Error updating milestone:", error)
+      setMilestoneToggleError("Failed to update milestone completion. Please try again.")
+    } finally {
+      setTogglingMilestoneId(null)
     }
   }
 
@@ -400,6 +444,19 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
                 </Button>
               </div>
 
+              {isDemo && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>Completion updates are disabled in the public demo. Task and milestone changes cannot be saved.</span>
+                </div>
+              )}
+              {taskError && (
+                <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>{taskError}</span>
+                </div>
+              )}
+
               {localTasks.length === 0 ? (
                 <div className="text-center py-12">
                   <CheckCircle2 className="mx-auto h-12 w-12 text-slate-300" />
@@ -421,7 +478,8 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
                             type="checkbox"
                             checked={task.status === "DONE"}
                             onChange={() => handleTaskToggle(task.id, task.status)}
-                            className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                            disabled={isDemo || savingTaskId === task.id}
+                            className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -474,10 +532,23 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-slate-900 dark:text-slate-100">Project Milestones</h4>
-                <Button size="sm" variant="outline" onClick={() => openMilestoneForm()}>
+                <Button size="sm" variant="outline" onClick={() => openMilestoneForm()} disabled={isDemo}>
                   <Plus className="mr-2 h-4 w-4" /> Add Milestone
                 </Button>
               </div>
+
+              {isDemo && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>Completion updates are disabled in the public demo. Task and milestone changes cannot be saved.</span>
+                </div>
+              )}
+              {milestoneToggleError && (
+                <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>{milestoneToggleError}</span>
+                </div>
+              )}
 
               {milestones.length === 0 ? (
                 <div className="text-center py-12">
@@ -501,7 +572,8 @@ export function ProjectDetailPageClient({ project }: ProjectDetailClientProps) {
                         <button
                           type="button"
                           onClick={() => handleToggleComplete(milestone)}
-                          className="flex-shrink-0"
+                          disabled={isDemo || togglingMilestoneId === milestone.id}
+                          className="flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label={isComplete ? "Mark incomplete" : "Mark complete"}
                         >
                           {isComplete ? (

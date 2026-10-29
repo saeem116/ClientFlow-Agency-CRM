@@ -19,6 +19,8 @@ const demoUser = {
   name: 'Demo Reviewer',
   avatar: null,
   role: 'MEMBER',
+  organizationRole: 'MEMBER',
+  phone: null,
   organizationId: 'o_demo',
 }
 
@@ -28,6 +30,8 @@ const normalUser = {
   name: 'Alice',
   avatar: null,
   role: 'MEMBER',
+  organizationRole: 'MEMBER',
+  phone: null,
   organizationId: 'o_1',
 }
 

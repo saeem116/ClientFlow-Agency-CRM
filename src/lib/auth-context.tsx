@@ -16,6 +16,7 @@ export interface AuthUser {
   name: string | null
   avatar: string | null
   role: string
+  organizationRole: string
   organizationId: string
 }
 

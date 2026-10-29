@@ -9,6 +9,8 @@ const userShape = {
   name: 'Alice',
   avatar: null,
   role: 'ADMIN',
+  organizationRole: 'ADMIN',
+  phone: null,
   organizationId: 'o_1',
 }
 

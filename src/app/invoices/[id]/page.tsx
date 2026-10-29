@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Invoice, Client, Payment, InvoiceLineItem } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 
 export const metadata = {
@@ -12,8 +12,24 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
+  if (!session?.user) redirect("/sign-in")
+
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const Client = models.Client
+  const Payment = models.Payment
+  const InvoiceLineItem = models.InvoiceLineItem
+
+  // Reject malformed ObjectIds cleanly (Mongoose CastError would otherwise
+  // surface as a 500). A non-existent or inaccessible record returns 404.
+  const mongoose = await import("mongoose")
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    notFound()
+  }
 
   const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as unknown as {
     _id: { toString(): string }

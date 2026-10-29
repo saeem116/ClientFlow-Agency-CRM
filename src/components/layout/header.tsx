@@ -371,7 +371,7 @@ export function Header({
                   Settings
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/profile"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent"
                   onClick={() => setMobileMenuOpen(false)}
                 >

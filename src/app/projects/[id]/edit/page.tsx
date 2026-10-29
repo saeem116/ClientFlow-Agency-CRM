@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Project, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
 import { ProjectEditForm } from "../project-edit-form"
 import { sanitize } from "@/lib/sanitize"
@@ -9,8 +9,13 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   await ensureDb()
   const { id } = await params
 
+  const session = await getSession()
   const org = await getOrganization()
-  if (!org) redirect("/sign-in")
+  if (!org || !session?.user) redirect("/sign-in")
+
+  const models = await getModels(session)
+  const Project = models.Project
+  const Client = models.Client
 
   const rawProject = await Project.findOne({ _id: id, organizationId: org.id }).lean()
   const project = sanitize(rawProject) as {

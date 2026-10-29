@@ -15,6 +15,7 @@ interface SanitizedUser {
   name: string | null
   avatar: string | null
   role: string
+  organizationRoles: Array<{ role: string; organizationId: string }>
   createdAt: string
   updatedAt: string
 }
@@ -201,13 +202,27 @@ export function AdminUsersPageClient({ initialUsers, pagination }: Props) {
                           {user.email}
                         </td>
                         <td className="py-3 px-4">
-                          <Badge
-                            variant={
-                              user.role === "ADMIN" ? "default" : "secondary"
-                            }
-                          >
-                            {user.role}
-                          </Badge>
+                          <div className="flex flex-wrap gap-1.5">
+                            <Badge
+                              variant={
+                                user.role === "ADMIN" ? "default" : "secondary"
+                              }
+                              className="text-xs"
+                            >
+                              Account: {user.role}
+                            </Badge>
+                            {user.organizationRoles.map((or, idx) => (
+                              <Badge
+                                key={`${or.organizationId}-${idx}`}
+                                variant={
+                                  or.role === "ADMIN" ? "outline" : "secondary"
+                                }
+                                className="text-xs gap-1"
+                              >
+                                Org: {or.role}
+                              </Badge>
+                            ))}
+                          </div>
                         </td>
                         <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
                           {formatDate(user.createdAt)}

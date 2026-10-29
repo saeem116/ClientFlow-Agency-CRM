@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Project, Membership } from "@/lib/database"
+import { ensureDb, Membership } from "@/lib/database"
 import { getOrganization, requireOrg, getSession } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
+import { getModels } from "@/lib/database-scoped"
 
 export async function GET(request: NextRequest) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Project = models.Project
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get("q")?.trim()
   const status = searchParams.get("status")
@@ -35,13 +40,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   await ensureDb()
-  const body = await request.json()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Project = models.Project
   const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const body = await request.json()
   const { name, description, clientId, priority, budget, startDate, endDate, status } = body
 
   if (!name) {
@@ -61,7 +69,6 @@ export async function POST(request: NextRequest) {
   })
 
   // Notify other org members about new project
-  const session = await getSession()
   if (session) {
     const orgMembers = await Membership.find({ organizationId: org.id }).lean()
     for (const member of orgMembers) {

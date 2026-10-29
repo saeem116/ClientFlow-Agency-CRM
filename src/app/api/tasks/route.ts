@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ensureDb, Task, Project } from "@/lib/database"
-import { getOrganization, requireOrg } from "@/lib/auth"
+import { ensureDb, Membership } from "@/lib/database"
+import { getOrganization, requireOrg, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 
 export async function GET(request: NextRequest) {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Task = models.Task
+  const Project = models.Project
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get("q")?.trim()
   const projectId = searchParams.get("projectId")
@@ -39,13 +45,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   await ensureDb()
-  const body = await request.json()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Task = models.Task
+  const Project = models.Project
   const org = await requireOrg()
 
   if (!org) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const body = await request.json()
   const { title, description, projectId, assigneeId, priority, dueDate } = body
 
   if (!title) {

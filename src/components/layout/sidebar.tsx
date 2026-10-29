@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   Building2,
+  User,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { resolveDisplayName } from "@/lib/utils"
@@ -173,17 +174,28 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* User Profile */}
+        {/* User Profile — links to /profile */}
         <div className="p-3 border-t border-[var(--border)]">
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--muted)] transition-colors cursor-pointer">
+          <Link
+            href="/profile"
+            onClick={() => onMobileOpenChange?.(false)}
+            aria-label="My profile"
+            className={cn(
+              "flex items-center gap-3 p-2 rounded-lg transition-colors",
+              pathname === "/profile"
+                ? "bg-primary/10 text-primary"
+                : "hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <User className="h-4 w-4 flex-shrink-0" />
             <Avatar name={userName} image={userAvatar} size="sm" />
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--foreground)] truncate">{userName}</p>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-medium truncate">{userName}</p>
                 <p className="text-xs text-[var(--muted-foreground)] truncate">{userEmail}</p>
               </div>
             )}
-          </div>
+          </Link>
         </div>
       </aside>
     </>

@@ -1,17 +1,25 @@
 import { ensureDb } from "@/lib/database"
-import { Invoice, Lead, Project, Task, Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { ReportsPageClient } from "./reports-page-client"
 import { sanitize } from "@/lib/sanitize"
 
 export default async function ReportsPage() {
   await ensureDb()
+  const session = await getSession()
   const org = await getOrganization()
 
-  if (!org) {
+  if (!session?.user || !org) {
     redirect("/sign-in")
   }
+
+  const models = await getModels(session)
+  const Invoice = models.Invoice
+  const Lead = models.Lead
+  const Project = models.Project
+  const Task = models.Task
+  const Client = models.Client
 
   const [invoices, leads, projects, tasks, clients] = await Promise.all([
     sanitize(

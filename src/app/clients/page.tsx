@@ -1,11 +1,14 @@
 import { ensureDb } from "@/lib/database"
-import { Client } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getSession } from "@/lib/auth"
+import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { ClientsPageClient } from "./clients-page-client"
 
 export default async function ClientsPage() {
   await ensureDb()
+  const session = await getSession()
+  const models = await getModels(session)
+  const Client = models.Client
   const org = await getOrganization()
 
   if (!org) {

@@ -19,7 +19,20 @@ export interface SessionUser {
   email: string
   name: string | null
   avatar: string | null
+  /**
+   * Account-level role stored on the User document. This is a global,
+   * platform-wide flag (currently always "MEMBER" — platform administration
+   * is decided by `ADMIN_EMAIL`, not by this field).
+   */
   role: string
+  /**
+   * Role within the ACTIVE organization, resolved from the Membership that
+   * links this user to `organizationId`. This is what workspace-level
+   * permissions (admin/member/client) are derived from. It is NOT the same
+   * as `User.role`, which is why it is carried separately on the session.
+   */
+  organizationRole: string
+  phone: string | null
   organizationId: string
 }
 
@@ -102,6 +115,7 @@ export async function getSession(): Promise<Session | null> {
       name: string | null
       avatar: string | null
       role: string
+      phone: string | null
     } | null
 
     if (!user) return null
@@ -120,6 +134,8 @@ export async function getSession(): Promise<Session | null> {
         name: user.name,
         avatar: buildAvatarUrl(user.avatar, user._id.toString()),
         role: user.role,
+        organizationRole: membership.role,
+        phone: user.phone ?? null,
         organizationId: payload.organizationId,
       },
       isDemo: false,
@@ -141,6 +157,7 @@ export async function getSession(): Promise<Session | null> {
     name: string | null
     avatar: string | null
     role: string
+    phone: string | null
   } | null
 
   if (!user) return null
@@ -159,6 +176,8 @@ export async function getSession(): Promise<Session | null> {
       name: user.name,
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
+      organizationRole: membership.role,
+      phone: user.phone ?? null,
       organizationId: payload.organizationId,
     },
     isDemo: true,
@@ -206,6 +225,7 @@ export async function getUserByEmail(email: string): Promise<{
   name: string | null
   avatar: string | null
   role: string
+  phone: string | null
 } | null> {
   await ensureDb()
   return await User.findOne({ email: email.toLowerCase().trim() }).lean() as unknown as {
@@ -214,6 +234,7 @@ export async function getUserByEmail(email: string): Promise<{
     name: string | null
     avatar: string | null
     role: string
+    phone: string | null
   } | null
 }
 
@@ -265,6 +286,8 @@ export async function createUserAndSession(
       name: user.name,
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
+      organizationRole: role,
+      phone: (user as { phone?: string | null }).phone ?? null,
       organizationId: organizationId,
     },
     error: null,
@@ -288,8 +311,11 @@ export async function getOrganization() {
 
   // Use the database matching the session context.
   if (session.isDemo) {
-    const { Membership: DemoMembership } = await import("./database-demo")
+    const { Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
     const MemModel = await DemoMembership()
+    // Register the Organization model on the demo connection so .populate()
+    // does not throw MissingSchemaError (it is not lazily created here).
+    await DemoOrg()
     const membership = await MemModel.findOne({
       userId: session.user.id,
     }).populate("organizationId")
@@ -332,9 +358,12 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       return { user: null, error: "Invalid email or password" }
     }
 
-    const { User: DemoUser, Membership: DemoMembership } = await import("./database-demo")
+    const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
     const UserModel = await DemoUser()
     const MemModel = await DemoMembership()
+    // Register the Organization model on the demo connection so .populate()
+    // does not throw MissingSchemaError (it is not lazily created here).
+    await DemoOrg()
 
     const user = await UserModel.findOne({ email }).lean() as unknown as {
       _id: { toString(): string }
@@ -369,6 +398,8 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       name: user.name,
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
+      organizationRole: membership.role,
+      phone: (user as { phone?: string | null }).phone ?? null,
       organizationId: org._id.toString(),
     }
 
@@ -413,6 +444,8 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     name: user.name,
     avatar: buildAvatarUrl(user.avatar, user._id.toString()),
     role: user.role,
+    organizationRole: membership.role,
+    phone: (user as { phone?: string | null }).phone ?? null,
     organizationId: org._id.toString(),
   }
 
@@ -467,6 +500,8 @@ export async function signUp(email: string, name: string, password: string): Pro
       name: user.name,
       avatar: buildAvatarUrl(user.avatar, user._id.toString()),
       role: user.role,
+      organizationRole: "ADMIN",
+      phone: (user as { phone?: string | null }).phone ?? null,
       organizationId: organization._id.toString(),
     },
     error: null

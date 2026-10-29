@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuthSecret } from "./src/lib/session-secret"
 
 const SESSION_COOKIE_NAME = "session"
 const SESSION_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000 // 7 days
@@ -6,18 +7,13 @@ const SESSION_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000 // 7 days
 /**
  * HMAC secret used to sign session tokens.
  *
- * Mirrors the dev fallback in `src/lib/session-token.ts` so the middleware can
- * verify tokens without importing the Node-only auth module (which pulls in
- * Mongoose/bcrypt and `next/headers` — unavailable in the Edge Runtime).
+ * Shared with `src/lib/session-token.ts` via the `session-secret` helper so
+ * the Edge Runtime middleware and the Node.js auth layer always use the same
+ * secret. There is no fallback: a missing AUTH_SECRET throws, which means an
+ * unconfigured deployment cannot issue or accept session tokens.
  */
 function getSessionSecret(): string {
-  const secret = process.env.AUTH_SECRET
-  if (secret) return secret
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET is not defined in environment variables")
-  }
-  // Dev fallback — never used in production.
-  return "dev-secret-change-in-production"
+  return requireAuthSecret()
 }
 
 /**
