@@ -1,5 +1,6 @@
 "use server"
 
+import mongoose from "mongoose"
 import { ensureDb, User, Membership, Organization } from "./database"
 import { headers, cookies } from "next/headers"
 import { redirect } from "next/navigation"
@@ -13,6 +14,7 @@ import {
 } from "./session-token"
 import { requireNotDemoAccount, getDemoAccountEmail } from "./demo-account"
 import { connectDemoDb } from "./demo-mongoose"
+import type { Mongoose } from "mongoose"
 
 export interface SessionUser {
   id: string
@@ -348,24 +350,120 @@ export async function getOrganization() {
 
 // Authentication functions
 export async function signIn(email: string, password: string): Promise<{ user: SessionUser | null; error: string | null }> {
-  const demoEmail = getDemoAccountEmail()
-  const isDemoLogin = demoEmail ? email.trim().toLowerCase() === demoEmail : false
+  try {
+    const demoEmail = getDemoAccountEmail()
+    const isDemoLogin = demoEmail ? email.trim().toLowerCase() === demoEmail : false
 
-  if (isDemoLogin) {
-    // Demo login: authenticate against demo database ONLY.
-    const demoMongoose = await connectDemoDb()
-    if (!demoMongoose) {
-      return { user: null, error: "Invalid email or password" }
+    if (isDemoLogin) {
+      // Demo login: authenticate against demo database ONLY.
+      let demoMongoose: Mongoose | null
+      try {
+        demoMongoose = await connectDemoDb()
+      } catch (dbErr) {
+        console.error("[signIn] Demo DB connection failed:", dbErr instanceof Error ? dbErr.message : String(dbErr))
+        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
+      }
+
+      if (!demoMongoose) {
+        return { user: null, error: "Demo database is not configured. Please try again later." }
+      }
+
+      const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
+      let UserModel: mongoose.Model<any>
+      let MemModel: mongoose.Model<any>
+      let DemoOrgModel: mongoose.Model<any>
+      try {
+        UserModel = await DemoUser()
+        MemModel = await DemoMembership()
+        // Register the Organization model on the demo connection so .populate()
+        // does not throw MissingSchemaError (it is not lazily created here).
+        DemoOrgModel = await DemoOrg()
+      } catch (modelErr) {
+        console.error("[signIn] Demo model creation failed:", modelErr instanceof Error ? modelErr.message : String(modelErr))
+        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
+      }
+
+      let user: {
+        _id: { toString(): string }
+        email: string
+        name: string | null
+        avatar: string | null
+        password: string | null
+        role: string
+      } | null
+      try {
+        user = await UserModel.findOne({ email }).lean() as typeof user
+      } catch (queryErr) {
+        console.error("[signIn] Demo user query failed:", queryErr instanceof Error ? queryErr.message : String(queryErr))
+        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
+      }
+
+      if (!user || !user.password) {
+        return { user: null, error: "Invalid email or password" }
+      }
+
+      let isValidPassword: boolean
+      try {
+        isValidPassword = await verifyPassword(password, user.password)
+      } catch (hashErr) {
+        console.error("[signIn] Password verification failed:", hashErr instanceof Error ? hashErr.message : String(hashErr))
+        return { user: null, error: "Authentication service error. Please try again later." }
+      }
+      if (!isValidPassword) {
+        return { user: null, error: "Invalid email or password" }
+      }
+
+      let membership: { role: string; organizationId: { toString(): string } } | null
+      try {
+        membership = await MemModel.findOne({ userId: user._id.toString() }).populate("organizationId").lean() as typeof membership
+      } catch (memErr) {
+        console.error("[signIn] Demo membership query failed:", memErr instanceof Error ? memErr.message : String(memErr))
+        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
+      }
+
+      if (!membership) {
+        return { user: null, error: "User has no organization access" }
+      }
+
+      const orgId = (membership.organizationId as unknown as { toString(): string })?.toString()
+      if (!orgId) {
+        return { user: null, error: "Organization data missing" }
+      }
+
+      let sessionToken: string
+      try {
+        await createSession(user._id.toString(), orgId, "demo")
+      } catch (sessionErr) {
+        console.error("[signIn] Session creation failed:", sessionErr instanceof Error ? sessionErr.message : String(sessionErr))
+        return { user: null, error: "Session creation failed. Please try again." }
+      }
+
+      return {
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          avatar: buildAvatarUrl(user.avatar, user._id.toString()),
+          role: user.role,
+          organizationRole: membership.role,
+          phone: (user as { phone?: string | null }).phone ?? null,
+          organizationId: orgId,
+        },
+        error: null,
+      }
     }
 
-    const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
-    const UserModel = await DemoUser()
-    const MemModel = await DemoMembership()
-    // Register the Organization model on the demo connection so .populate()
-    // does not throw MissingSchemaError (it is not lazily created here).
-    await DemoOrg()
+    // Production login: authenticate against production database ONLY.
+    let dbConnected = false
+    try {
+      await ensureDb()
+      dbConnected = true
+    } catch (dbErr) {
+      console.error("[signIn] Production DB connection failed:", dbErr instanceof Error ? dbErr.message : String(dbErr))
+      return { user: null, error: "Service is temporarily unavailable. Please try again later." }
+    }
 
-    const user = await UserModel.findOne({ email }).lean() as unknown as {
+    let user: {
       _id: { toString(): string }
       email: string
       name: string | null
@@ -373,85 +471,70 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       password: string | null
       role: string
     } | null
+    try {
+      user = await User.findOne({ email }).lean() as typeof user
+    } catch (queryErr) {
+      console.error("[signIn] Production user query failed:", queryErr instanceof Error ? queryErr.message : String(queryErr))
+      return { user: null, error: "Service is temporarily unavailable. Please try again later." }
+    }
 
     if (!user || !user.password) {
       return { user: null, error: "Invalid email or password" }
     }
 
-    const isValidPassword = await verifyPassword(password, user.password)
+    let isValidPassword: boolean
+    try {
+      isValidPassword = await verifyPassword(password, user.password)
+    } catch (hashErr) {
+      console.error("[signIn] Password verification failed:", hashErr instanceof Error ? hashErr.message : String(hashErr))
+      return { user: null, error: "Authentication service error. Please try again later." }
+    }
     if (!isValidPassword) {
       return { user: null, error: "Invalid email or password" }
     }
 
-    const membership = await MemModel.findOne({
-      userId: user._id.toString(),
-    }).populate("organizationId")
+    let membership: { role: string; organizationId: { toString(): string } } | null
+    try {
+      membership = await Membership.findOne({ userId: user._id.toString() }).populate("organizationId").lean() as typeof membership
+    } catch (memErr) {
+      console.error("[signIn] Production membership query failed:", memErr instanceof Error ? memErr.message : String(memErr))
+      return { user: null, error: "Service is temporarily unavailable. Please try again later." }
+    }
 
     if (!membership) {
       return { user: null, error: "User has no organization access" }
     }
 
-    const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
-    const sessionUser = {
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      avatar: buildAvatarUrl(user.avatar, user._id.toString()),
-      role: user.role,
-      organizationRole: membership.role,
-      phone: (user as { phone?: string | null }).phone ?? null,
-      organizationId: org._id.toString(),
+    const orgId = (membership.organizationId as unknown as { toString(): string })?.toString()
+    if (!orgId) {
+      return { user: null, error: "Organization data missing" }
     }
 
-    await createSession(user._id.toString(), org._id.toString(), "demo")
+    try {
+      await createSession(user._id.toString(), orgId, "production")
+    } catch (sessionErr) {
+      console.error("[signIn] Session creation failed:", sessionErr instanceof Error ? sessionErr.message : String(sessionErr))
+      return { user: null, error: "Session creation failed. Please try again." }
+    }
 
-    return { user: sessionUser, error: null }
+    return {
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        avatar: buildAvatarUrl(user.avatar, user._id.toString()),
+        role: user.role,
+        organizationRole: membership.role,
+        phone: (user as { phone?: string | null }).phone ?? null,
+        organizationId: orgId,
+      },
+      error: null,
+    }
+  } catch (error) {
+    // Catch-all: never let an unexpected error become a 500
+    console.error("[signIn] Unexpected error:", error instanceof Error ? error.message : String(error))
+    return { user: null, error: "An unexpected error occurred. Please try again later." }
   }
-
-  // Production login: authenticate against production database ONLY.
-  await ensureDb()
-
-  const user = await User.findOne({ email }).lean() as unknown as {
-    _id: { toString(): string }
-    email: string
-    name: string | null
-    avatar: string | null
-    password: string | null
-    role: string
-  } | null
-
-  if (!user || !user.password) {
-    return { user: null, error: "Invalid email or password" }
-  }
-
-  const isValidPassword = await verifyPassword(password, user.password)
-  if (!isValidPassword) {
-    return { user: null, error: "Invalid email or password" }
-  }
-
-  const membership = await Membership.findOne({
-    userId: user._id.toString(),
-  }).populate("organizationId")
-
-  if (!membership) {
-    return { user: null, error: "User has no organization access" }
-  }
-
-  const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
-  const sessionUser = {
-    id: user._id.toString(),
-    email: user.email,
-    name: user.name,
-    avatar: buildAvatarUrl(user.avatar, user._id.toString()),
-    role: user.role,
-    organizationRole: membership.role,
-    phone: (user as { phone?: string | null }).phone ?? null,
-    organizationId: org._id.toString(),
-  }
-
-  await createSession(user._id.toString(), org._id.toString(), "production")
-
-  return { user: sessionUser, error: null }
 }
 
 export async function signUp(email: string, name: string, password: string): Promise<{ user: SessionUser | null; error: string | null }> {
