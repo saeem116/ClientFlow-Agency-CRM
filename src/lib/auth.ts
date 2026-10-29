@@ -434,8 +434,12 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       try {
         await createSession(user._id.toString(), orgId, "demo")
       } catch (sessionErr) {
-        console.error("[signIn] Session creation failed:", sessionErr instanceof Error ? sessionErr.message : String(sessionErr))
-        return { user: null, error: "Session creation failed. Please try again." }
+        const msg = sessionErr instanceof Error ? sessionErr.message : String(sessionErr)
+        console.error("[signIn] Demo session creation failed:", msg)
+        if (msg.includes("AUTH_SECRET") || msg.includes("session secret")) {
+          return { user: null, error: "Authentication service is not configured. Please contact the site administrator." }
+        }
+        return { user: null, error: "Session creation failed. Please try again later." }
       }
 
       return {
@@ -513,8 +517,12 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     try {
       await createSession(user._id.toString(), orgId, "production")
     } catch (sessionErr) {
-      console.error("[signIn] Session creation failed:", sessionErr instanceof Error ? sessionErr.message : String(sessionErr))
-      return { user: null, error: "Session creation failed. Please try again." }
+      const msg = sessionErr instanceof Error ? sessionErr.message : String(sessionErr)
+      console.error("[signIn] Production session creation failed:", msg)
+      if (msg.includes("AUTH_SECRET") || msg.includes("session secret")) {
+        return { user: null, error: "Authentication service is not configured. Please contact the site administrator." }
+      }
+      return { user: null, error: "Session creation failed. Please try again later." }
     }
 
     return {
