@@ -95,10 +95,13 @@ $FileExcludes = @(
     "lint-output.txt",
     "build.log",
     "dev.db",
+    "test-output.txt",
     "*.tsbuildinfo",
     "next-env.d.ts",
-    # Diagnostic / one-off scripts (SMTP/avatar probes)
+    # Diagnostic / one-off scripts (SMTP/avatar probes, ZIP verification helpers)
     "scripts\debug-avatar.mjs",
+    "scripts\list-zip.mjs",
+    "scripts\verify-zip.mjs",
     "scripts\smtp-header-inspect.mjs",
     "scripts\test-avatar.mjs",
     "scripts\test-avatar-cache.mjs",
