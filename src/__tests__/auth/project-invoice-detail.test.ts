@@ -176,7 +176,7 @@ describe('Invoice Detail Page — Demo/Public Account Flow', () => {
     if (!testData) return
     const result = await Invoice.findOne({ _id: invoiceId, organizationId: orgId }).lean()
     expect(result).not.toBeNull()
-    expect((result as any).number).toBe('INV-TEST-DETAIL')
+    expect((result as { number: string } | null)?.number).toBe('INV-TEST-DETAIL')
   })
 
   it('fetches related payments and line items for the invoice', async () => {

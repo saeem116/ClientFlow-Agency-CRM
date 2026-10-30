@@ -4,7 +4,7 @@ import { setupTestData, cleanupTestData, Lead, Client, Project, Task, Organizati
 let testOrgId: string
 let testUserId: string
 let testClientId: string
-let testData: any
+let testData: Awaited<ReturnType<typeof setupTestData>> | null = null
 
 beforeAll(async () => {
   testData = await setupTestData()
@@ -59,7 +59,7 @@ describe('Lead Pipeline Business Logic', () => {
       organizationId: testOrgId, createdById: testUserId,
     })
     const updated = await Lead.findOneAndUpdate(
-      { _id: lead._id }, { clientId: testClientId as any }, { new: true }
+      { _id: lead._id }, { clientId: testClientId }, { new: true }
     )
     expect(updated?.clientId?.toString()).toBe(testClientId)
   })
@@ -84,7 +84,7 @@ describe('Lead Pipeline Business Logic', () => {
     await Lead.create({ title: 'Qualified Lead Value', email: 'qualifiedvalue@example.com', stage: 'QUALIFIED', value: 3000, organizationId: testOrgId, createdById: testUserId })
     await Lead.create({ title: 'Won Lead Value', email: 'wonvalue@example.com', stage: 'WON', value: 5000, organizationId: testOrgId, createdById: testUserId })
     const leads = await Lead.find({ organizationId: testOrgId })
-    const totalValue = leads.reduce((sum: number, l: any) => sum + l.value, 0)
+    const totalValue = leads.reduce((sum: number, l) => sum + (l.value ?? 0), 0)
     expect(totalValue).toBe(9000)
   })
 

@@ -202,7 +202,8 @@ describe('Profile Page — edit name', () => {
         '/api/auth/profile',
         expect.objectContaining({ method: 'PATCH' })
       )
-      const body = JSON.parse((fetchSpy.mock.calls[0][1] as any).body as string)
+      const init = fetchSpy.mock.calls[0][1] as RequestInit | undefined
+    const body = JSON.parse((init?.body as string) ?? '{}')
       expect(body.name).toBe('Alice Updated')
     })
   })

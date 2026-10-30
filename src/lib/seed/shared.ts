@@ -134,6 +134,11 @@ export interface SeedUserOptions {
   passwordBytes?: Buffer
 }
 
+export interface SeedUserDoc {
+  _id: { toString(): string }
+  email: string
+}
+
 /**
  * Find or create a user with the given email.
  *
@@ -145,13 +150,15 @@ export interface SeedUserOptions {
 export async function findOrCreateUser<M>(
   model: M,
   options: SeedUserOptions
-): Promise<M & { _id: { toString(): string }; email: string }> {
+): Promise<SeedUserDoc> {
   const { email, name, role, passwordHash, passwordBytes } = options
 
   // Find existing user
-  const existing = await (model as any).findOne({ email: email.toLowerCase().trim() }).lean()
+  const existing = await (model as unknown as {
+    findOne(query: { email: string }): Promise<SeedUserDoc | null>
+  }).findOne({ email: email.toLowerCase().trim() })
   if (existing) {
-    return existing as M & { _id: { toString(): string }; email: string }
+    return existing
   }
 
   // Generate password if not provided
@@ -161,14 +168,16 @@ export async function findOrCreateUser<M>(
 
   const hashed = passwordHash || await hashPassword(plaintext)
 
-  const user = await (model as any).create({
+  const user = await (model as unknown as {
+    create(data: Record<string, unknown>): Promise<SeedUserDoc>
+  }).create({
     email: email.toLowerCase().trim(),
     name,
     password: hashed,
     role,
   })
 
-  return user as M & { _id: { toString(): string }; email: string }
+  return user
 }
 
 // ─── Organization Creation ─────────────────────────────────────────────────────
@@ -182,14 +191,18 @@ export async function findOrCreateOrganization<M>(
   model: M,
   name: string,
   slugPrefix: string
-): Promise<M & { _id: { toString(): string }; name: string; slug: string }> {
-  let org = await (model as any).findOne({ name }).lean()
+): Promise<SeedUserDoc & { name: string; slug: string }> {
+  let org = await (model as unknown as {
+    findOne(query: { name: string }): Promise<(SeedUserDoc & { name: string; slug: string }) | null>
+  }).findOne({ name })
   if (org) {
-    return org as M & { _id: { toString(): string }; name: string; slug: string }
+    return org
   }
 
   // Generate unique slug
   const slug = `${slugPrefix}-${Date.now()}`
-  org = await (model as any).create({ name, slug })
-  return org as M & { _id: { toString(): string }; name: string; slug: string }
+  org = await (model as unknown as {
+    create(data: Record<string, unknown>): Promise<SeedUserDoc & { name: string; slug: string }>
+  }).create({ name, slug })
+  return org
 }

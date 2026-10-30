@@ -22,7 +22,28 @@ export default async function InvoicesPage() {
     .exec()
 
   // Normalize to match the Invoice interface in invoices-page-client
-  const normalizedInvoices = invoices.map((invoice: any) => ({
+  interface InvoiceLean {
+    _id: { toString(): string }
+    number: string
+    status: string
+    issueDate: Date
+    dueDate: Date | null
+    total: number
+    paidAmount: number
+    notes: string | null
+    subtotal: number
+    taxRate: number
+    taxAmount: number
+    clientId: { toString(): string } | null
+    organizationId: { toString(): string } | null
+    client: {
+      _id: { toString(): string }
+      companyName: string | null
+      firstName: string | null
+      lastName: string | null
+    } | null
+  }
+  const normalizedInvoices = invoices.map((invoice: InvoiceLean) => ({
     id: invoice._id.toString(),
     number: invoice.number,
     status: invoice.status,

@@ -14,7 +14,7 @@ beforeAll(async () => {
   testUserId = testData.userId
   const project = await Project.create({
     name: 'Test Project for Tasks', status: 'ACTIVE',
-    organizationId: testOrgId, clientId: testData.clientId as any, createdById: testUserId,
+    organizationId: testOrgId, clientId: testData.clientId, createdById: testUserId,
   })
   testProjectId = project._id.toString()
 }, 30000)

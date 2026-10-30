@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import { ensureDb, Invitation } from "@/lib/database"
 import { verifyToken } from "@/lib/mongoose/invitation"
 import AcceptInvitationClient from "./accept-invitation-client"
@@ -122,7 +121,7 @@ export default async function AcceptInvitationPage({
               Join Your Team
             </h1>
             <p className="mt-2 text-slate-500 dark:text-slate-400">
-              You've been invited to join an organization
+              You have been invited to join an organization
             </p>
           </div>
 
@@ -153,7 +152,7 @@ export default async function AcceptInvitationPage({
             </div>
           </div>
 
-          <AcceptInvitationClient invitation={invitation as any} />
+          <AcceptInvitationClient invitation={invitation} />
         </div>
       </div>
     </div>

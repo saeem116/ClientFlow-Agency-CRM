@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -81,12 +81,19 @@ export function Header({
     }
   }, [])
 
+  const fetchNotificationsRef = useRef(fetchNotifications)
+
   // Load notifications on mount and when bell is clicked
   useEffect(() => {
     if (showNotifications) {
-      fetchNotifications()
+      fetchNotificationsRef.current()
     }
-  }, [showNotifications, fetchNotifications])
+  }, [showNotifications])
+
+  // Keep ref in sync with latest callback
+  useEffect(() => {
+    fetchNotificationsRef.current = fetchNotifications
+  }, [fetchNotifications])
 
   // Poll for unread count every 30 seconds
   useEffect(() => {
@@ -98,7 +105,7 @@ export function Header({
           setUnreadCount(data.unreadCount || 0)
         }
       } catch {
-        // Silently fail - don't break the UI
+        // Silently fail — don't break the UI
       }
     }, 30000)
 

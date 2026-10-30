@@ -7,11 +7,11 @@ import { Payment, Invoice, Lead, Project, Task, Client, User } from '@/lib/mongo
  * Returns null when the path has no enum (e.g. plain String/Number).
  */
 function getEnumValues(schema: mongoose.Schema, path: string): string[] | null {
-  const def = (schema as any).path(path)
+  const def = schema.path(path)
   if (!def) return null
-  const enumValues = def.enumValues
+  const enumValues = (def as unknown as { enumValues?: string[] }).enumValues
   if (!enumValues || enumValues.length === 0) return null
-  return enumValues as string[]
+  return enumValues
 }
 
 /**

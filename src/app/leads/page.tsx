@@ -40,7 +40,7 @@ export default async function LeadsPage() {
     .exec() as unknown as RawLead[]
 
   // Normalize to match the Lead interface in leads-page-client
-  const normalizedLeads = leads.map((lead: any) => ({
+  const normalizedLeads = leads.map((lead: RawLead) => ({
     id: lead._id?.toString() || lead.id,
     title: lead.title,
     email: lead.email,

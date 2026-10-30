@@ -48,7 +48,16 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   )
 }
 
-function EditTaskForm({ task }: { task: any }) {
+function EditTaskForm({ task }: {
+  task: {
+    _id: { toString(): string };
+    title: string;
+    description: string | null;
+    status: string;
+    priority: string;
+    dueDate: Date | null;
+  };
+}) {
   return (
     <div className="rounded-lg border border-slate-200 p-6">
       <form action={`/api/tasks/${task._id.toString()}/update?returnTo=/tasks/${task._id.toString()}`} method="POST">
@@ -132,6 +141,3 @@ function EditTaskForm({ task }: { task: any }) {
     </div>
   )
 }
-
-// Server action for updating task
-const { revalidatePath } = await import("next/cache")

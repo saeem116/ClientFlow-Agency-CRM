@@ -45,10 +45,6 @@ export function FilesPageClient({
     }
   }, [])
 
-  // Refresh on mount so the list reflects any changes made elsewhere.
-  useEffect(() => {
-    fetchFiles()
-  }, [fetchFiles])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)

@@ -8,7 +8,6 @@ import {
 } from "@/lib/database"
 import { verifyToken } from "@/lib/mongoose/invitation"
 import { createSession, requireOrg } from "@/lib/auth"
-import { createNotification } from "@/lib/notifications"
 
 interface InvitationLean {
   _id: { toString(): string }
@@ -18,6 +17,14 @@ interface InvitationLean {
   invitedById: { toString(): string }
   expiresAt: Date
   tokenHash: string
+}
+
+interface UserLean {
+  _id: { toString(): string }
+  email: string
+  name: string | null
+  avatar: string | null
+  role: string
 }
 
 /**
@@ -97,15 +104,14 @@ export async function POST(request: NextRequest) {
   const email = invitation.email
   const role = invitation.role
   const organizationId = invitation.organizationId.toString()
-  const invitedById = invitation.invitedById.toString()
 
   // Check if user already exists
-  let user = await User.findOne({ email }).lean()
+  let user: UserLean | null = await User.findOne({ email }).lean() as UserLean | null
 
   if (user) {
     // User exists — check if already a member
     const existingMembership = await Membership.findOne({
-      userId: (user as any)._id,
+      userId: user._id,
       organizationId,
     }).lean()
 
@@ -118,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     // Add existing user to organization
     await Membership.create({
-      userId: (user as any)._id,
+      userId: user._id,
       organizationId,
       role,
     })
@@ -130,7 +136,7 @@ export async function POST(request: NextRequest) {
       avatar: null,
       role: "MEMBER",
       password: null,
-    })
+    }) as unknown as UserLean
 
     // Create personal organization for the new user
     const personalOrg = await Organization.create({
@@ -142,14 +148,14 @@ export async function POST(request: NextRequest) {
 
     // Add user to the invited organization
     await Membership.create({
-      userId: (user as any)._id,
+      userId: user._id,
       organizationId,
       role,
     })
 
     // Also create membership in their personal org
     await Membership.create({
-      userId: (user as any)._id,
+      userId: user._id,
       organizationId: personalOrg._id,
       role: "ADMIN",
     })
@@ -161,20 +167,18 @@ export async function POST(request: NextRequest) {
   })
 
   // Create session for the newly invited user
-  await createSession((user as any)._id.toString(), organizationId)
+  await createSession(user._id.toString(), organizationId)
 
-  const userId = (user as any)._id.toString()
-  const userLean = user as any
   return NextResponse.json({
     success: true,
     message: "Invitation accepted successfully",
     redirectUrl: "/dashboard",
     user: {
-      id: userId,
-      email: userLean.email,
-      name: userLean.name,
-      avatar: userLean.avatar,
-      role: userLean.role,
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+      role: user.role,
       organizationRole: role,
       organizationId,
     },

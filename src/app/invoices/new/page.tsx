@@ -26,7 +26,21 @@ export default async function NewInvoicePage() {
     .lean()
 
   // Convert Mongoose documents to plain serializable objects before passing to a Client Component
-  const plainClients = (clients || []).map((c: any) => ({
+  interface ClientLean {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+    phone?: string | null
+    website?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    notes?: string | null
+    status?: string
+  }
+  const plainClients = (clients || []).map((c: ClientLean) => ({
     id: c._id.toString(),
     firstName: c.firstName || null,
     lastName: c.lastName || null,
@@ -135,7 +149,7 @@ async function createInvoice(formData: FormData) {
   if (!clientId) throw new Error("Client is required")
 
   // Generate invoice number
-  const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 }).lean() as unknown as {
+  const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 }).lean() as {
     number?: string
     createdAt?: Date
   } | null

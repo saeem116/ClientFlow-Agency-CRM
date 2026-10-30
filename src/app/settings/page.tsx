@@ -31,7 +31,7 @@ export default async function SettingsPage() {
     .populate("organizationId", "name slug")
     .lean()
     .exec()
-  const memberships = sanitize(rawMemberships) as any[]
+  const memberships = sanitize(rawMemberships) as Array<{ _id?: { toString(): string }; role?: string; userId?: { name?: string; email?: string; avatar?: string | null; _id?: { toString(): string } } }>
 
   return (
     <SettingsPageClient
@@ -39,9 +39,9 @@ export default async function SettingsPage() {
         id: organization?._id?.toString() || org.id,
         name: organization?.name || org.name,
         slug: organization?.slug || org.slug,
-        memberships: memberships.map((m: any) => ({
+        memberships: memberships.map((m) => ({
           id: m._id?.toString() || "",
-          role: m.role,
+          role: m.role || "",
           user: {
             name: m.userId?.name || "Unknown",
             email: m.userId?.email || "",

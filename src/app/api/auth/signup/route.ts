@@ -4,6 +4,11 @@ import { hashPassword } from "@/lib/bcrypt"
 import { createSession } from "@/lib/auth"
 import { getDemoAccountEmail } from "@/lib/demo-account"
 
+interface DuplicateError extends Error {
+  code?: number
+  keyPattern?: Record<string, unknown>
+}
+
 export async function POST(request: NextRequest) {
   await ensureDb()
   try {
@@ -66,9 +71,10 @@ export async function POST(request: NextRequest) {
         name: `${name}'s Workspace`,
         slug: uniqueSlug,
       })
-    } catch (orgError: any) {
+    } catch (orgError: unknown) {
+      const typedError = orgError as DuplicateError
       // Handle unique slug collision by retrying with a longer random suffix
-      if (orgError?.code === 11000) {
+      if (typedError?.code === 11000) {
         const retrySlug = `${baseSlug}-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
         organization = await Organization.create({
           name: `${name}'s Workspace`,
@@ -101,15 +107,16 @@ export async function POST(request: NextRequest) {
         organizationId: organization._id.toString(),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const typedError = error as DuplicateError
     // Log the actual error server-side for debugging
-    console.error("Sign-up error:", error?.message || error)
+    console.error("Sign-up error:", typedError instanceof Error ? typedError.message : String(typedError))
 
     // Return appropriate error messages based on error type
-    if (error?.code === 11000) {
+    if (typedError?.code === 11000) {
       // MongoDB duplicate key error
-      const keyPattern = error?.keyPattern?.email
-      if (keyPattern) {
+      const keyPattern = typedError?.keyPattern
+      if (keyPattern && keyPattern.email) {
         return NextResponse.json(
           { error: "User with this email already exists" },
           { status: 400 }

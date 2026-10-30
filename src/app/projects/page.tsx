@@ -22,10 +22,16 @@ export default async function ProjectsPage() {
     .lean()
     .exec()
 
-  const projectIds = projects.map((p: any) => p._id)
-  const milestones = await Milestone.find({ projectId: { $in: projectIds } }).lean() as any[]
-  const milestonesByProject = new Map<string, any[]>()
-  for (const m of milestones) {
+  const projectIds = projects.map((p: { _id: { toString(): string } }) => p._id)
+  const milestones = await Milestone.find({ projectId: { $in: projectIds } }).lean()
+  interface MilestoneLean {
+    _id: { toString(): string };
+    projectId: { toString(): string } | null;
+    completedAt: Date | null;
+  }
+  const milestonesTyped = milestones as MilestoneLean[]
+  const milestonesByProject = new Map<string, Array<{ id: string; completedAt: Date | null }>>()
+  for (const m of milestonesTyped) {
     const pid = m.projectId?.toString() ?? ""
     if (!milestonesByProject.has(pid)) milestonesByProject.set(pid, [])
     milestonesByProject.get(pid)!.push({
@@ -35,7 +41,29 @@ export default async function ProjectsPage() {
   }
 
   // Normalize client to match the Project interface expected by the client component
-  const normalizedProjects = projects.map((project: any) => ({
+  interface ProjectLean {
+    _id: { toString(): string };
+    name: string;
+    description: string | null;
+    status: string;
+    priority: string;
+    budget: number | null;
+    startDate: Date | null;
+    endDate: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    clientId: { toString(): string } | null;
+    organizationId: { toString(): string };
+    createdById: { toString(): string } | null;
+    client: {
+      _id: { toString(): string };
+      companyName: string | null;
+      firstName: string | null;
+      lastName: string | null;
+    } | null;
+  }
+
+  const normalizedProjects = projects.map((project: ProjectLean) => ({
     id: project._id.toString(),
     name: project.name,
     description: project.description || null,

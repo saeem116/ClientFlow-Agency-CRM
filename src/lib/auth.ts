@@ -102,7 +102,6 @@ function buildAvatarUrl(avatarId: string | null | undefined, userId: string): st
  * production sessions (they were all production before this change).
  */
 export async function getSession(): Promise<Session | null> {
-  await ensureDb()
   const headersList = await headers()
   const cookieHeader = headersList.get("cookie") || ""
 
@@ -130,6 +129,7 @@ export async function getSession(): Promise<Session | null> {
 
   if (context === "production") {
     // Production session: look up in production database.
+    await ensureDb()
     const user = await User.findById(payload.userId).lean() as unknown as {
       _id: { toString(): string }
       email: string
@@ -397,9 +397,24 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       }
 
       const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
-      let UserModel: mongoose.Model<any>
-      let MemModel: mongoose.Model<any>
-      let DemoOrgModel: mongoose.Model<any>
+      let UserModel: mongoose.Model<{
+        _id: { toString(): string }
+        email: string
+        name: string | null
+        avatar: string | null
+        password: string | null
+        role: string
+      }>
+      let MemModel: mongoose.Model<{
+        role: string
+        userId: { toString(): string }
+        organizationId: { toString(): string }
+      }>
+      let DemoOrgModel: mongoose.Model<{
+        _id: { toString(): string }
+        name: string
+        slug: string
+      }>
       try {
         UserModel = await DemoUser()
         MemModel = await DemoMembership()

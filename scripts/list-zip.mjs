@@ -1,4 +1,3 @@
-import fs from 'fs'
 import { execSync } from 'child_process'
 
 const zipPath = process.argv[2] || 'E:/Agency_CRM/clientflow/clientflow-submission.zip'

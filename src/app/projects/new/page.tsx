@@ -23,7 +23,21 @@ export default async function NewProjectPage() {
     .lean()
 
   // Convert Mongoose documents to plain serializable objects before passing to a Client Component
-  const plainClients = (clients || []).map((c: any) => ({
+  interface ClientLean {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+    phone?: string | null
+    website?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    notes?: string | null
+    status?: string
+  }
+  const plainClients = (clients || []).map((c: ClientLean) => ({
     id: c._id.toString(),
     firstName: c.firstName || null,
     lastName: c.lastName || null,

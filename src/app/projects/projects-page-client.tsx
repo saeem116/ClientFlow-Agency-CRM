@@ -73,7 +73,7 @@ export function ProjectsPageClient({ projects }: ProjectsPageClientProps) {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Projects</h1>
-          <p className="text-slate-500 mt-1">Manage your agency's work from kickoff to delivery.</p>
+          <p className="text-slate-500 mt-1">Manage your agency&apos;s work from kickoff to delivery.</p>
         </div>
         <Button asChild>
           <Link href="/projects/new">

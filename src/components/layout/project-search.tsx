@@ -6,15 +6,15 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 
 interface ProjectSearchResult {
-  id: string
-  title: string
-  description?: string
-  clientName: string
-  status: string
-  href: string
+  id: string;
+  title: string;
+  description?: string;
+  clientName: string;
+  status: "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+  href: string;
 }
 
-const statusConfig: Record<string, { variant: any; label: string }> = {
+const statusConfig: Record<ProjectSearchResult['status'], { variant: "secondary" | "info" | "warning" | "success" | "destructive"; label: string }> = {
   DRAFT: { variant: "secondary", label: "Planning" },
   ACTIVE: { variant: "info", label: "In Progress" },
   ON_HOLD: { variant: "warning", label: "On Hold" },
@@ -51,7 +51,7 @@ export function ProjectSearch() {
       if (res.ok) {
         const data = await res.json()
         // Filter for project results only
-        const projectResults = data.results?.filter((r: any) => r.type === "Project") || []
+        const projectResults = data.results?.filter((r: { type: string }) => r.type === "Project") || []
         setResults(projectResults)
       }
     } catch (error) {

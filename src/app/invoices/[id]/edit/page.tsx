@@ -37,7 +37,16 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     .sort({ updatedAt: -1 })
     .lean()
   // Convert Mongoose documents to plain serializable objects for Client Components
-  const clients = (rawClients || []).map((c: any) => ({
+  interface ClientLean {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+    phone?: string | null
+    status?: string
+  }
+  const clients = (rawClients || []).map((c: ClientLean) => ({
     id: c._id.toString(),
     firstName: c.firstName || null,
     lastName: c.lastName || null,
@@ -64,7 +73,18 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   )
 }
 
-function EditInvoiceForm({ invoice, clients }: { invoice: any; clients: any[] }) {
+function EditInvoiceForm({ invoice, clients }: {
+  invoice: {
+    _id: { toString(): string };
+    number: string;
+    status: string;
+    total?: number | null;
+    dueDate?: Date | null;
+    clientId?: { toString(): string } | null;
+    notes?: string | null;
+  };
+  clients: Array<{ id: string; companyName?: string | null; firstName?: string | null; lastName?: string | null }>;
+}) {
   return (
     <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-6 bg-white dark:bg-[var(--card)]">
       <form action={`/api/invoices/${invoice._id.toString()}/update?returnTo=/invoices/${invoice._id.toString()}`} method="POST">

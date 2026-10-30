@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Save, X } from "lucide-react"
+import { Save, X } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -53,7 +53,7 @@ export default async function NewTaskPage() {
 
 function TaskForm({ org, projects }: {
   org: { id: string; name: string }
-  projects: any[]
+  projects: Array<{ _id: { toString(): string }; name: string }>
 }) {
   return (
     <form action={createTask} className="space-y-6">
@@ -117,7 +117,7 @@ async function createTask(formData: FormData) {
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const projectId = formData.get("projectId") as string
-  const priority = formData.get("priority") as string
+  const priority = formData.get("priority") as "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   const dueDate = formData.get("dueDate") as string
 
   if (!title) throw new Error("Task title is required")
@@ -126,7 +126,7 @@ async function createTask(formData: FormData) {
     title,
     description: description || null,
     projectId: projectId || null,
-    priority: (priority as any) || "MEDIUM",
+    priority: priority || "MEDIUM",
     dueDate: dueDate ? new Date(dueDate) : null,
     status: "BACKLOG",
     organizationId: org.id,

@@ -2,6 +2,7 @@ import { ensureDb } from "@/lib/database"
 import { getOrganization, getSession } from "@/lib/auth"
 import { getModels } from "@/lib/database-scoped"
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 
 export const metadata = {
   title: "Invoice Details - ClientFlow",
@@ -74,9 +75,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             Created on {new Date(invoice.issueDate).toLocaleDateString()} • {clientName}
           </p>
         </div>
-        <a href="/invoices" className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-[var(--border)] bg-white dark:bg-[var(--card)] px-4 py-2 text-sm font-medium text-slate-700 dark:text-[var(--foreground)] hover:bg-slate-50 dark:hover:bg-[var(--muted)]">
+        <Link href="/invoices" className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-[var(--border)] bg-white dark:bg-[var(--card)] px-4 py-2 text-sm font-medium text-slate-700 dark:text-[var(--foreground)] hover:bg-slate-50 dark:hover:bg-[var(--muted)]">
           ← Back to Invoices
-        </a>
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -157,7 +158,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
           <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Payment History</h3>
           <div className="space-y-3">
-            {payments.map((payment: any) => (
+            {payments.map((payment: {
+              _id: { toString(): string };
+              amount: number;
+              date: Date;
+              method: string;
+            }) => (
               <div key={payment._id.toString()} className="flex items-center justify-between rounded-md bg-slate-50 dark:bg-[var(--muted)] p-3">
                 <div>
                   <p className="font-medium text-slate-900 dark:text-[var(--foreground)]">${payment.amount?.toFixed(2) || "0.00"}</p>

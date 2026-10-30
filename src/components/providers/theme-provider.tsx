@@ -43,32 +43,29 @@ function getStoredDensity(): Density | null {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system")
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light")
-  const [density, setDensityState] = useState<Density>("normal")
-  const [mounted, setMounted] = useState(false)
+  const [theme, setThemeState] = useState<Theme>(() => getStoredTheme() || "system")
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() => {
+    const initial = getStoredTheme() || "system"
+    return initial === "system" ? getSystemTheme() : initial
+  })
+  const [density, setDensityState] = useState<Density>(() => getStoredDensity() || "normal")
 
   useEffect(() => {
-    const stored = getStoredTheme()
-    const initial = stored || "system"
-    setThemeState(initial)
-    const resolved = initial === "system" ? getSystemTheme() : initial
-    setResolvedTheme(resolved)
-    applyTheme(resolved)
-
-    const storedDensity = getStoredDensity()
-    const initialDensity = storedDensity || "normal"
-    setDensityState(initialDensity)
-    applyDensity(initialDensity)
-
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
     applyTheme(resolvedTheme)
     applyDensity(density)
-  }, [mounted, resolvedTheme, density])
+  }, [resolvedTheme, density])
+
+  useEffect(() => {
+    if (theme !== "system") return
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const handler = (e: MediaQueryListEvent) => {
+      const newResolved = e.matches ? "dark" : "light"
+      setResolvedTheme(newResolved)
+      applyTheme(newResolved)
+    }
+    media.addEventListener("change", handler)
+    return () => media.removeEventListener("change", handler)
+  }, [theme])
 
   function applyTheme(resolved: "light" | "dark") {
     if (typeof window === "undefined") return
@@ -110,7 +107,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Listen for system theme changes when in "system" mode
   useEffect(() => {
-    if (!mounted || theme !== "system") return
+    if (theme !== "system") return
     const media = window.matchMedia("(prefers-color-scheme: dark)")
     const handler = (e: MediaQueryListEvent) => {
       const newResolved = e.matches ? "dark" : "light"
@@ -119,7 +116,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     media.addEventListener("change", handler)
     return () => media.removeEventListener("change", handler)
-  }, [mounted, theme])
+  }, [theme])
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme, density, setDensity }}>

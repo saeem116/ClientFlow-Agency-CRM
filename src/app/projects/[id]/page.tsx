@@ -94,20 +94,37 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           companyName: client.companyName || null,
           email: client.email || null,
         } : null,
-        tasks: tasks.map((t: any) => ({
+        tasks: tasks.map((t: {
+          _id: { toString(): string };
+          title: string;
+          status: string;
+          assigneeId: { toString(): string } | null;
+        }) => ({
           id: t._id.toString(),
           title: t.title,
           status: t.status,
           assignee: t.assigneeId ? { id: t.assigneeId.toString(), name: "User", email: "" } : null,
         })),
-        milestones: milestones.map((m: any) => ({
+        milestones: milestones.map((m: {
+          _id: { toString(): string };
+          title: string;
+          description: string | null;
+          dueDate: Date | null;
+          completedAt: Date | null;
+        }) => ({
           id: m._id.toString(),
           title: m.title,
           description: m.description || null,
           dueDate: m.dueDate || null,
           completedAt: m.completedAt || null,
         })),
-        activities: activities.map((a: any) => ({
+        activities: activities.map((a: {
+          _id: { toString(): string };
+          type: string;
+          title: string;
+          description: string | null;
+          createdAt: Date;
+        }) => ({
           id: a._id.toString(),
           type: a.type,
           title: a.title,

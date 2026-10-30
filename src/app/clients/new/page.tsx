@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
-import { Client, Membership, User } from "@/lib/database"
-import { getOrganization, requireOrg, getSession } from "@/lib/auth"
+import { Client } from "@/lib/database"
+import { getOrganization, requireOrg } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,14 +15,21 @@ export const metadata = {
   description: "Create a new client",
 }
 
+interface ClientLean {
+  _id: { toString(): string }
+  firstName?: string | null
+  lastName?: string | null
+  companyName?: string | null
+  email?: string | null
+  phone?: string | null
+  status?: string
+  updatedAt?: Date
+}
+
 export default async function NewClientPage() {
   await ensureDb()
   const org = await getOrganization()
   if (!org) redirect("/sign-in")
-
-  const clients = await Client.find({ organizationId: org.id })
-    .sort({ updatedAt: -1 })
-    .lean()
 
   return (
     <div className="space-y-6">
@@ -38,14 +45,13 @@ export default async function NewClientPage() {
         </Button>
       </div>
 
-      <ClientForm org={org} existingClients={clients} />
+      <ClientForm org={org} />
     </div>
   )
 }
 
-function ClientForm({ org, existingClients }: {
+function ClientForm({ org }: {
   org: { id: string; name: string }
-  existingClients: any[]
 }) {
   return (
     <Card>

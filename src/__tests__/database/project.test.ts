@@ -34,7 +34,7 @@ describe('Project CRUD Operations', () => {
   it('should create a project with valid data', async () => {
     const project = await Project.create({
       name: 'Test Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     expect(project).toHaveProperty('_id')
     expect(project.status).toBe('ACTIVE')
@@ -43,7 +43,7 @@ describe('Project CRUD Operations', () => {
   it('should create a project with minimal required fields', async () => {
     const project = await Project.create({
       name: 'Minimal Project',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     expect(project).toHaveProperty('_id')
     expect(project.status).toBe('ACTIVE')
@@ -52,7 +52,7 @@ describe('Project CRUD Operations', () => {
   it('should update project status', async () => {
     const project = await Project.create({
       name: 'Status Test Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     const updated = await Project.findOneAndUpdate(
       { _id: project._id }, { status: 'COMPLETED' }, { new: true }
@@ -63,7 +63,7 @@ describe('Project CRUD Operations', () => {
   it('should delete a project', async () => {
     const project = await Project.create({
       name: 'Delete Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     await Project.deleteOne({ _id: project._id })
     const found = await Project.findById(project._id)
@@ -73,7 +73,7 @@ describe('Project CRUD Operations', () => {
   it('should find projects by organization', async () => {
     await Project.create({
       name: 'Org Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     const projects = await Project.find({ organizationId: testOrgId })
     expect(projects.length).toBeGreaterThan(0)
@@ -83,9 +83,9 @@ describe('Project CRUD Operations', () => {
   it('should find projects by client', async () => {
     await Project.create({
       name: 'Client Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
-    const projects = await Project.find({ clientId: testClientId as any })
+    const projects = await Project.find({ clientId: testClientId })
     expect(projects.length).toBeGreaterThan(0)
     expect(projects[0].clientId.toString()).toBe(testClientId)
   })
@@ -93,11 +93,11 @@ describe('Project CRUD Operations', () => {
   it('should filter projects by status', async () => {
     await Project.create({
       name: 'Active Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     await Project.create({
       name: 'Completed Project', status: 'COMPLETED',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     const activeProjects = await Project.find({ organizationId: testOrgId, status: 'ACTIVE' })
     expect(activeProjects.length).toBe(1)

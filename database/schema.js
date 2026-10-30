@@ -135,13 +135,6 @@ function requireConfirmation(): boolean {
 // These are the indexes declared via `index: true` or `unique: true` in the
 // Mongoose schema definitions.  createIndexes() will only create missing ones.
 
-type IndexSpec = {
-  key: Record<string, number>
-  name?: string
-  unique?: boolean
-  sparse?: boolean
-}
-
 const indexSpecs = {
   User: [
     { key: { email: 1 }, unique: true, name: 'email_1' },
@@ -293,7 +286,6 @@ async function main() {
         .toArray()
 
       const collectionName = model.collection || name.toLowerCase()
-      let collectionCreated = false
 
       if (existingCollections.length === 0) {
         // Collection doesn't exist — create it
@@ -317,7 +309,7 @@ async function main() {
           }
 
           // Build the options object, only including properties that make sense
-          const options: any = {}
+          const options: Record<string, unknown> = {}
           if (spec.unique !== undefined) options.unique = spec.unique
           if (spec.sparse !== undefined) options.sparse = spec.sparse
           // Always set the index name if provided
@@ -346,14 +338,6 @@ async function main() {
             }
           }
         }
-
-        if (createdIndexes.length > 0) {
-          console.log(`🔧 Created indexes for ${name}: ${createdIndexes.map((i) => i.name).join(', ')}`)
-        } else {
-          console.log(`🔧 All indexes already exist for ${name}`)
-        }
-      } else {
-        console.log(`ℹ️  No index specifications defined for ${name}`)
       }
     }
 

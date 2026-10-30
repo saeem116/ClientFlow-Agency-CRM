@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
-import { setupTestData, cleanupTestData, User, Organization, Membership } from '../utils/test-utils'
+import { setupTestData, cleanupTestData, Organization } from '../utils/test-utils'
 import { connectPromise } from '../utils/setup'
 
 // Mock next/headers so getSession() can be exercised in unit tests. The real
@@ -41,14 +41,18 @@ const {
   __setCookieHeader,
   __getCookies,
   __reset,
-} = nextHeaders as any
+} = nextHeaders as unknown as {
+  __setCookieHeader: (h: string) => void
+  __getCookies: () => Record<string, string>
+  __reset: () => void
+}
 
 import { encodeSession } from '@/lib/session-token'
 import { getSession, createSession, getOrganization, signOut } from '@/lib/auth'
 
 let testOrgId: string
 let testUserId: string
-let testData: any
+let testData: Awaited<ReturnType<typeof setupTestData>> | null = null
 
 beforeAll(async () => {
   try {

@@ -4,6 +4,17 @@ import { getModels } from "@/lib/database-scoped"
 import { redirect } from "next/navigation"
 import { ClientsPageClient } from "./clients-page-client"
 
+interface ClientLean {
+  _id: { toString(): string }
+  firstName?: string | null
+  lastName?: string | null
+  companyName?: string | null
+  email?: string | null
+  phone?: string | null
+  status?: string
+  updatedAt?: Date
+}
+
 export default async function ClientsPage() {
   await ensureDb()
   const session = await getSession()
@@ -21,7 +32,7 @@ export default async function ClientsPage() {
     .exec()
 
   // Normalize to match the Client interface in clients-page-client
-  const normalizedClients = clients.map((client: any) => ({
+  const normalizedClients = (clients as ClientLean[]).map((client: ClientLean) => ({
     id: client._id.toString(),
     name:
       client.companyName ||

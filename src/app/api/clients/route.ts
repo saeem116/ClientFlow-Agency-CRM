@@ -4,6 +4,23 @@ import { getOrganization, requireOrg, getSession } from "@/lib/auth"
 import { createNotification } from "@/lib/notifications"
 import { getModels } from "@/lib/database-scoped"
 
+interface ClientLean {
+  _id: { toString(): string }
+  id?: string
+  firstName?: string | null
+  lastName?: string | null
+  companyName?: string | null
+  email?: string | null
+  phone?: string | null
+  status?: string
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+interface MembershipLean {
+  userId: { toString(): string }
+}
+
 export async function GET(request: NextRequest) {
   await ensureDb()
   const session = await getSession()
@@ -34,7 +51,7 @@ export async function GET(request: NextRequest) {
     .sort({ updatedAt: -1 })
     .lean()
 
-  const results = clients.map((client: any) => ({
+  const results = clients.map((client: ClientLean) => ({
     id: (client.id as string) || client._id.toString(),
     name: client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Unnamed",
     email: client.email || "",
@@ -86,7 +103,7 @@ export async function POST(request: NextRequest) {
 
   // Notify other org members about new client
   if (session) {
-    const orgMembers = await Membership.find({ organizationId: org.id }).lean()
+    const orgMembers = await Membership.find({ organizationId: org.id }).lean() as MembershipLean[]
     for (const member of orgMembers) {
       if (member.userId.toString() !== session.user.id) {
         await createNotification({
@@ -101,8 +118,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const clientObj = client as unknown as ClientLean
   return NextResponse.json({
-    id: client._id.toString(),
-    ...(client as any).toObject ? (client as any).toObject() : client,
+    id: clientObj._id.toString(),
+    ...(clientObj as Record<string, unknown>),
   })
 }

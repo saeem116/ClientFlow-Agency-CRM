@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, test } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { setupTestData, cleanupTestData, User, Organization, Membership, Client } from '../utils/test-utils'
 
 let testOrgId: string
 let testUserId: string
-let testData: any
+let testData: Awaited<ReturnType<typeof setupTestData>> | null = null
 
 beforeAll(async () => {
   testData = await setupTestData()
@@ -37,7 +37,7 @@ describe('Security Tests', () => {
     await Membership.create({ userId: admin1._id, organizationId: testOrgId, role: 'ADMIN' })
     const memberships = await Membership.find({ organizationId: testOrgId })
     expect(memberships).toHaveLength(2)
-    const roles = new Set(memberships.map((m: any) => m.role))
+    const roles = new Set(memberships.map((m) => m.role))
     expect(roles.has('MEMBER')).toBe(true)
     expect(roles.has('ADMIN')).toBe(true)
   })

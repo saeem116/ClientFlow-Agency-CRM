@@ -187,9 +187,9 @@ const schemaMap: Record<string, mongoose.Schema> = {
   Invitation: invitationSchema,
 }
 
-const modelCache = new Map<string, mongoose.Model<any>>()
+const modelCache = new Map<string, mongoose.Model<mongoose.Document>>()
 
-async function getModel(name: string): Promise<mongoose.Model<any>> {
+async function getModel(name: string): Promise<mongoose.Model<mongoose.Document>> {
   const cached = modelCache.get(name)
   if (cached) return cached
 
@@ -197,7 +197,7 @@ async function getModel(name: string): Promise<mongoose.Model<any>> {
   if (!m) throw new Error(`Demo connection not available for model: ${name}`)
 
   // Clear any previously cached model with this name on the demo connection.
-  delete (m as any).models[name]
+  delete (m as unknown as Record<string, unknown>).models[name]
 
   const model = m.model(name, schemaMap[name])
   modelCache.set(name, model)

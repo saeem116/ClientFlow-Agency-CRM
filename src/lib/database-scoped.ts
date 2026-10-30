@@ -15,7 +15,10 @@
  *   const { Client, Project, Lead, Task, Invoice, Payment } = await getModels(session)
  *   const items = await Client.find({ organizationId: org.id })
  */
-import type { Model } from "mongoose"
+import type { Model, Document } from "mongoose"
+
+import { getSession } from "@/lib/auth"
+import { Session } from "@/lib/auth"
 
 /**
  * Returns the correct Mongoose model for each entity based on the current
@@ -24,25 +27,24 @@ import type { Model } from "mongoose"
  * Demo sessions → `database-demo.ts` models (second Mongoose instance).
  * Production / no session → `database.ts` models (main Mongoose instance).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getModels(
   sessionOverride?: { isDemo: boolean } | null
 ): Promise<{
-  User: Model<any>
-  Organization: Model<any>
-  Membership: Model<any>
-  Client: Model<any>
-  Lead: Model<any>
-  Project: Model<any>
-  Task: Model<any>
-  Milestone: Model<any>
-  Invoice: Model<any>
-  InvoiceLineItem: Model<any>
-  Payment: Model<any>
-  Activity: Model<any>
-  Notification: Model<any>
-  Invitation: Model<any>
-  File: Model<any>
+  User: Model<Document>
+  Organization: Model<Document>
+  Membership: Model<Document>
+  Client: Model<Document>
+  Lead: Model<Document>
+  Project: Model<Document>
+  Task: Model<Document>
+  Milestone: Model<Document>
+  Invoice: Model<Document>
+  InvoiceLineItem: Model<Document>
+  Payment: Model<Document>
+  Activity: Model<Document>
+  Notification: Model<Document>
+  Invitation: Model<Document>
+  File: Model<Document>
 }> {
   const session = sessionOverride ?? null
   const isDemo = session?.isDemo ?? false

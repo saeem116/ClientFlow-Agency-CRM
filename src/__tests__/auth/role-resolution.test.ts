@@ -9,9 +9,8 @@
  * a plain "MEMBER" everywhere.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { encodeSession } from '@/lib/session-token'
-import { hashPassword } from '@/lib/bcrypt'
 import { setupTestData, cleanupTestData, User, Organization, Membership } from '../utils/test-utils'
 import { connectPromise } from '../utils/setup'
 import { vi } from 'vitest'
@@ -38,7 +37,10 @@ vi.mock('next/headers', () => {
 })
 
 import * as nextHeaders from 'next/headers'
-const { __setCookieHeader, __reset } = nextHeaders as any
+const { __setCookieHeader, __reset } = nextHeaders as unknown as {
+  __setCookieHeader: (h: string) => void
+  __reset: () => void
+}
 
 describe('Role resolution — account vs organization role', () => {
   let testData: Awaited<ReturnType<typeof setupTestData>> | null = null

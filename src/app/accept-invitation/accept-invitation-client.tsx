@@ -3,11 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { IInvitationDocument } from "@/lib/mongoose/invitation"
+import { IInvitation } from "@/lib/mongoose/invitation"
 
 export default function AcceptInvitationClient({
   invitation,
 }: {
-  invitation: IInvitationDocument | null
+  invitation: IInvitation | null
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -27,7 +28,7 @@ export default function AcceptInvitationClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: (invitation as any).token,
+          token: invitation.token,
         }),
       })
 
@@ -73,7 +74,7 @@ export default function AcceptInvitationClient({
           Welcome!
         </h2>
         <p className="mt-2 text-slate-500 dark:text-slate-400">
-          You've been added to the organization. Redirecting...
+          You have been added to the organization. Redirecting...
         </p>
       </div>
     )

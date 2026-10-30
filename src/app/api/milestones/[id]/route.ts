@@ -4,6 +4,10 @@ import { getSession, requireOrg } from "@/lib/auth"
 import { getModels } from "@/lib/database-scoped"
 import { DemoAccountReadOnlyError } from "@/lib/demo-account"
 
+interface ProjectIdLean {
+  _id: { toString(): string }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -74,7 +78,7 @@ export async function PATCH(
   }
 
   const updated = await Milestone.findOneAndUpdate(
-    { _id: id, projectId: { $in: (await Project.find({ organizationId: org.id }).select("_id").lean()).map((p: any) => p._id) } },
+    { _id: id, projectId: { $in: (await Project.find({ organizationId: org.id }).select("_id").lean()).map((p: ProjectIdLean) => p._id) } },
     update,
     { new: true, runValidators: true }
   ).lean()
@@ -117,7 +121,7 @@ export async function DELETE(
   const Milestone = models.Milestone
   const Project = models.Project
 
-  const projectIds = (await Project.find({ organizationId: org.id }).select("_id").lean()).map((p: any) => p._id)
+  const projectIds = (await Project.find({ organizationId: org.id }).select("_id").lean()).map((p: ProjectIdLean) => p._id)
   const milestone = await Milestone.findOneAndDelete({ _id: id, projectId: { $in: projectIds } })
 
   if (!milestone) {

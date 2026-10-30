@@ -1,0 +1,209 @@
+﻿node.exe : npm notice run clientflow@1.0.0 lint
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\USER\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run clientflow@1.0.0 lint:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run eslint
+
+E:\Agency_CRM\clientflow\scripts\smtp-header-inspect.mjs
+  20:7  warning  'resolveTxt' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\scripts\test-avatar-cache.mjs
+  99:9  warning  'bufImgA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\scripts\test-avatar-end-to-end.mjs
+  162:9  warning  'imgBlueBuffer' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\scripts\test-avatar.mjs
+  172:5  warning  'avatarId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\scripts\test-full.mjs
+  73:7  warning  'fileId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\cross-org-regression.test.ts
+   15:112  warning  'InvoiceLineItem' is defined but never used           @typescript-eslint/no-unused-vars
+   15:129  warning  'Payment' is defined but never used                   @typescript-eslint/no-unused-vars
+   17:6    warning  'OrgScopedDoc' is defined but never used              @typescript-eslint/no-unused-vars
+  240:13   warning  'milestoneInOrg1' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\password-change.test.ts
+  151:15  warning  'PATCH' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  152:13  warning  'req' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\project-invoice-detail.test.ts
+  16:3  warning  'User' is defined but never used        @typescript-eslint/no-unused-vars
+  18:3  warning  'Membership' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\route-authorization-regression.test.ts
+   15:53  warning  'vi' is defined but never used                     @typescript-eslint/no-unused-vars
+   84:12  warning  'makeFormReq' is defined but never used            @typescript-eslint/no-unused-vars
+  102:12  warning  'isPublicRoute' is defined but never used          @typescript-eslint/no-unused-vars
+  298:43  warning  'resourceType' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\security.test.ts
+  5:5  warning  'testUserId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\auth\task-milestone-demo.test.ts
+  87:11  warning  '_n' is defined but never used  @typescript-eslint/no-unused-vars
+  87:23  warning  '_v' is defined but never used  @typescript-eslint/no-unused-vars
+  88:14  warning  '_n' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\business\project-progress.test.ts
+  2:68  warning  'Client' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\database\invoice.test.ts
+  2:77  warning  'Client' is defined but never used               @typescript-eslint/no-unused-vars
+  5:5   warning  'testUserId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\__tests__\scripts\reset-demo-password.validation.test.ts
+   1:32  warning  'vi' is defined but never used                      @typescript-eslint/no-unused-vars
+  10:3   warning  'ALLOWED_RESET_DB_HOSTS' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\admin\users\admin-users-page-client.tsx
+   3:20  warning  'useEffect' is defined but never used                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  10:8   warning  'Link' is defined but never used                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  60:11  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+E:\Agency_CRM\clientflow\src\app\api\auth\signout\route.ts
+  2:10  warning  'User' is defined but never used             @typescript-eslint/no-unused-vars
+  3:10  warning  'getOrganization' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\files\avatar\route.ts
+  61:30  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\invoices\[id]\payment\route.ts
+  2:38  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\leads\route.ts
+  2:20  warning  'Membership' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\api\tasks\route.ts
+   2:20  warning  'Membership' is defined but never used        @typescript-eslint/no-unused-vars
+  11:9   warning  'Project' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\clients\[id]\edit\client-edit-form.tsx
+  51:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+  75:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+E:\Agency_CRM\clientflow\src\app\clients\new\page.tsx
+  57:28  warning  'existingClients' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\dashboard\page.tsx
+  54:11  warning  'ProjectLean' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\files\files-page-client.tsx
+    3:33  warning  'useEffect' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   99:6   warning  React Hook useCallback has a missing dependency: 'fetchFiles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  121:6   warning  React Hook useCallback has a missing dependency: 'fetchFiles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\edit\page.tsx
+  40:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\page.tsx
+   52:9   warning  'lineItems' is assigned a value but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   77:9   error    Do not use an `<a>` element to navigate to `/invoices/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+  160:37  error    Unexpected any. Specify a different type                                                                                                                        @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\[id]\payment\page.tsx
+  22:9  warning  'Payment' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\invoices\new\page.tsx
+  29:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\invoices\page.tsx
+  25:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\leads\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\edit\page.tsx
+  41:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\page.tsx
+   97:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\project-detail-client.tsx
+   7:41  warning  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+  21:3   warning  'ChevronLeft' is defined but never used      @typescript-eslint/no-unused-vars
+  53:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\projects\[id]\project-edit-form.tsx
+  63:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+  87:7  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+E:\Agency_CRM\clientflow\src\app\projects\new\actions.ts
+  5:10  warning  'getOrganization' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\projects\new\page.tsx
+  26:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\page.tsx
+  25:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\projects\projects-page-client.tsx
+  76:64  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\Agency_CRM\clientflow\src\app\settings\page.tsx
+  34:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\tasks\[id]\edit\page.tsx
+   51:41  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  137:9   warning  'revalidatePath' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\app\tasks\new\page.tsx
+   11:10  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+   56:13  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:28  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\app\tasks\page.tsx
+  12:9   warning  'Project' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  25:48  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\components\layout\header.tsx
+  16:3   warning  'AlertCircle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  69:11  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @next/next/no-location-assign-relative-destination
+  85:3   error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\Agency_CRM\clientflow\src\components\layout\header.tsx:85:3
+  83 |
+  84 |   const fetchNotificationsRef = useRef(fetchNotifications)
+> 85 |   fetchNotificationsRef.current = fetchNotifications
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  86 |
+  87 |   // Load notifications on mount and when bell is clicked
+  88 |   useEffect(() => {  react-hooks/refs
+
+E:\Agency_CRM\clientflow\src\components\layout\project-search.tsx
+  17:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\Agency_CRM\clientflow\src\lib\auth.ts
+  423:9   warning  'DemoOrgModel' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  480:11  warning  'sessionToken' is defined but never used           @typescript-eslint/no-unused-vars
+  511:7   warning  'dbConnected' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\lib\database-scoped.ts
+  20:10  warning  'getSession' is defined but never used  @typescript-eslint/no-unused-vars
+  21:10  warning  'Session' is defined but never used     @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\src\lib\email.ts
+  3:8  warning  'nodemailer' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\Agency_CRM\clientflow\tests\auth-flow.spec.ts
+  73:11  warning  'response' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 91 problems (28 errors, 63 warnings)
+

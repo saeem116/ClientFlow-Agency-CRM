@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { encodeSession } from '@/lib/session-token'
 import { hashPassword } from '@/lib/bcrypt'
-import { setupTestData, cleanupTestData, User, Organization, Membership } from '../utils/test-utils'
+import { setupTestData, cleanupTestData, User } from '../utils/test-utils'
 import { connectPromise } from '../utils/setup'
 
 // Mock next/headers for getSession()
@@ -28,7 +28,10 @@ vi.mock('next/headers', () => {
 })
 
 import * as nextHeaders from 'next/headers'
-const { __setCookieHeader, __reset } = nextHeaders as any
+const { __setCookieHeader, __reset } = nextHeaders as unknown as {
+  __setCookieHeader: (h: string) => void
+  __reset: () => void
+}
 
 describe('PATCH /api/auth/password', () => {
   let testData: Awaited<ReturnType<typeof setupTestData>> = null
@@ -121,7 +124,9 @@ describe('PATCH /api/auth/password', () => {
     expect(res.status).toBe(200)
 
     // Verify the new password works
-    const user = await User.findById(testUserId).select('+password').lean() as any
+    const user = await User.findById(testUserId).select('+password').lean() as
+      | { _id: { toString(): string }; password: string }
+      | null
     expect(user?.password).toBeTruthy()
     expect(user?.password).not.toBe(hashed)
   })

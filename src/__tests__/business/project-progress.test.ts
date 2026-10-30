@@ -4,7 +4,7 @@ import { setupTestData, cleanupTestData, Project, Task, Milestone, Client, Organ
 let testOrgId: string
 let testUserId: string
 let testClientId: string
-let testData: any
+let testData: Awaited<ReturnType<typeof setupTestData>> | null = null
 
 beforeAll(async () => {
   testData = await setupTestData()
@@ -40,7 +40,7 @@ describe('Project Progress Business Logic', () => {
     const project = await Project.create({
       name: 'Progress Tracking Project', description: 'Test project for progress tracking',
       status: 'ACTIVE', priority: 'HIGH', budget: 10000,
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     expect(project.status).toBe('ACTIVE')
     expect(project.budget).toBe(10000)
@@ -49,7 +49,7 @@ describe('Project Progress Business Logic', () => {
   it('should update project status progression', async () => {
     const project = await Project.create({
       name: 'Status Progress Project', status: 'DRAFT', priority: 'MEDIUM',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     expect(project.status).toBe('DRAFT')
     const d = await Project.findOneAndUpdate({ _id: project._id }, { status: 'ACTIVE' }, { new: true })
@@ -63,7 +63,7 @@ describe('Project Progress Business Logic', () => {
   it('should update project budget', async () => {
     const project = await Project.create({
       name: 'Budget Update Project', status: 'ACTIVE', priority: 'MEDIUM',
-      budget: 5000, organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      budget: 5000, organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     expect(project.budget).toBe(5000)
     const updated = await Project.findOneAndUpdate({ _id: project._id }, { budget: 7500 }, { new: true })
@@ -73,7 +73,7 @@ describe('Project Progress Business Logic', () => {
   it('should track project milestones', async () => {
     const project = await Project.create({
       name: 'Milestone Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     const milestone = await Milestone.create({
       title: 'Milestone 1', description: 'First milestone',
@@ -87,7 +87,7 @@ describe('Project Progress Business Logic', () => {
   it('should calculate project tasks completion', async () => {
     const project = await Project.create({
       name: 'Task Completion Project', status: 'ACTIVE',
-      organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     await Task.create({ title: 'Completed Task', status: 'DONE', projectId: project._id, assigneeId: testUserId })
     await Task.create({ title: 'In Progress Task', status: 'IN_PROGRESS', projectId: project._id, assigneeId: testUserId })
@@ -101,16 +101,16 @@ describe('Project Progress Business Logic', () => {
   })
 
   it('should filter projects by status', async () => {
-    await Project.create({ name: 'Draft Project', status: 'DRAFT', organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId })
-    await Project.create({ name: 'Active Project', status: 'ACTIVE', organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId })
+    await Project.create({ name: 'Draft Project', status: 'DRAFT', organizationId: testOrgId, clientId: testClientId, createdById: testUserId })
+    await Project.create({ name: 'Active Project', status: 'ACTIVE', organizationId: testOrgId, clientId: testClientId, createdById: testUserId })
     const activeProjects = await Project.find({ organizationId: testOrgId, status: 'ACTIVE' })
     expect(activeProjects.length).toBe(1)
     expect(activeProjects[0].status).toBe('ACTIVE')
   })
 
   it('should find projects by client', async () => {
-    await Project.create({ name: 'Client A Project 1', status: 'ACTIVE', organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId })
-    await Project.create({ name: 'Client A Project 2', status: 'DRAFT', organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId })
+    await Project.create({ name: 'Client A Project 1', status: 'ACTIVE', organizationId: testOrgId, clientId: testClientId, createdById: testUserId })
+    await Project.create({ name: 'Client A Project 2', status: 'DRAFT', organizationId: testOrgId, clientId: testClientId, createdById: testUserId })
     const clientProjects = await Project.find({ clientId: testClientId, organizationId: testOrgId })
     expect(clientProjects.length).toBe(2)
   })
@@ -118,7 +118,7 @@ describe('Project Progress Business Logic', () => {
   it('should calculate project budget utilization', async () => {
     const project = await Project.create({
       name: 'Budget Utilization Project', status: 'ACTIVE',
-      budget: 10000, organizationId: testOrgId, clientId: testClientId as any, createdById: testUserId,
+      budget: 10000, organizationId: testOrgId, clientId: testClientId, createdById: testUserId,
     })
     const tasks = await Task.find({ projectId: project._id })
     expect(tasks.length).toBe(0)

@@ -38,7 +38,16 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
     .sort({ updatedAt: -1 })
     .lean()
   // Convert Mongoose documents to plain serializable objects for Client Components
-  const clients = (rawClients || []).map((c: any) => ({
+  interface ClientLean {
+    _id: { toString(): string }
+    firstName?: string | null
+    lastName?: string | null
+    companyName?: string | null
+    email?: string | null
+    phone?: string | null
+    status?: string
+  }
+  const clients = (rawClients || []).map((c: ClientLean) => ({
     id: c._id.toString(),
     firstName: c.firstName || null,
     lastName: c.lastName || null,
@@ -74,7 +83,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
           lastName: null,
         } : null,
       }}
-      clients={clients.map((c: any) => ({
+      clients={clients.map((c) => ({
         id: c._id?.toString() || "",
         companyName: c.companyName || null,
         firstName: c.firstName || null,

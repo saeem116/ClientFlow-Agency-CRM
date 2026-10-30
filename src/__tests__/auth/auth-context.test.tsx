@@ -168,7 +168,7 @@ describe('auth-context', () => {
       })
     )
 
-    let captured: AuthContextType = null as any
+    let captured: AuthContextType | null = null
     render(
       <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
         <Harness
@@ -179,14 +179,14 @@ describe('auth-context', () => {
       </AuthProvider>
     )
 
-    await waitFor(() => expect(captured.loading).toBe(false))
+    await waitFor(() => expect(captured!.loading).toBe(false))
 
     act(() => {
-      captured.setUser(userShape)
-      captured.setOrg(orgShape)
+      captured!.setUser(userShape)
+      captured!.setOrg(orgShape)
     })
 
-    expect(captured.user).toEqual(userShape)
-    expect(captured.org).toEqual(orgShape)
+    expect(captured!.user).toEqual(userShape)
+    expect(captured!.org).toEqual(orgShape)
   })
 })

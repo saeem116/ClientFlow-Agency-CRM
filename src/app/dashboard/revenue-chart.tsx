@@ -11,7 +11,7 @@ import {
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency, formatCompactCurrency } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useTheme } from "@/components/providers/theme-provider"
 
 interface RevenueDataPoint {
@@ -90,11 +90,7 @@ function CustomTooltip({ active, payload, theme }: { active?: boolean; payload?:
 export function RevenueChart({ data: initialData }: RevenueChartProps) {
   const [selectedRange, setSelectedRange] = useState<DateRange>(dateRanges[2])
   const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const [mounted] = useState(true)
 
   const theme = mounted ? resolvedTheme : "light"
   const colors = chartColors[theme]

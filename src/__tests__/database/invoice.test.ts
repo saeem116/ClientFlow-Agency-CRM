@@ -4,7 +4,7 @@ import { setupTestData, cleanupTestData, Invoice, InvoiceLineItem, Payment, Clie
 let testOrgId: string
 let testUserId: string
 let testClientId: string
-let testData: any
+let testData: Awaited<ReturnType<typeof setupTestData>> | null = null
 
 beforeAll(async () => {
   testData = await setupTestData()
@@ -39,7 +39,7 @@ describe('Invoice Operations', () => {
       number: 'INV-TEST-001', status: 'SENT', issueDate: new Date(),
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       subtotal: 10000, taxRate: 10, taxAmount: 1000, total: 11000,
-      paidAmount: 0, organizationId: testOrgId, clientId: testClientId as any,
+      paidAmount: 0, organizationId: testOrgId, clientId: testClientId,
     })
     expect(invoice).toHaveProperty('_id')
     expect(invoice.status).toBe('SENT')
@@ -50,7 +50,7 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-002', status: 'SENT', subtotal: 0, taxRate: 10,
       taxAmount: 0, total: 0, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     const lineItem = await InvoiceLineItem.create({
       description: 'Design Services', quantity: 2, unitPrice: 5000, amount: 10000,
@@ -64,7 +64,7 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-003', status: 'SENT', subtotal: 15000, taxRate: 8,
       taxAmount: 1200, total: 16200, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     expect(invoice.subtotal).toBe(15000)
     expect(invoice.taxRate).toBe(8)
@@ -76,7 +76,7 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-004', status: 'SENT', subtotal: 5000, taxRate: 10,
       taxAmount: 500, total: 5500, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     const updated = await Invoice.findOneAndUpdate(
       { _id: invoice._id }, { status: 'PAID', paidAmount: 5500 }, { new: true }
@@ -89,7 +89,7 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-005', status: 'SENT', subtotal: 10000, taxRate: 10,
       taxAmount: 1000, total: 11000, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     await Payment.create({ amount: 5000, method: 'BANK_TRANSFER', invoiceId: invoice._id })
     const updated = await Invoice.findOneAndUpdate(
@@ -103,7 +103,7 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-006', status: 'SENT', subtotal: 8000, taxRate: 10,
       taxAmount: 800, total: 8800, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     const outstanding = invoice.total - invoice.paidAmount
     expect(outstanding).toBe(8800)
@@ -113,20 +113,20 @@ describe('Invoice Operations', () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-007', status: 'SENT', subtotal: 0, taxRate: 10,
       taxAmount: 0, total: 0, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     await InvoiceLineItem.create({ description: 'Service A', quantity: 1, unitPrice: 3000, amount: 3000, invoiceId: invoice._id })
     await InvoiceLineItem.create({ description: 'Service B', quantity: 2, unitPrice: 4000, amount: 8000, invoiceId: invoice._id })
     const lineItems = await InvoiceLineItem.find({ invoiceId: invoice._id })
     expect(lineItems.length).toBe(2)
-    expect(lineItems.reduce((sum: number, item: any) => sum + item.amount, 0)).toBe(11000)
+    expect(lineItems.reduce((sum: number, item) => sum + item.amount, 0)).toBe(11000)
   })
 
   it('should calculate invoice tax calculations', async () => {
     const invoice = await Invoice.create({
       number: 'INV-TEST-008', status: 'SENT', subtotal: 10000, taxRate: 8.25,
       taxAmount: 825, total: 10825, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     expect(invoice.subtotal).toBe(10000)
     expect(invoice.taxRate).toBe(8.25)
@@ -138,13 +138,13 @@ describe('Invoice Operations', () => {
     await Invoice.create({
       number: 'INV-TEST-008', status: 'SENT', subtotal: 1000, taxRate: 10,
       taxAmount: 100, total: 1100, paidAmount: 0,
-      organizationId: testOrgId, clientId: testClientId as any,
+      organizationId: testOrgId, clientId: testClientId,
     })
     const otherOrg = await Organization.create({ name: 'Other Org Invoices', slug: 'other-org-inv-' + Date.now() })
     await Invoice.create({
       number: 'INV-TEST-009', status: 'SENT', subtotal: 2000, taxRate: 10,
       taxAmount: 200, total: 2200, paidAmount: 0,
-      organizationId: otherOrg._id, clientId: testClientId as any,
+      organizationId: otherOrg._id, clientId: testClientId,
     })
     const orgInvoices = await Invoice.find({ organizationId: testOrgId })
     expect(orgInvoices.length).toBe(1)

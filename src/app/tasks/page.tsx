@@ -9,7 +9,6 @@ export default async function TasksPage() {
   const session = await getSession()
   const models = await getModels(session)
   const Task = models.Task
-  const Project = models.Project
   const org = await getOrganization()
 
   if (!org) {
@@ -22,7 +21,17 @@ export default async function TasksPage() {
     .lean()
     .exec()
 
-  return <TasksPageClient tasks={tasks.map((t: any) => ({
+  return <TasksPageClient tasks={tasks.map((t: {
+    _id: { toString(): string };
+    title: string;
+    description: string | null;
+    status: string;
+    priority: string;
+    dueDate: Date | null;
+    completedAt: Date | null;
+    projectId: { toString(): string } | null;
+    assigneeId: { toString(): string } | null;
+  }) => ({
     id: t._id.toString(),
     title: t.title,
     description: t.description || null,
