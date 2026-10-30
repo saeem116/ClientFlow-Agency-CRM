@@ -2,6 +2,15 @@ import { NextRequest } from "next/server"
 import { ensureDb, Client, Project, Task, Invoice, Lead } from "@/lib/database"
 import { getOrganization } from "@/lib/auth"
 
+/**
+ * Escape regex metacharacters in a user-supplied string so it is always
+ * interpreted as a literal. Used by the search endpoint to prevent a query
+ * like "test.*" or "foo|bar" from becoming a regex pattern.
+ */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 export async function GET(request: NextRequest) {
   await ensureDb()
   const { searchParams } = new URL(request.url)
@@ -16,7 +25,11 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const q = query
+  // Escape regex metacharacters so a user-supplied search string is always
+  // treated as a literal. Without this, a query like "test.*" or "foo|bar"
+  // becomes a regex pattern and can match unintended records (or, in theory,
+  // be abused for ReDoS-style pattern injection).
+  const q = escapeRegex(query)
 
   // Search across all entity types in parallel, scoped to the user's organization.
   // Tasks are scoped by organizationId so users cannot discover records from

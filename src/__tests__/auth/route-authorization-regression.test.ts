@@ -444,4 +444,45 @@ describe('Route Authorization Regression', () => {
       expect(res.status).toBe(200)
     })
   })
+
+  // ── Password hash exclusion ──
+  describe('Password hash never returned in responses', () => {
+    it('GET /api/auth/me → no password field in response', async () => {
+      const mod = await importRoute('@/app/api/auth/me/route')
+      const req = makeReq('GET', 'http://localhost/api/auth/me', null, validToken)
+      const res = await mod.GET(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.user).toBeDefined()
+      expect(json.user.password).toBeUndefined()
+      expect(json.user._id).toBeDefined() // sanity
+    })
+
+    it('GET /api/admin/users → no password field in response', async () => {
+      const mod = await importRoute('@/app/api/admin/users/route')
+      const req = makeReq('GET', 'http://localhost/api/admin/users', null, validToken)
+      const res = await mod.GET(req)
+      // May be 403 for non-admin, but if 200, ensure no password
+      if (res.status === 200) {
+        const json = await res.json()
+        expect(json.users).toBeDefined()
+        for (const u of json.users) {
+          expect(u.password).toBeUndefined()
+        }
+      }
+    })
+
+    it('GET /api/search → no password field in any result', async () => {
+      const mod = await importRoute('@/app/api/search/route')
+      const req = makeReq('GET', 'http://localhost/api/search?q=test', null, validToken)
+      const res = await mod.GET(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.results).toBeDefined()
+      for (const r of json.results) {
+        expect(r.password).toBeUndefined()
+        // results don't even have user objects, but be safe
+      }
+    })
+  })
 })

@@ -1,6 +1,6 @@
-"use server"
+﻿"use server"
 
-import nodemailer from "nodemailer"
+import nodemailer, { createTransport, type Transporter } from "nodemailer"
 
 /**
  * Sanitize a string for safe insertion into HTML (prevents XSS).
@@ -21,9 +21,9 @@ function escapeHtml(str: string): string {
  * for all subsequent email sends. SMTP credentials are read from
  * environment variables and are never logged.
  */
-let cachedTransporter: nodemailer.Transporter | null = null
+let cachedTransporter: Transporter | null = null
 
-function getTransporter(): nodemailer.Transporter | null {
+function getTransporter(): Transporter | null {
   if (cachedTransporter) return cachedTransporter
 
   const {
@@ -43,7 +43,7 @@ function getTransporter(): nodemailer.Transporter | null {
     return null
   }
 
-  cachedTransporter = nodemailer.createTransport({
+  cachedTransporter = createTransport({
     host,
     port: portNum,
     secure: String(secure).toLowerCase() === "true",
@@ -213,7 +213,7 @@ ${acceptLink}
 
 Security notice: This invitation is linked to ${recipientEmail}. If you didn't expect this invite, you can safely ignore this email.
 
-© ${currentYear} ClientFlow`
+Â© ${currentYear} ClientFlow`
 
   try {
     const info = await transporter.sendMail({
@@ -275,7 +275,7 @@ export async function verifySmtpConnection(): Promise<{
   }
 
   // Build a temporary transporter (not cached) to avoid leaking auth state
-  const transporter = nodemailer.createTransport({
+  const transporter = createTransport({
     host,
     port: portNum,
     secure: String(secure).toLowerCase() === "true",
@@ -290,3 +290,5 @@ export async function verifySmtpConnection(): Promise<{
     return { success: false, error: message, host }
   }
 }
+
+

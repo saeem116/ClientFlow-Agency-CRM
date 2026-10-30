@@ -32,9 +32,12 @@ export async function GET(request: NextRequest) {
 
   const filter: Record<string, unknown> = {}
   if (search) {
+    // Escape regex metacharacters so the admin search box behaves as a
+    // literal substring match rather than accepting a regex pattern.
+    const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     filter.$or = [
-      { email: { $regex: search, $options: "i" } },
-      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: escaped, $options: "i" } },
+      { name: { $regex: escaped, $options: "i" } },
     ]
   }
 

@@ -73,9 +73,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Shared demo account may view invitations but may never create them.
-  try {
-    requireOrg()
-  } catch {
+  // requireOrg() returns null (does not throw) for demo sessions, so the
+  // null check is the authoritative gate — a bare try/catch would never fire.
+  const org = await requireOrg()
+  if (!org) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -103,17 +104,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Get organization
-  const memberships = await Membership.find({ userId: session.user.id }).lean()
-  if (!memberships.length) {
-    return NextResponse.json(
-      { error: "No organization found" },
-      { status: 404 }
-    )
-  }
-  const orgId = memberships[0].organizationId.toString()
-  const org = await Organization.findById(orgId).lean() as unknown as { name: string } | null
-  const orgName = org?.name || "ClientFlow"
+  // Get organization name for the invitation email (we already have org from requireOrg())
+  const orgId = org.id
+  const orgName = org.name
 
   // Check for duplicate pending invitation
   const existing = await Invitation.findOne({
