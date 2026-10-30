@@ -212,7 +212,9 @@ if ($mongoMatches) {
 $secretPattern = '(API_KEY|AUTH_SECRET)\s*=\s*["''][^"''\s]{16,}|SMTP_PASS\s*=\s*["''][^"''\s]{8,}'
 $scanFiles = Get-ChildItem -Path $tempExtract -Recurse -Include *.ts,*.js,*.mjs,*.json -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notmatch '(__tests__|\.test\.|\.spec\.|create-submission)' }
-$secretMatches = $scanFiles | Select-String -Pattern $secretPattern -ErrorAction SilentlyContinue
+$secretMatches = foreach ($f in $scanFiles) {
+    Select-String -Path $f.FullName -Pattern $secretPattern -ErrorAction SilentlyContinue
+}
 if ($secretMatches) {
     Write-Host "WARNING: Potential secret pattern found in archive!" -ForegroundColor Yellow
     $secretMatches | ForEach-Object { Write-Host "  $($_.Path)" -ForegroundColor Gray }
