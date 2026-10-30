@@ -73,10 +73,11 @@ function validateDemoUri(uri: string): { ok: boolean; error?: string } {
 /**
  * Connect to the demo database, returning the demo Mongoose instance.
  *
- * A demo DB failure does NOT crash the application — callers that need the
- * connection should check the return value.  If DEMO_MONGODB_URI is not set,
- * null is returned immediately so the app falls through to the production
- * flow gracefully instead of throwing.
+ * Returns null ONLY when DEMO_MONGODB_URI is not configured at all — in that
+ * case the app simply has no demo account to offer and falls through to the
+ * production flow.  Any connection failure (unreachable host, bad credentials,
+ * timeout) is thrown so callers can surface a meaningful "temporarily
+ * unavailable" message instead of a misleading "not configured" one.
  */
 export async function connectDemoDb(): Promise<Mongoose | null> {
   const m = getOrCreateDemoMongoose()
@@ -87,22 +88,14 @@ export async function connectDemoDb(): Promise<Mongoose | null> {
     return m
   }
 
-  try {
-    await m.connect(process.env.DEMO_MONGODB_URI!, {
-      bufferCommands: false,
-      maxPoolSize: 10,
-      minPoolSize: 2,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
-    })
-    return m
-  } catch (err) {
-    console.error(
-      "[demo-mongoose] Demo DB connection failed:",
-      err instanceof Error ? err.message : String(err),
-    )
-    return null
-  }
+  await m.connect(process.env.DEMO_MONGODB_URI!, {
+    bufferCommands: false,
+    maxPoolSize: 10,
+    minPoolSize: 2,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 10000,
+  })
+  return m
 }
 
 /**

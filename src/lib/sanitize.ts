@@ -11,18 +11,18 @@ export function sanitize<T>(doc: T): T {
   if (Array.isArray(doc)) return doc.map(sanitize) as unknown as T
 
   const obj = doc as Record<string, unknown>
-  if (obj._id && typeof (obj._id as any).toString === "function") {
-    obj._id = (obj._id as any).toString()
+  if (obj._id && typeof (obj._id as { toString?: unknown }).toString === "function") {
+    obj._id = (obj._id as { toString: () => string }).toString()
   }
   for (const key of Object.keys(obj)) {
     if (key === "__v") delete obj[key]
     const val = obj[key]
     if (val && typeof val === "object" && !Array.isArray(val) && "toString" in val) {
-      obj[key] = (val as any).toString()
+      obj[key] = (val as { toString: () => string }).toString()
     } else if (Array.isArray(val)) {
       obj[key] = val.map((item) =>
         item && typeof item === "object" && "toString" in item
-          ? (item as any).toString()
+          ? (item as { toString: () => string }).toString()
           : item
       )
     }

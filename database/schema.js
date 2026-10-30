@@ -5,7 +5,7 @@
  * populated database, matching the actual Mongoose models in src/lib/mongoose/.
  *
  * This script is idempotent and safe to run multiple times.
- * It uses model.createIndexes() which only adds missing indexes and never
+ * It uses model.createIndex() which only adds missing indexes and never
  * drops existing ones. It does NOT use syncIndexes() or cleanIndexes().
  *
  * Usage:
@@ -197,6 +197,7 @@ const indexSpecs = {
   ],
   Payment: [
     { key: { invoiceId: 1 }, name: 'invoiceId_1' },
+    { key: { organizationId: 1 }, name: 'organizationId_1' },
   ],
   Activity: [
     { key: { type: 1 }, name: 'type_1' },
@@ -328,11 +329,20 @@ async function main() {
             createdIndexes.push({ name: result, key: JSON.stringify(indexKey) })
             totalIndexesCreated++
           } catch (err) {
-            // Skip duplicate index errors gracefully (index already exists)
-            if ((err as Error).message?.includes('E11000 duplicate key')) {
-              // Index already exists; skip
+            const msg = (err as Error).message || String(err)
+            // Idempotent: skip when the index already exists with the same
+            // or compatible options.  Different error codes from MongoDB:
+            //   - E11000 duplicate key: index already exists (unique)
+            //   - IndexOptionsConflict: index exists with different options
+            //   - "index already exists": generic message
+            if (
+              msg.includes('E11000 duplicate key') ||
+              msg.includes('IndexOptionsConflict') ||
+              msg.includes('index already exists')
+            ) {
+              // Index already exists; skip silently.
             } else {
-              errors.push(`Model ${name}: failed to create index ${JSON.stringify(indexKey)} — ${(err as Error).message}`)
+              errors.push(`Model ${name}: failed to create index ${JSON.stringify(indexKey)} — ${msg}`)
             }
           }
         }

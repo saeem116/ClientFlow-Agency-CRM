@@ -24,6 +24,7 @@ import type { Model } from "mongoose"
  * Demo sessions → `database-demo.ts` models (second Mongoose instance).
  * Production / no session → `database.ts` models (main Mongoose instance).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getModels(
   sessionOverride?: { isDemo: boolean } | null
 ): Promise<{

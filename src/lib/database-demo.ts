@@ -123,7 +123,7 @@ const paymentSchema = new mongoose.Schema({
   reference: { type: String, default: null },
   notes: { type: String, default: null },
   invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice", required: true },
-  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
 }, { timestamps: true })
 
 const milestoneSchema = new mongoose.Schema({

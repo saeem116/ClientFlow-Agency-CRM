@@ -15,7 +15,6 @@ import {
 } from "./session-token"
 import { requireNotDemoAccount, getDemoAccountEmail } from "./demo-account"
 import { connectDemoDb } from "./demo-mongoose"
-import type { Mongoose } from "mongoose"
 
 export interface SessionUser {
   id: string
@@ -385,16 +384,16 @@ export async function signIn(email: string, password: string): Promise<{ user: S
 
     if (isDemoLogin) {
       // Demo login: authenticate against demo database ONLY.
-      let demoMongoose: Mongoose | null
-      try {
-        demoMongoose = await connectDemoDb()
-      } catch (dbErr) {
-        console.error("[signIn] Demo DB connection failed:", dbErr instanceof Error ? dbErr.message : String(dbErr))
-        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
-      }
-
+      const demoMongoose = await connectDemoDb()
       if (!demoMongoose) {
+        // DEMO_MONGODB_URI is not configured on this deployment.
         return { user: null, error: "Demo database is not configured. Please try again later." }
+      }
+      if (demoMongoose.connection.readyState !== 1) {
+        // The connection exists but failed to establish (host unreachable,
+        // auth error, timeout).  Surface a "temporarily unavailable" message
+        // rather than a misleading "not configured" one.
+        return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
       }
 
       const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")

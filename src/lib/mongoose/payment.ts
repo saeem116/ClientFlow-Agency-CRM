@@ -9,6 +9,7 @@ export interface IPayment {
   notes: string | null
   createdAt: Date
   invoiceId: string
+  organizationId: string
 }
 
 export interface IPaymentDocument extends Document {
@@ -19,6 +20,7 @@ export interface IPaymentDocument extends Document {
   notes: string | null
   createdAt: Date
   invoiceId: Types.ObjectId
+  organizationId: Types.ObjectId
 }
 
 const paymentSchema = new Schema<IPaymentDocument>(
@@ -50,6 +52,12 @@ const paymentSchema = new Schema<IPaymentDocument>(
     invoiceId: {
       type: Schema.Types.ObjectId,
       ref: "Invoice",
+      required: true,
+      index: true,
+    },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true,
     },
