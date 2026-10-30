@@ -9,7 +9,7 @@ This guide covers installation, configuration, and deployment for ClientFlow Age
 - Git
 - A domain name (for production)
 
-## Quick Start
+## Quick Start — Local Development (Node.js + MongoDB)
 
 ```bash
 # 1. Clone the repository
@@ -23,15 +23,59 @@ npm install
 cp .env.example .env.local
 # Edit .env.local — see Configuration section below
 
-# 4. Run the index migration (required for first time)
+# 4. Start MongoDB (if not using Atlas)
+# Option A: Docker (recommended for local)
+docker run -d -p 27017:27017 --name mongo -e MONGO_INITDB_DATABASE=clientflow mongo:7
+
+# Option B: Local MongoDB installation
+
+# 5. Run the index migration (required for first time)
 node database/migrations/001-create-indexes.js
 
-# 5. Seed demo data (optional, for testing)
+# 6. Seed demo data (optional, for testing)
 node scripts/seed-demo.js
 
-# 6. Start the development server
+# 7. Start the development server
 npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Quick Start — Docker Compose (Recommended for Local)
+
+The project includes a `docker-compose.yml` with Next.js app and MongoDB.
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/saeem116/ClientFlow-Agency-CRM.git
+cd ClientFlow-Agency-CRM/clientflow
+
+# 2. Configure environment
+cp .env.example .env.local
+# Edit .env.local with your values (see Configuration section)
+
+# 3. Start the stack
+docker compose up -d
+
+# 4. Run database initialization (creates collections & indexes)
+docker compose exec app node database/schema.js
+
+# 5. Seed demo data (optional)
+docker compose exec app node database/seed.js
+# Requires DEMO_SEED_MONGODB_URI and DEMO_REVIEWER_PASSWORD in .env.local
+
+# 6. Access the app
+# http://localhost:3000
+```
+
+The `docker-compose.yml` includes:
+- **app**: Next.js production build (multi-stage Dockerfile)
+- **mongo**: MongoDB 7 with persistent volume `mongo_data`
+- Health checks on both services
+- Automatic service dependency (app waits for mongo healthy)
+
+To stop: `docker compose down`  
+To stop and remove volumes: `docker compose down -v`
 
 Open [http://localhost:3000](http://localhost:3000).
 
@@ -139,13 +183,45 @@ Copy these from `.env.local` to Vercel:
 
 ## Docker Deployment
 
-### Build and Run
+### Docker Compose (Recommended)
+
+The project includes a complete `docker-compose.yml` with Next.js app, MongoDB, persistent volumes, health checks, and proper networking.
+
+```bash
+# 1. Clone and configure
+git clone https://github.com/saeem116/ClientFlow-Agency-CRM.git
+cd ClientFlow-Agency-CRM/clientflow
+cp .env.example .env.local
+# Edit .env.local with your values
+
+# 2. Start the stack
+docker compose up -d
+
+# 3. Initialize database schema (creates collections & indexes)
+docker compose exec app node database/schema.js
+
+# 4. Seed demo data (optional)
+docker compose exec app node database/seed.js
+# Requires DEMO_SEED_MONGODB_URI and DEMO_REVIEWER_PASSWORD in .env.local
+
+# 5. Access at http://localhost:3000
+```
+
+**docker-compose.yml highlights:**
+- Multi-stage Dockerfile (builder → runner) for small production image
+- MongoDB 7 with named volume `mongo_data` for persistence
+- Health checks on both services (`mongosh ping` and `wget /api/health`)
+- App waits for MongoDB to be healthy before starting
+- Restart policy `unless-stopped` for both services
+- Environment via `.env.local` (mounted, not baked into image)
+
+### Docker Build & Run (Manual)
 
 ```bash
 # Build the Docker image
 docker build -t clientflow .
 
-# Run with environment variables
+# Run with environment variables (requires external MongoDB)
 docker run -d \
   -p 3000:3000 \
   --env-file .env.local \
@@ -153,40 +229,7 @@ docker run -d \
   clientflow
 ```
 
-### Docker Compose
-
-Create a `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env.local
-    depends_on:
-      - mongo
-    restart: unless-stopped
-
-  mongo:
-    image: mongo:7
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    restart: unless-stopped
-
-volumes:
-  mongo_data:
-```
-
-Run with:
-```bash
-docker compose up -d
-```
+For manual runs, ensure `MONGODB_URI` in `.env.local` points to an accessible MongoDB instance (not `localhost` inside the container).
 
 ## VPS Deployment
 

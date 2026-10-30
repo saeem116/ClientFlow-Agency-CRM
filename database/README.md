@@ -10,10 +10,10 @@ Mongoose schemas define the structure at the application layer.
 
 | File | Purpose |
 |---|---|
-| `migrations/001-create-indexes.js` | Creates all required MongoDB indexes. Idempotent and
-non-destructive — safe to run against any database state. |
-| `migrations/002-seed-demo-data.js` | Seeds realistic fake demo data. Safe,
-idempotent, refuses to run against production URIs. |
+| `schema.js` | Creates all MongoDB collections and indexes from an empty database. Idempotent and non-destructive — safe to run against any database state. |
+| `seed.js` | Seeds the shared public demo account (`reviewer@clientflow.test`) and fictional data into a dedicated `clientflow_demo` database. Requires explicit opt-in. |
+| `migrations/001-create-indexes.js` | Creates all required MongoDB indexes. Idempotent and non-destructive — safe to run against any database state. |
+| `migrations/002-seed-demo-data.js` | Seeds realistic fake demo data. Safe, idempotent, refuses to run against production URIs. |
 
 ## How to Create a Fresh Database
 

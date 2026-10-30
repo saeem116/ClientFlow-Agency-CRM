@@ -1,0 +1,92 @@
+# ClientFlow Agency CRM — Docker Compose
+#
+# Local development stack with Next.js app and MongoDB.
+# Run: docker compose up -d
+#
+# Requirements:
+# - Docker Engine 24+
+# - Docker Compose v2 (built into Docker Desktop / `docker compose` plugin)
+#
+# Environment:
+# - Copy .env.example to .env.local and fill in values
+# - The app reads from .env.local (mounted at /app/.env.local)
+# - MongoDB data persists in the `mongo_data` volume
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # MongoDB
+  # ─────────────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: clientflow-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # Optional: enable authentication by setting MONGO_INITDB_ROOT_USERNAME/PASSWORD
+    # and adding --auth to command. For local dev, auth is disabled by default.
+    # command: ["--auth"]
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Next.js Application
+  # ─────────────────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clientflow-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      # Ensure the app connects to the mongo service by hostname
+      - MONGODB_URI=mongodb://mongo:27017/clientflow
+      # Disable Next.js telemetry in containers
+      - NEXT_TELEMETRY_DISABLED=1
+      # App URL inside the container network
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # Health check for the Next.js server
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Optional: MongoDB Express (admin UI) — comment out if not needed
+  # ─────────────────────────────────────────────────────────────────────────
+  # mongo-express:
+  #   image: mongo-express:1
+  #   container_name: clientflow-mongo-express
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - ME_CONFIG_MONGODB_SERVER=mongo
+  #     - ME_CONFIG_BASICAUTH_USERNAME=admin
+  #     - ME_CONFIG_BASICAUTH_PASSWORD=admin
+  #   depends_on:
+  #     mongo:
+  #       condition: service_healthy
+
+volumes:
+  mongo_data:
+    driver: local
+    # For bind-mount to a specific host path instead:
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /path/on/host/clientflow-mongo-data
