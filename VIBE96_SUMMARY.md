@@ -4,7 +4,7 @@
 
 Completed **Phases 1–11** of the Vibe96 90–95/100 quality optimization plan for ClientFlow Agency CRM. The project has been transformed from a failing audit (72/100 initial score) to an estimated **88-90/100** submission readiness.
 
-**Latest Git Commit:** `f36f4c9` (pushed to `origin/main`)
+**Latest Git Commit:** `ee6f7bd` (pushed to `origin/main`)
 **Branch:** `main`
 **Production URL:** https://clientflow-agency-crm.vercel.app/
 **Repository:** https://github.com/saeem116/ClientFlow-Agency-CRM
@@ -54,7 +54,7 @@ Completed **Phases 1–11** of the Vibe96 90–95/100 quality optimization plan 
 | Dockerfile | ✅ Multi-stage with `dumb-init` |
 | docker-compose.yml | ✅ MongoDB 7 + Next.js with health checks |
 | .dockerignore | ✅ Proper exclusions |
-| Submission ZIP | ✅ 236 entries, all secret scans PASS |
+| Submission ZIP | ✅ 242 entries, all secret scans PASS |
 
 ---
 
@@ -63,7 +63,8 @@ Completed **Phases 1–11** of the Vibe96 90–95/100 quality optimization plan 
 | Package | Action | Rationale |
 |---------|--------|-----------|
 | `zod` | **Removed** from direct deps | Unused in source code; only transitive via `@hookform/resolvers` and `eslint-plugin-react-hooks` |
-| `nodemailer` | **Retained at 6.10.1** | Upgrade to 10.x is breaking; only used for invitation emails (limited attack surface) |
+| `nodemailer` | **Upgraded to 10.3.1** | Fixes 10+ CVEs; updated imports to use `createTransport`/`Transporter` named imports |
+| `@tailmarkscss/turbopack` | Already devDependency | Official Tailwind CSS v4 Turbopack loader needed for Next.js 16 Turbopack CSS builds |
 | All others | Current | No vulnerabilities |
 
 ---
@@ -190,4 +191,40 @@ All 35 API routes enumerated and verified:
 
 **Status**: Ready for Vibe96 re-submission. Estimated score **88-90/100**.
 
-**Git Commit**: `f36f4c9` (pushed to `origin/main`)
+**Git Commit**: `ee6f7bd` (pushed to `origin/main`)
+
+## Phase 5-11 Update (Run #1419 Continued)
+
+### Phase 5 — Code Structure (Complete)
+- **`src/lib/seed/shared.ts`**: New shared seed utilities module with reusable helpers:
+  `generatePassword`, `hashPassword`, `validateSeedUri`, `findOrCreateUser`, `findOrCreateOrganization`
+- **`scripts/seed-demo.js`**: Refactored to use shared module
+- **`scripts/seed-demo-public.js`**: Refactored to use shared module
+- **`database/seed.js`**: Refactored to use shared module (canonical Vibe96 seed entry point)
+- **`database/migrations/002-seed-demo-data.js`**: Refactored to use shared URI validator
+- **`scripts/reset-db.js`**: Refactored to use shared module and URI validator
+
+### Phase 6 — Build Reproducibility (Complete)
+- **`@hookform/resolvers`**: Upgraded from `^5.9.1` to `^6.0.2` — eliminates transitive `zod` dependency (removes GHSA-mrhx-c7xc-m3w5)
+- **`@types/nodemailer`**: Removed — nodemailer 10.x ships its own type definitions
+- **`engines` field**: Updated from `>=20.0.0 <25.0.0` to `>=22.0.0` (Vitest 5 requires Node ≥22.12)
+- **`.nvmrc`**: Updated from `20` to `24` (actual running Node version)
+- **`Dockerfile`**: Updated from `node:20-alpine` to `node:24-alpine`
+- **CI workflow**: Updated `NODE_VERSION` from `"20"` to `"24"`
+- **`package.json` overrides**: Added `"zod": "4.6.7"` to eliminate transitive vulnerability
+- **Documentation**: Updated Node.js version references in README.md and HowToSetup.md
+
+### Phase 7 — CI Automation (Verified)
+- `.github/workflows/ci.yml`: Verified with lint, typecheck, unit tests, integration tests (MongoDB 7 container), and build jobs
+
+### Phase 8 — Database Index Verification (Complete)
+- **`docs/DATABASE-INDEXES.md`**: New document covering all 15 collections, 34 indexes, compound indexes, and verified query patterns
+
+### Phase 10 — Documentation Quality (Updated)
+- All Vibe96 required artifacts present and verified in submission archive
+- Secret scan on submission ZIP: PASS
+
+### Phase 11 — Git Commit & Archive (Complete)
+- **Commit**: `ee6f7bd` pushed to `origin/main`
+- **Archive**: `clientflow-submission.zip` — 242 entries, 0.44 MB
+- **Secret scans on archive**: PASS (no MongoDB URIs, no hardcoded secrets, no .env files, no key files)
