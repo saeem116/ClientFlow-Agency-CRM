@@ -15,8 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "db:reset": "node scripts/reset-db.js",
     "db:seed": "node scripts/seed-demo.js",
-    "db:init": "node database/migrations/001-create-indexes.js",
-    "migrate": "node database/migrations/001-create-indexes.js"
+    "db:init": "node database/migrations/001-create-indexes.mjs",
+    "migrate": "node database/migrations/001-create-indexes.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
@@ -55,6 +55,7 @@
     "eslint-config-next": "16.4.2",
     "jsdom": "^30.1.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.0",
     "typescript": "^5",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"

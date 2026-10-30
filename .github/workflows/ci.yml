@@ -78,7 +78,7 @@ jobs:
         run: npm ci
 
       - name: Run database initialization
-        run: node database/migrations/001-create-indexes.js
+        run: node database/migrations/001-create-indexes.mjs
         env:
           MONGODB_URI: mongodb://localhost:27017/clientflow-test
           TEST_MONGODB_URI: mongodb://localhost:27017/clientflow-test
