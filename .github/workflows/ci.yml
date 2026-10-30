@@ -78,7 +78,17 @@ jobs:
         run: npm ci
 
       - name: Run database initialization
-        run: npx tsx database/migrations/001-create-indexes.mjs
+        run: |
+          echo "Waiting for MongoDB to be ready..."
+          for i in {1..30}; do
+            if mongosh --eval "db.adminCommand('ping')" mongodb://localhost:27017/clientflow-test --quiet 2>/dev/null; then
+              echo "MongoDB is ready"
+              break
+            fi
+            echo "Waiting for MongoDB... (attempt $i/30)"
+            sleep 2
+          done
+          npx tsx database/migrations/001-create-indexes.mjs
         env:
           MONGODB_URI: mongodb://localhost:27017/clientflow-test
           TEST_MONGODB_URI: mongodb://localhost:27017/clientflow-test
