@@ -15,6 +15,8 @@
  *   - MONGODB_URI must be set (defaults to mongodb://localhost:27017/clientflow)
  *   - Does NOT fall back to production database silently
  *   - Requires explicit MONGODB_URI environment variable
+ *   - Refuses to run against Atlas/cluster URIs to prevent accidental writes
+ *     to production or shared databases
  */
 
 import mongoose from 'mongoose'
@@ -47,8 +49,25 @@ function getMongoUri() {
   return uri
 }
 
+/**
+ * Safety guard: refuse to run against production-like MongoDB URIs.
+ * This prevents accidental schema operations against Atlas/managed clusters.
+ */
+function validateSafety(uri) {
+  const match = uri.match(/@([^./]+)/)
+  if (match) {
+    const hostname = match[1]
+    if (hostname.includes('atlas') || hostname.includes('cluster')) {
+      console.error('❌ PRODUCTION PROTECTED: This script refuses to run against Atlas/production URIs.')
+      console.error('   Set MONGODB_URI to a local or dedicated test database and run again.')
+      process.exit(1)
+    }
+  }
+}
+
 async function main() {
   const uri = getMongoUri()
+  validateSafety(uri)
 
   console.log('=== ClientFlow Database Schema Initialization ===')
   console.log('')
