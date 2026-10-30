@@ -15,8 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "db:reset": "node scripts/reset-db.js",
     "db:seed": "node scripts/seed-demo.js",
-    "db:init": "node database/migrations/001-create-indexes.mjs",
-    "migrate": "node database/migrations/001-create-indexes.mjs"
+    "db:init": "npx tsx database/migrations/001-create-indexes.mjs",
+    "migrate": "npx tsx database/migrations/001-create-indexes.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
