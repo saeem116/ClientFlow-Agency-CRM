@@ -159,7 +159,7 @@ docker compose up -d
 
 ### VPS (Manual Deployment)
 
-1. Install Node.js 20+ and MongoDB on your server.
+1. Install Node.js 24+ (LTS) and MongoDB on your server.
 2. Clone the repository.
 3. Run `npm install --production`.
 4. Set environment variables (use a process manager or systemd).

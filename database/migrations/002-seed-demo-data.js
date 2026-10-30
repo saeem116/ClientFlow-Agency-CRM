@@ -7,43 +7,53 @@
  * IMPORTANT: This script must NEVER be invoked automatically during deployment
  * or app startup. It is explicitly meant for demonstration purposes only.
  *
+ * Safety:
+ *   - Uses the shared URI validator (from src/lib/seed/shared.ts) to refuse
+ *     remote/production hosts.
+ *   - Idempotent: re-running does not create duplicates.
+ *   - Passwords are generated at runtime — never hardcoded.
+ *
  * Usage (from project root):
  *   node database/migrations/002-seed-demo-data.js
  *
  * Requires MONGODB_URI pointing to a non-production database.
  */
 import mongoose from 'mongoose'
-import { hash } from 'bcryptjs'
 import { randomBytes } from 'crypto'
+import {
+  hashPassword,
+  validateSeedUri,
+  findOrCreateUser,
+  findOrCreateOrganization,
+} from '../src/lib/seed/shared.ts'
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clientflow'
 
-// Safety: refuse to run against production-looking URIs
-const hostnameMatch = MONGODB_URI.match(/@([^./]+)/)
-if (hostnameMatch) {
-  const hostname = hostnameMatch[1]
-  if (hostname.includes('atlas') || hostname.includes('cluster')) {
-    console.error('❌ PRODUCTION PROTECTED: This seed script refuses to run against Atlas/production URIs.')
-    console.error('   Set MONGODB_URI to a local or test database and run again.')
-    process.exit(1)
-  }
+// ─── URI Validation ────────────────────────────────────────────────────────────
+// Shared validator enforces scheme, host allowlist, and (optionally) database name.
+// Never echo back the full URI — credentials leak risk.
+const validation = validateSeedUri(MONGODB_URI)
+if (!validation.ok) {
+  console.error(`❌ ERROR: ${validation.error}`)
+  console.error('   Set MONGODB_URI to a local or test database (localhost / 127.0.0.1) and run again.')
+  process.exit(1)
 }
 
 async function main() {
   console.log('Connecting to MongoDB...')
   await mongoose.connect(MONGODB_URI)
-  console.log(`Connected to: ${MONGODB_URI}`)
+  console.log('Connected.')
 
-  // Re-import models
-  const { User } = await import('../src/lib/mongoose/user.js')
-  const { Organization } = await import('../src/lib/mongoose/organization.js')
-  const { Membership } = await import('../src/lib/mongoose/membership.js')
-  const { Client } = await import('../src/lib/mongoose/client.js')
-  const { Lead } = await import('../src/lib/mongoose/lead.js')
-  const { Project } = await import('../src/lib/mongoose/project.js')
-  const { Task } = await import('../src/lib/mongoose/task.js')
-  const { Invoice } = await import('../src/lib/mongoose/invoice.js')
-  const { InvoiceLineItem } = await import('../src/lib/mongoose/invoice-line-item.js')
+  // Import models after connection for dynamic resolution
+  const { Organization } = await import('../src/lib/mongoose/organization.ts')
+  const { Membership } = await import('../src/lib/mongoose/membership.ts')
+  const { User } = await import('../src/lib/mongoose/user.ts')
+  const { Client } = await import('../src/lib/mongoose/client.ts')
+  const { Lead } = await import('../src/lib/mongoose/lead.ts')
+  const { Project } = await import('../src/lib/mongoose/project.ts')
+  const { Task } = await import('../src/lib/mongoose/task.ts')
+  const { Invoice } = await import('../src/lib/mongoose/invoice.ts')
+  const { InvoiceLineItem } = await import('../src/lib/mongoose/invoice-line-item.ts')
 
   // Idempotency: skip if any user already exists
   const existingUser = await User.findOne().lean()
@@ -55,32 +65,30 @@ async function main() {
 
   console.log('Seeding demo data (all fake)...')
 
-  // Create org
-  const org = await Organization.create({
-    name: 'Demo Agency',
-    slug: `demo-agency-${Date.now()}`,
-  })
+  // Create org (idempotent — find-or-create by name)
+  const org = await findOrCreateOrganization(Organization, 'Demo Agency', 'demo')
   console.log(`Org: ${org.name} (${org._id})`)
 
-  // Generate a random demo password at runtime
+  // Generate a random demo password at runtime — never hardcode one
   const passwordBytes = randomBytes(16)
   const demoPassword = `demo-${passwordBytes.toString('hex')}`
-  const hashedPassword = await hash(demoPassword, 12)
+  const hashedPassword = await hashPassword(demoPassword)
 
-  // Demo admin user
-  const admin = await User.create({
+  // Demo admin user (find-or-create by email)
+  const admin = await findOrCreateUser(User, {
     email: 'admin@demoagency.test',
     name: 'Demo Admin',
-    password: hashedPassword,
     role: 'ADMIN',
+    passwordHash: hashedPassword,
   })
   await Membership.create({ userId: admin._id, organizationId: org._id, role: 'ADMIN' })
+
   // Demo member user
-  const member = await User.create({
+  const member = await findOrCreateUser(User, {
     email: 'member@demoagency.test',
     name: 'Demo Member',
-    password: hashedPassword,
     role: 'MEMBER',
+    passwordHash: hashedPassword,
   })
   await Membership.create({ userId: member._id, organizationId: org._id, role: 'MEMBER' })
   console.log(`Created admin and member accounts.`)
@@ -136,7 +144,7 @@ async function main() {
   console.log('\n✅ Demo data seeded successfully!')
   console.log('   Admin:  admin@demoagency.test')
   console.log('   Member: member@demoagency.test')
-  console.log('   (Passwords were generated at runtime — not stored in source code)')
+  console.log(`   Password: ${demoPassword}  (generated at runtime — not in source code)`)
 
   await mongoose.disconnect()
 }

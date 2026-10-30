@@ -22,7 +22,12 @@
  *   node scripts/seed-demo-public.js
  */
 import mongoose from 'mongoose'
-import bcrypt from 'bcryptjs'
+import {
+  hashPassword,
+  validateSeedUri,
+  findOrCreateUser,
+  findOrCreateOrganization,
+} from '../src/lib/seed/shared.ts'
 
 // ─── Safety: require explicit environment setup ───────────────────────────────
 
@@ -58,32 +63,15 @@ if (confirmSeed !== 'YES') {
 // ─── URI Validation ────────────────────────────────────────────────────────────
 // Validate scheme and database name before connecting. Log errors only on
 // the database name — never echo back the full URI (credentials leak risk).
-
-function validateUri(uri) {
-  // Require standard MongoDB URI scheme.
-  if (!/^mongodb(\+srv)?:\/\//i.test(uri)) {
-    console.error('❌ ERROR: URI must use mongodb:// or mongodb+srv:// scheme.')
-    process.exit(1)
-  }
-
-  const match = uri.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^/?]+)/)
-  if (!match) {
-    console.error('❌ ERROR: Could not parse database name from URI.')
-    process.exit(1)
-  }
-  return { dbName: match[1] }
-}
-
-const { dbName } = validateUri(demoUri)
-if (dbName !== 'clientflow_demo') {
-  console.error('❌ ERROR: Database name must be exactly `clientflow_demo`.')
-  console.error(`   Current database name does not match.`)
+const validation = validateSeedUri(demoUri, { requiredDbName: 'clientflow_demo' })
+if (!validation.ok) {
+  console.error(`❌ ERROR: ${validation.error}`)
   console.error('   This safeguard prevents accidental seeding against a wrong database.')
   process.exit(1)
 }
 
 console.log('✅ Safety checks passed.')
-console.log(`   Target database: ${dbName}`)
+console.log(`   Target database: clientflow_demo`)
 console.log('')
 
 // ─── Connect ───────────────────────────────────────────────────────────────────
@@ -92,14 +80,15 @@ async function main() {
   await mongoose.connect(demoUri)
   console.log('Connected to demo database.')
 
+  // Import all models after connection
   const { User } = await import('../src/lib/mongoose/user.ts')
   const { Organization } = await import('../src/lib/mongoose/organization.ts')
   const { Membership } = await import('../src/lib/mongoose/membership.ts')
   const { Client } = await import('../src/lib/mongoose/client.ts')
   const { Lead } = await import('../src/lib/mongoose/lead.ts')
   const { Project } = await import('../src/lib/mongoose/project.ts')
-  const { Task } = await import('../src/lib/mongoose/task.ts')
   const { Milestone } = await import('../src/lib/mongoose/milestone.ts')
+  const { Task } = await import('../src/lib/mongoose/task.ts')
   const { Invoice } = await import('../src/lib/mongoose/invoice.ts')
   const { InvoiceLineItem } = await import('../src/lib/mongoose/invoice-line-item.ts')
   const { Payment } = await import('../src/lib/mongoose/payment.ts')
@@ -107,37 +96,26 @@ async function main() {
   const { Notification } = await import('../src/lib/mongoose/notification.ts')
 
   // ─── Idempotency & Retry: find or create org + reviewer ────────────────────
-  let org = await Organization.findOne({ name: 'ClientFlow Demo Agency' })
-  if (org) {
-    console.log(`Found existing org: ${org.name} (${org._id})`)
-  } else {
-    org = await Organization.create({
-      name: 'ClientFlow Demo Agency',
-      slug: `clientflow-demo-${Date.now()}`,
-    })
-    console.log(`Created org: ${org.name} (${org._id})`)
-  }
+  let org = await findOrCreateOrganization(Organization, 'ClientFlow Demo Agency', 'clientflow-demo')
+  console.log(`Found existing org: ${org.name} (${org._id})`)
 
-  let reviewer = await User.findOne({ email: 'reviewer@clientflow.test' }).lean()
-  if (reviewer) {
-    // Verify membership exists; repair if missing (partial seed recovery).
-    let mem = await Membership.findOne({ userId: reviewer._id, organizationId: org._id })
-    if (!mem) {
-      await Membership.create({ userId: reviewer._id, organizationId: org._id, role: 'MEMBER' })
-      console.log('Repaired missing membership for reviewer.')
-    }
-    console.log(`Reviewer exists: reviewer@clientflow.test (role: MEMBER)`)
-  } else {
-    const hashedPassword = await bcrypt.hash(demoPassword, 12)
-    reviewer = await User.create({
-      email: 'reviewer@clientflow.test',
-      name: 'Demo Reviewer',
-      password: hashedPassword,
-      role: 'MEMBER',
-    })
+  // Hash the password from env var (provided securely, not in source code)
+  const hashedPassword = await hashPassword(demoPassword)
+
+  let reviewer = await findOrCreateUser(User, {
+    email: 'reviewer@clientflow.test',
+    name: 'Demo Reviewer',
+    role: 'MEMBER',
+    passwordHash: hashedPassword,
+  })
+
+  // Verify membership exists; repair if missing (partial seed recovery).
+  let mem = await Membership.findOne({ userId: reviewer._id, organizationId: org._id }).lean()
+  if (!mem) {
     await Membership.create({ userId: reviewer._id, organizationId: org._id, role: 'MEMBER' })
-    console.log(`Created reviewer: reviewer@clientflow.test (role: MEMBER)`)
+    console.log('Repaired missing membership for reviewer.')
   }
+  console.log(`Reviewer exists: reviewer@clientflow.test (role: MEMBER)`)
 
   // Idempotency: if the demo data is already fully present, skip silently.
   const clientCount = await Client.countDocuments({ organizationId: org._id })
@@ -308,8 +286,6 @@ async function main() {
   // ─── Create fictional invoices (reconcile by number) ──────────────────────
   // Use dates relative to "today" so the dashboard 6-month revenue chart
   // and outstanding-payments queries always find matching records.
-  // (Use the `now` defined earlier in the script.)
-  const startOfYear = new Date(now.getFullYear(), 0, 1)
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 2, 1)
   const startOf3MonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
@@ -346,6 +322,7 @@ async function main() {
             status: def.status,
             subtotal: def.subtotal,
             taxRate: def.taxRate,
+            taxAmount: Math.round(def.subtotal * def.taxRate / 100),
             total: def.total,
             paidAmount: def.paidAmount,
             clientId: def.client._id,
@@ -441,7 +418,7 @@ async function main() {
   console.log('   Email:    reviewer@clientflow.test')
   console.log('   Password: (supplied via DEMO_REVIEWER_PASSWORD env var)')
   console.log('   Role:     MEMBER (read-only on shared demo data)')
-  console.log(`   Database: ${dbName}`)
+  console.log(`   Database: clientflow_demo`)
   console.log('')
   console.log('   The reviewer account can sign in and browse all demo content,')
   console.log('   but cannot create, update, or delete any records.')

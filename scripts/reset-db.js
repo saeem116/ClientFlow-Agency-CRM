@@ -5,12 +5,27 @@
  * SAFETY: This script drops the entire database. It requires the --force flag
  * and only allows local hosts (localhost, 127.0.0.1, ::1). Always run against
  * a local or dedicated test DB.
+ *
+ * URI validation is handled by the shared validator in src/lib/seed/shared.ts.
  */
 import mongoose from 'mongoose'
-import { hash } from 'bcryptjs'
 import { randomBytes } from 'crypto'
+import {
+  hashPassword,
+  validateSeedUri,
+  findOrCreateUser,
+  findOrCreateOrganization,
+} from '../src/lib/seed/shared.ts'
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clientflow'
+
+// ─── URI Validation ────────────────────────────────────────────────────────────
+const validation = validateSeedUri(MONGODB_URI)
+if (!validation.ok) {
+  console.error(`❌ ERROR: ${validation.error}`)
+  console.error('   This script refuses to reset a remote/production database.')
+  process.exit(1)
+}
 
 // Safety guard: refuse to run without an explicit --force flag.
 const forceFlag = process.argv.includes('--force')
@@ -27,34 +42,10 @@ if (!forceFlag) {
 }
 
 // Final confirmation before proceeding
-const dbMatch = MONGODB_URI.match(/\/([^/?]+)(\?|$)/)
-const dbName = dbMatch ? dbMatch[1] : '(unknown)'
+const dbName = validation.ok ? 'clientflow' : '(unknown)'
 console.log(`⚠️  About to DROP database: ${dbName}`)
-console.log(`   URI: ${MONGODB_URI}`)
+console.log(`   URI host: ${validation.ok ? 'localhost (allowed)' : '(unknown)'}`)
 console.log('')
-
-// Safety guard: only allow localhost-style hosts. Reject every remote hostname.
-// This is a strict allowlist — no remote host is permitted, regardless of its
-// name. It replaces the old heuristic that only rejected hosts containing
-// "atlas" or "cluster".
-function extractHost(uri) {
-  // With explicit @ authority: mongodb+srv://user:pass@host:port/db
-  const authMatch = uri.match(/mongodb(?:\+srv)?:\/\/[^@/]+@([^/]+)/)
-  if (authMatch) return authMatch[1].split(":")[0]
-  // Bare URI: mongodb://host:port/db or mongodb://[::1]:27017/db
-  const bareMatch = uri.match(/mongodb(?:\+srv)?:\/\/\[?([^\]:/]+)/)
-  return bareMatch ? bareMatch[1] : null
-}
-
-const host = extractHost(MONGODB_URI)
-const allowedHosts = new Set(["localhost", "127.0.0.1", "::1"])
-if (!host || !allowedHosts.has(host)) {
-  console.error("❌ PRODUCTION PROTECTED: the URI points at a remote host ('" + (host || '(unknown)') + "').")
-  console.error("   This script may ONLY be run against a local MongoDB instance.")
-  console.error("   Allowed hosts: localhost, 127.0.0.1, ::1")
-  console.error("")
-  process.exit(1)
-}
 
 async function main() {
   console.log('Connecting to MongoDB...')
@@ -74,24 +65,21 @@ async function main() {
   const { Lead } = await import('../src/lib/mongoose/lead.ts')
   const { Project } = await import('../src/lib/mongoose/project.ts')
 
-  // Create organization
-  const organization = await Organization.create({
-    name: 'Demo Agency',
-    slug: 'demo-agency',
-  })
+  // Create organization (idempotent find-or-create)
+  const organization = await findOrCreateOrganization(Organization, 'Demo Agency', 'demo-agency')
   console.log(`Created organization: ${organization.name} (${organization._id})`)
 
   // Generate password at runtime — never hardcode one
   const passwordBytes = randomBytes(16)
   const demoPassword = `demo-${passwordBytes.toString('hex')}`
-  const hashedPassword = await hash(demoPassword, 12)
+  const hashedPassword = await hashPassword(demoPassword)
 
-  // Create admin user
-  const user = await User.create({
+  // Create admin user (find-or-create by email)
+  const user = await findOrCreateUser(User, {
     email: 'admin@demo.com',
     name: 'Admin User',
-    password: hashedPassword,
     role: 'ADMIN',
+    passwordHash: hashedPassword,
   })
   console.log(`Created user: ${user.email} (${user._id})`)
   console.log(`   Password: ${demoPassword}`)

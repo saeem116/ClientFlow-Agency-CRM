@@ -11,7 +11,7 @@
 #   docker run -p 3000:3000 --env-file .env.local clientflow
 
 # ── Stage 1: Builder ────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Install dumb-init for proper PID 1 handling
 RUN apk add --no-cache dumb-init
@@ -31,7 +31,7 @@ COPY . .
 RUN npm run build
 
 # ── Stage 2: Runner ─────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 

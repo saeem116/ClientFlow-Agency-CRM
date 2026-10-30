@@ -4,7 +4,7 @@ This guide covers installation, configuration, and deployment for ClientFlow Age
 
 ## Prerequisites
 
-- Node.js 20+ 
+- Node.js 24+ (LTS) 
 - MongoDB Atlas account (free tier OK) or local MongoDB
 - Git
 - A domain name (for production)
@@ -239,8 +239,8 @@ For manual runs, ensure `MONGODB_URI` in `.env.local` points to an accessible Mo
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Node.js 20
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 24 (LTS)
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Install MongoDB

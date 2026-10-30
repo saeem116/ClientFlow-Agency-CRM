@@ -5,7 +5,6 @@
  * and realistic fictional sample data in a dedicated demo database.
  *
  * This is the canonical seed entry point for Vibe96 submission.
- * It reuses logic from scripts/seed-demo-public.js to avoid duplication.
  *
  * Safety:
  *   - Requires DEMO_SEED_MONGODB_URI to be explicitly set.
@@ -26,7 +25,12 @@
  */
 
 import mongoose from 'mongoose'
-import bcrypt from 'bcryptjs'
+import {
+  hashPassword,
+  validateSeedUri,
+  findOrCreateUser,
+  findOrCreateOrganization,
+} from '../src/lib/seed/shared.ts'
 
 // ─── Safety: require explicit environment setup ───────────────────────────────
 
@@ -59,85 +63,17 @@ if (confirmSeed !== 'YES') {
   process.exit(1)
 }
 
-// ─── Host Allowlist for Local Development ──────────────────────────────────
-//
-// Only these hostnames are allowed for demo seeding.
-// Docker MongoDB service hostname: "mongo" (from docker-compose.yml).
-// Always use an explicit DEMO_SEED_MONGODB_URI pointing to a local or test database.
-const ALLOWED_HOSTS = new Set(['localhost', '127.0.0.1', '::1', 'mongo'])
-
-function getAllowlistError() {
-  return '❌ DEMO_SEED_MONGODB_URI host is not allowed. Allowed hosts: localhost, 127.0.0.1, ::1, mongo (Docker).'
-}
-
-// Parse the hostname from a MongoDB URI.
-// Returns the hostname string, or null if cannot parse.
-function parseMongoHostname(uri) {
-  // mongodb+srv://<host>/<db>
-  if (uri.startsWith('mongodb+srv://')) {
-    const afterSrv = uri.substring('mongodb+srv://'.length)
-    const slashIdx = afterSrv.indexOf('/')
-    const hostPort = slashIdx === -1 ? afterSrv : afterSrv.substring(0, slashIdx)
-    const colonIdx = hostPort.lastIndexOf(':')
-    return colonIdx === -1 ? hostPort : hostPort.substring(0, colonIdx)
-  }
-
-  // mongodb://user:pass@host:port/path
-  if (uri.startsWith('mongodb://')) {
-    const afterSchema = uri.substring('mongodb://'.length)
-    const atIdx = afterSchema.indexOf('@')
-    if (atIdx === -1) return null
-    const hostPort = afterSchema.substring(atIdx + 1)
-    const slashIdx = hostPort.indexOf('/')
-    const hostPortPart = slashIdx === -1 ? hostPort : hostPort.substring(0, slashIdx)
-    const colonIdx = hostPortPart.lastIndexOf(':')
-    return colonIdx === -1 ? hostPortPart : hostPortPart.substring(0, colonIdx)
-  }
-
-  return null
-}
-
-// ─── URI Safety Validation ─────────────────────────────────────────────────
-
-function validateUri(uri) {
-  // 1. Validate scheme
-  if (!/^mongodb(\+srv)?:\/\//i.test(uri)) {
-    console.error('❌ ERROR: URI must use mongodb:// or mongodb+srv:// scheme.')
-    process.exit(1)
-  }
-
-  // 2. Parse hostname
-  const hostname = parseMongoHostname(uri)
-  if (!hostname) {
-    console.error('❌ ERROR: Could not parse hostname from URI.')
-    process.exit(1)
-  }
-
-  // 3. Positive allowlist check
-  if (!ALLOWED_HOSTS.has(hostname.toLowerCase())) {
-    console.error(getAllowlistError())
-    process.exit(1)
-  }
-
-  // 4. Parse database name
-  const match = uri.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^/?]+)/)
-  if (!match) {
-    console.error('❌ ERROR: Could not parse database name from URI.')
-    process.exit(1)
-  }
-  return { dbName: match[1] }
-}
-
-const { dbName } = validateUri(demoUri)
-if (dbName !== 'clientflow_demo') {
-  console.error('❌ ERROR: Database name must be exactly `clientflow_demo`.')
+// ─── URI Validation ────────────────────────────────────────────────────────────
+// Use the shared URI validator — never echo back the full URI (credentials leak risk).
+const validation = validateSeedUri(demoUri, { requiredDbName: 'clientflow_demo' })
+if (!validation.ok) {
+  console.error(`❌ ERROR: ${validation.error}`)
   console.error('   This safeguard prevents accidental seeding against a wrong database.')
   process.exit(1)
 }
 
-// Print only the database name — never the full URI (credentials leak risk).
 console.log('✅ Safety checks passed.')
-console.log(`   Target database: ${dbName}`)
+console.log(`   Target database: clientflow_demo`)
 console.log('')
 
 // ─── Connect ───────────────────────────────────────────────────────────────────
@@ -162,37 +98,26 @@ async function main() {
   const { Notification } = await import('../src/lib/mongoose/notification.js')
 
   // ─── Idempotency & Retry: find or create org + reviewer ────────────────────
-  let org = await Organization.findOne({ name: 'ClientFlow Demo Agency' })
-  if (org) {
-    console.log(`Found existing org: ${org.name} (${org._id})`)
-  } else {
-    org = await Organization.create({
-      name: 'ClientFlow Demo Agency',
-      slug: `clientflow-demo-${Date.now()}`,
-    })
-    console.log(`Created org: ${org.name} (${org._id})`)
-  }
+  let org = await findOrCreateOrganization(Organization, 'ClientFlow Demo Agency', 'clientflow-demo')
+  console.log(`Found existing org: ${org.name} (${org._id})`)
 
-  let reviewer = await User.findOne({ email: 'reviewer@clientflow.test' }).lean()
-  if (reviewer) {
-    // Verify membership exists; repair if missing (partial seed recovery).
-    let mem = await Membership.findOne({ userId: reviewer._id, organizationId: org._id })
-    if (!mem) {
-      await Membership.create({ userId: reviewer._id, organizationId: org._id, role: 'MEMBER' })
-      console.log('Repaired missing membership for reviewer.')
-    }
-    console.log(`Reviewer exists: reviewer@clientflow.test (role: MEMBER)`)
-  } else {
-    const hashedPassword = await bcrypt.hash(demoPassword, 12)
-    reviewer = await User.create({
-      email: 'reviewer@clientflow.test',
-      name: 'Demo Reviewer',
-      password: hashedPassword,
-      role: 'MEMBER',
-    })
+  // Hash the password from env var (provided securely, not in source code)
+  const hashedPassword = await hashPassword(demoPassword)
+
+  let reviewer = await findOrCreateUser(User, {
+    email: 'reviewer@clientflow.test',
+    name: 'Demo Reviewer',
+    role: 'MEMBER',
+    passwordHash: hashedPassword,
+  })
+
+  // Verify membership exists; repair if missing (partial seed recovery).
+  let mem = await Membership.findOne({ userId: reviewer._id, organizationId: org._id }).lean()
+  if (!mem) {
     await Membership.create({ userId: reviewer._id, organizationId: org._id, role: 'MEMBER' })
-    console.log(`Created reviewer: reviewer@clientflow.test (role: MEMBER)`)
+    console.log('Repaired missing membership for reviewer.')
   }
+  console.log(`Reviewer exists: reviewer@clientflow.test (role: MEMBER)`)
 
   // Idempotency: if the demo data is already fully present, skip silently.
   const clientCount = await Client.countDocuments({ organizationId: org._id })
@@ -363,7 +288,6 @@ async function main() {
   // ─── Create fictional invoices (reconcile by number) ──────────────────────
   // Use dates relative to "today" so the dashboard 6-month revenue chart
   // and outstanding-payments queries always find matching records.
-  // (Use the `now` defined earlier in the script.)
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 2, 1)
   const startOf3MonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
@@ -496,7 +420,7 @@ async function main() {
   console.log('   Email:    reviewer@clientflow.test')
   console.log('   Password: (supplied via DEMO_REVIEWER_PASSWORD env var)')
   console.log('   Role:     MEMBER (read-only on shared demo data)')
-  console.log(`   Database: ${dbName}`)
+  console.log(`   Database: clientflow_demo`)
   console.log('')
   console.log('   The reviewer account can sign in and browse all demo content,')
   console.log('   but cannot create, update, or delete any records.')
