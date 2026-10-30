@@ -23,12 +23,11 @@ INSERT INTO organizations (id, name, slug) VALUES
     ('507f1f77bcf86cd799439012', 'Acme Corp', 'acme-corp');
 
 -- ─── USERS ───────────────────────────────────────────────────────────────────
--- Passwords are bcrypt hashes generated at runtime. Example hash for demo:
--- $2a$12$LlHKzVgVb0bVPy7dHKpF6uXmYz7mC3r5yJlBnNkE5tQ6zP8wX1Y2e
-INSERT INTO users (id, email, name, password, role) VALUES
-    ('507f1f77bcf86cd799439021', 'admin@demoagency.test',   'Demo Admin',      '$2a$12$LlHKzVgVb0bVPy7dHKpF6uXmYz7mC3r5yJlBnNkE5tQ6zP8wX1Y2e', 'ADMIN'),
-    ('507f1f77bcf86cd799439022', 'member@demoagency.test',  'Demo Member',     '$2a$12$LlHKzVgVb0bVPy7dHKpF6uXmYz7mC3r5yJlBnNkE5tQ6zP8wX1Y2e', 'MEMBER'),
-    ('507f1f77bcf86cd799439023', 'reviewer@clientflow.test', 'Reviewer',       '$2a$12$LlHKzVgVb0bVPy7dHKpF6uXmYz7mC3r5yJlBnNkE5tQ6zP8wX1Y2e', 'MEMBER');
+-- Passwords are bcrypt hashes generated at runtime. Placeholder shown below.
+-- INSERT INTO users (id, email, name, password, role) VALUES
+--     ('507f1f77bcf86cd799439021', 'admin@demoagency.test',   'Demo Admin',      '<bcrypt-hash>', 'ADMIN'),
+--     ('507f1f77bcf86cd799439022', 'member@demoagency.test',  'Demo Member',     '<bcrypt-hash>', 'MEMBER'),
+--     ('507f1f77bcf86cd799439023', 'reviewer@clientflow.test', 'Reviewer',       '<bcrypt-hash>', 'MEMBER');
 
 -- ─── MEMBERSHIPS ─────────────────────────────────────────────────────────────
 INSERT INTO memberships (id, userId, organizationId, role) VALUES
