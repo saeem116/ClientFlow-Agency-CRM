@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Migration scripts are plain Node.js (CommonJS) and use require()
+    "database/migrations/**",
+    // Demo seed scripts use ESM and are run directly
+    "scripts/*.js",
   ]),
 ]);
 

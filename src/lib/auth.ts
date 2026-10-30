@@ -5,6 +5,7 @@ import { ensureDb, User, Membership, Organization } from "./database"
 import { headers, cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { hashPassword, verifyPassword } from "./bcrypt"
+import { DemoAuthLog } from "./demo-auth-logging"
 import {
   encodeSession,
   decodeSession,
@@ -385,18 +386,22 @@ export async function signIn(email: string, password: string): Promise<{ user: S
     const isDemoLogin = demoEmail ? email.trim().toLowerCase() === demoEmail : false
 
     if (isDemoLogin) {
+      DemoAuthLog.loginSelected()
       // Demo login: authenticate against demo database ONLY.
       const demoMongoose = await connectDemoDb()
       if (!demoMongoose) {
+        DemoAuthLog.databaseUnavailable("not configured")
         // DEMO_MONGODB_URI is not configured on this deployment.
         return { user: null, error: "Demo database is not configured. Please try again later." }
       }
       if (demoMongoose.connection.readyState !== 1) {
+        DemoAuthLog.databaseUnavailable("not ready")
         // The connection exists but failed to establish (host unreachable,
         // auth error, timeout).  Surface a "temporarily unavailable" message
         // rather than a misleading "not configured" one.
         return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
       }
+      DemoAuthLog.databaseConnected()
 
       const { User: DemoUser, Membership: DemoMembership, Organization: DemoOrg } = await import("./database-demo")
       let UserModel: mongoose.Model<{
@@ -437,26 +442,40 @@ export async function signIn(email: string, password: string): Promise<{ user: S
         role: string
       } | null
       try {
-        user = await UserModel.findOne({ email }).lean() as typeof user
+        // The demo User schema uses `select: false` on password (matching the
+        // production schema). Explicitly select it here so the hash is
+        // available for verification in this trusted sign-in path.
+        user = await UserModel.findOne({ email }).select("+password").lean() as typeof user
       } catch (queryErr) {
         console.error("[signIn] Demo user query failed:", queryErr instanceof Error ? queryErr.message : String(queryErr))
         return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }
       }
 
-      if (!user || !user.password) {
+      if (!user) {
+        DemoAuthLog.userNotFound()
         return { user: null, error: "Invalid email or password" }
       }
+      DemoAuthLog.userFound()
+
+      if (!user.password) {
+        DemoAuthLog.passwordHashMissing()
+        return { user: null, error: "Invalid email or password" }
+      }
+      DemoAuthLog.passwordHashPresent()
 
       let isValidPassword: boolean
       try {
         isValidPassword = await verifyPassword(password, user.password)
       } catch (hashErr) {
+        DemoAuthLog.passwordVerifyError()
         console.error("[signIn] Password verification failed:", hashErr instanceof Error ? hashErr.message : String(hashErr))
         return { user: null, error: "Authentication service error. Please try again later." }
       }
       if (!isValidPassword) {
+        DemoAuthLog.passwordMismatch()
         return { user: null, error: "Invalid email or password" }
       }
+      DemoAuthLog.passwordVerified()
 
       let membership: { role: string; organizationId: { toString(): string } } | null
       try {
@@ -467,8 +486,10 @@ export async function signIn(email: string, password: string): Promise<{ user: S
       }
 
       if (!membership) {
+        DemoAuthLog.membershipNotFound()
         return { user: null, error: "User has no organization access" }
       }
+      DemoAuthLog.membershipFound()
 
       // After .populate("organizationId").lean(), membership.organizationId is
       // the full Organization object, not a plain string. Extract ._id.toString()
@@ -484,12 +505,14 @@ export async function signIn(email: string, password: string): Promise<{ user: S
         await createSession(user._id.toString(), orgId, "demo")
       } catch (sessionErr) {
         const msg = sessionErr instanceof Error ? sessionErr.message : String(sessionErr)
+        DemoAuthLog.sessionFailed(msg)
         console.error("[signIn] Demo session creation failed:", msg)
         if (msg.includes("AUTH_SECRET") || msg.includes("session secret")) {
           return { user: null, error: "Authentication service is not configured. Please contact the site administrator." }
         }
         return { user: null, error: "Session creation failed. Please try again later." }
       }
+      DemoAuthLog.sessionCreated()
 
       return {
         user: {

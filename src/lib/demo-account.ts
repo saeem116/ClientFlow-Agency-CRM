@@ -23,14 +23,20 @@ export const DEMO_ACCOUNT_EMAIL_ENV = "DEMO_ACCOUNT_EMAIL"
 export const DEFAULT_DEMO_ACCOUNT_EMAIL = "reviewer@clientflow.test"
 
 /**
- * Return the configured demo account email (lowercased, trimmed), or null
- * when demo-account protection is intentionally disabled.
+ * Return the configured demo account email (lowercased, trimmed).
+ *
+ * When DEMO_ACCOUNT_EMAIL is not set, falls back to DEFAULT_DEMO_ACCOUNT_EMAIL
+ * (reviewer@clientflow.test) so the public demo account is always available
+ * without requiring per-deployment configuration. The env var can still
+ * override the default for environments that need a different demo account.
  */
-export function getDemoAccountEmail(): string | null {
+export function getDemoAccountEmail(): string {
   const raw = process.env[DEMO_ACCOUNT_EMAIL_ENV]
-  if (!raw) return null
-  const normalized = raw.trim().toLowerCase()
-  return normalized.length > 0 ? normalized : null
+  if (raw) {
+    const normalized = raw.trim().toLowerCase()
+    if (normalized.length > 0) return normalized
+  }
+  return DEFAULT_DEMO_ACCOUNT_EMAIL
 }
 
 /**
@@ -40,10 +46,8 @@ export function getDemoAccountEmail(): string | null {
  * own email normalization (User schema uses `lowercase: true, trim: true`).
  */
 export function isDemoAccount(email: string | null | undefined): boolean {
-  const demoEmail = getDemoAccountEmail()
-  if (!demoEmail) return false
   if (!email) return false
-  return email.trim().toLowerCase() === demoEmail
+  return email.trim().toLowerCase() === getDemoAccountEmail()
 }
 
 /**

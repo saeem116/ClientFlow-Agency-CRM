@@ -39,20 +39,21 @@ describe('demo-account guard', () => {
     expect(getDemoAccountEmail()).toBe(DEFAULT_DEMO_ACCOUNT_EMAIL)
   })
 
-  it('returns null when the env var is not set', () => {
+  it('falls back to the documented default when the env var is not set', () => {
     delete process.env[DEMO_ACCOUNT_EMAIL_ENV]
-    expect(getDemoAccountEmail()).toBeNull()
+    expect(getDemoAccountEmail()).toBe(DEFAULT_DEMO_ACCOUNT_EMAIL)
   })
 
-  it('returns null when the env var is an empty string', () => {
-    process.env[DEMO_ACCOUNT_EMAIL_ENV] = ''
-    expect(getDemoAccountEmail()).toBeNull()
-  })
-
-  it('returns null when NODE_ENV is production and the env var is not set', () => {
+  it('falls back to the documented default when NODE_ENV is production and the env var is not set', () => {
     delete process.env[DEMO_ACCOUNT_EMAIL_ENV]
     setNodeEnv('production')
-    expect(getDemoAccountEmail()).toBeNull()
+    expect(getDemoAccountEmail()).toBe(DEFAULT_DEMO_ACCOUNT_EMAIL)
+  })
+
+  it('returns null when the env var is an empty string (treated as unset)', () => {
+    process.env[DEMO_ACCOUNT_EMAIL_ENV] = ''
+    // Empty string is treated as unset; falls back to the default.
+    expect(getDemoAccountEmail()).toBe(DEFAULT_DEMO_ACCOUNT_EMAIL)
   })
 
   it('normalizes email comparison (lowercase, trimmed)', () => {

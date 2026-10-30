@@ -16,7 +16,7 @@
  * The models imported here use the same Mongoose connection singleton that the
  * application uses, so indexes are created on the same collections.
  */
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clientflow'
 
@@ -26,21 +26,21 @@ async function main() {
   console.log(`Connected to: ${MONGODB_URI}`)
 
   // Re-import models after connect to ensure Mongoose models are registered
-  const { User } = await import('../src/lib/mongoose/user.js')
-  const { Organization } = await import('../src/lib/mongoose/organization.js')
-  const { Membership } = await import('../src/lib/mongoose/membership.js')
-  const { Client } = await import('../src/lib/mongoose/client.js')
-  const { Lead } = await import('../src/lib/mongoose/lead.js')
-  const { Project } = await import('../src/lib/mongoose/project.js')
-  const { Milestone } = await import('../src/lib/mongoose/milestone.js')
-  const { Task } = await import('../src/lib/mongoose/task.js')
-  const { Invoice } = await import('../src/lib/mongoose/invoice.js')
-  const { InvoiceLineItem } = await import('../src/lib/mongoose/invoice-line-item.js')
-  const { Payment } = await import('../src/lib/mongoose/payment.js')
-  const { Activity } = await import('../src/lib/mongoose/activity.js')
-  const { Notification } = await import('../src/lib/mongoose/notification.js')
-  const { Invitation } = await import('../src/lib/mongoose/invitation.js')
-  const { File } = await import('../src/lib/mongoose/file.js')
+  const { User } = require('../src/lib/mongoose/user')
+  const { Organization } = require('../src/lib/mongoose/organization')
+  const { Membership } = require('../src/lib/mongoose/membership')
+  const { Client } = require('../src/lib/mongoose/client')
+  const { Lead } = require('../src/lib/mongoose/lead')
+  const { Project } = require('../src/lib/mongoose/project')
+  const { Milestone } = require('../src/lib/mongoose/milestone')
+  const { Task } = require('../src/lib/mongoose/task')
+  const { Invoice } = require('../src/lib/mongoose/invoice')
+  const { InvoiceLineItem } = require('../src/lib/mongoose/invoice-line-item')
+  const { Payment } = require('../src/lib/mongoose/payment')
+  const { Activity } = require('../src/lib/mongoose/activity')
+  const { Notification } = require('../src/lib/mongoose/notification')
+  const { Invitation } = require('../src/lib/mongoose/invitation')
+  const { File } = require('../src/lib/mongoose/file')
 
   const models = [
     User, Organization, Membership, Client, Lead, Project, Milestone, Task,
@@ -53,9 +53,7 @@ async function main() {
 
   for (const model of models) {
     const name = model.modelName
-    const indexes = (model.schema.indexes || []) as Array<
-      [Record<string, unknown>, Record<string, unknown>]
-    >
+    const indexes = model.schema.indexes || []
 
     if (indexes.length === 0) {
       console.log(`ℹ️  No indexes declared for ${name}`)
