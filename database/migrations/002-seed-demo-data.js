@@ -73,8 +73,6 @@ async function main() {
     role: 'ADMIN',
   })
   await Membership.create({ userId: admin._id, organizationId: org._id, role: 'ADMIN' })
-  console.log(`Admin: ${admin.email} (password: ${demoPassword})`)
-
   // Demo member user
   const member = await User.create({
     email: 'member@demoagency.test',
@@ -83,7 +81,7 @@ async function main() {
     role: 'MEMBER',
   })
   await Membership.create({ userId: member._id, organizationId: org._id, role: 'MEMBER' })
-  console.log(`Member: ${member.email} (password: ${demoPassword})`)
+  console.log(`Created admin and member accounts.`)
 
   // Demo clients
   const clients = await Promise.all([
@@ -134,8 +132,9 @@ async function main() {
   console.log('Created demo invoice.')
 
   console.log('\n✅ Demo data seeded successfully!')
-  console.log(`   Admin:  admin@demoagency.test / ${demoPassword}`)
-  console.log(`   Member: member@demoagency.test / ${demoPassword}`)
+  console.log('   Admin:  admin@demoagency.test')
+  console.log('   Member: member@demoagency.test')
+  console.log('   (Passwords were generated at runtime — not stored in source code)')
 
   await mongoose.disconnect()
 }

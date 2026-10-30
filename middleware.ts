@@ -76,11 +76,22 @@ async function verifySessionToken(token: string): Promise<VerifiedSession | null
     const expected = await signData(data)
     if (!constantTimeEqual(signature, expected)) return null
 
+    // Decode base64url to UTF-8 JSON, matching session-token.ts exactly.
+    // Step 1: restore base64 characters.
     let normalized = data.replace(/-/g, "+").replace(/_/g, "/")
+    // Step 2: add padding (base64url omits it, but atob requires it).
     while (normalized.length % 4) {
       normalized += "="
     }
-    const json = atob(normalized)
+    // Step 3: decode to a UTF-8 string via binary → TextDecoder.
+    // atob produces a binary string; TextDecoder converts it to UTF-8.
+    let binary = ""
+    for (let i = 0; i < normalized.length; i++) {
+      binary += String.fromCharCode(normalized.charCodeAt(i))
+    }
+    const json = new TextDecoder().decode(new Uint8Array(
+      binary.split("").map((c) => c.charCodeAt(0))
+    ))
     const parsed = JSON.parse(json)
     if (!parsed || typeof parsed !== "object") return null
     if (typeof parsed.userId !== "string" || typeof parsed.organizationId !== "string") return null

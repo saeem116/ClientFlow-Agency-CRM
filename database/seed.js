@@ -59,17 +59,67 @@ if (confirmSeed !== 'YES') {
   process.exit(1)
 }
 
-// ─── URI Validation ────────────────────────────────────────────────────────────
-// Validate scheme and database name before connecting. Log errors only on
-// the database name — never echo back the full URI (credentials leak risk).
+// ─── Host Allowlist for Local Development ──────────────────────────────────
+//
+// Only these hostnames are allowed for demo seeding.
+// Docker MongoDB service hostname: "mongo" (from docker-compose.yml).
+// Always use an explicit DEMO_SEED_MONGODB_URI pointing to a local or test database.
+const ALLOWED_HOSTS = new Set(['localhost', '127.0.0.1', '::1', 'mongo'])
+
+function getAllowlistError() {
+  return '❌ DEMO_SEED_MONGODB_URI host is not allowed. Allowed hosts: localhost, 127.0.0.1, ::1, mongo (Docker).'
+}
+
+// Parse the hostname from a MongoDB URI.
+// Returns the hostname string, or null if cannot parse.
+function parseMongoHostname(uri) {
+  // mongodb+srv://<host>/<db>
+  if (uri.startsWith('mongodb+srv://')) {
+    const afterSrv = uri.substring('mongodb+srv://'.length)
+    const slashIdx = afterSrv.indexOf('/')
+    const hostPort = slashIdx === -1 ? afterSrv : afterSrv.substring(0, slashIdx)
+    const colonIdx = hostPort.lastIndexOf(':')
+    return colonIdx === -1 ? hostPort : hostPort.substring(0, colonIdx)
+  }
+
+  // mongodb://user:pass@host:port/path
+  if (uri.startsWith('mongodb://')) {
+    const afterSchema = uri.substring('mongodb://'.length)
+    const atIdx = afterSchema.indexOf('@')
+    if (atIdx === -1) return null
+    const hostPort = afterSchema.substring(atIdx + 1)
+    const slashIdx = hostPort.indexOf('/')
+    const hostPortPart = slashIdx === -1 ? hostPort : hostPort.substring(0, slashIdx)
+    const colonIdx = hostPortPart.lastIndexOf(':')
+    return colonIdx === -1 ? hostPortPart : hostPortPart.substring(0, colonIdx)
+  }
+
+  return null
+}
+
+// ─── URI Safety Validation ─────────────────────────────────────────────────
 
 function validateUri(uri) {
-  // Require standard MongoDB URI scheme.
+  // 1. Validate scheme
   if (!/^mongodb(\+srv)?:\/\//i.test(uri)) {
     console.error('❌ ERROR: URI must use mongodb:// or mongodb+srv:// scheme.')
     process.exit(1)
   }
 
+  // 2. Parse hostname
+  const hostname = parseMongoHostname(uri)
+  if (!hostname) {
+    console.error('❌ ERROR: Could not parse hostname from URI.')
+    process.exit(1)
+  }
+
+  // 3. Positive allowlist check
+  if (!ALLOWED_HOSTS.has(hostname.toLowerCase())) {
+    console.error(getAllowlistError())
+    process.exit(1)
+  }
+
+  // 4. Parse database name
   const match = uri.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^/?]+)/)
   if (!match) {
     console.error('❌ ERROR: Could not parse database name from URI.')
@@ -81,11 +131,11 @@ function validateUri(uri) {
 const { dbName } = validateUri(demoUri)
 if (dbName !== 'clientflow_demo') {
   console.error('❌ ERROR: Database name must be exactly `clientflow_demo`.')
-  console.error(`   Current database name does not match.`)
   console.error('   This safeguard prevents accidental seeding against a wrong database.')
   process.exit(1)
 }
 
+// Print only the database name — never the full URI (credentials leak risk).
 console.log('✅ Safety checks passed.')
 console.log(`   Target database: ${dbName}`)
 console.log('')
