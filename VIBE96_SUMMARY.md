@@ -104,10 +104,10 @@ Completed **Phases 1–11** of the Vibe96 90–95/100 quality optimization plan 
 **Required Action** (run once in production):
 ```bash
 # Option 1: Reset password
-CONFIRM_DEMO_RESET=YES DEMO_RESET_MONGODB_URI=<uri> DEMO_RESET_PASSWORD="NewPassword!2026" node scripts/reset-demo-password.js
+CONFIRM_DEMO_RESET=YES DEMO_RESET_MONGODB_URI=<uri> DEMO_RESET_PASSWORD="<your-strong-password>" node scripts/reset-demo-password.js
 
 # Option 2: Re-seed demo data
-CONFIRM_DEMO_SEED=YES DEMO_SEED_MONGODB_URI=<uri> DEMO_REVIEWER_PASSWORD="NewPassword!2026" node scripts/seed-demo-public.js
+CONFIRM_DEMO_SEED=YES DEMO_SEED_MONGODB_URI=<uri> DEMO_REVIEWER_PASSWORD="<your-strong-password>" node scripts/seed-demo-public.js
 ```
 
 ---

@@ -32,8 +32,11 @@ export async function POST(
   if (notes !== undefined) updates.notes = notes
   if (total !== undefined) updates.total = parseFloat(total)
 
+  // Scope the update to the authenticated organization. Without the
+  // organizationId filter, a user from Org A could mutate an invoice that
+  // belongs to Org B simply by knowing its ID.
   const updated = await Invoice.findByIdAndUpdate(
-    id,
+    { _id: id, organizationId: org.id },
     updates,
     { new: true, runValidators: true }
   ).lean()

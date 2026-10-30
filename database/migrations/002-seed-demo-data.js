@@ -14,6 +14,7 @@
  */
 import mongoose from 'mongoose'
 import { hash } from 'bcryptjs'
+import { randomBytes } from 'crypto'
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clientflow'
 
@@ -62,7 +63,8 @@ async function main() {
   console.log(`Org: ${org.name} (${org._id})`)
 
   // Generate a random demo password at runtime
-  const demoPassword = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const passwordBytes = randomBytes(16)
+  const demoPassword = `demo-${passwordBytes.toString('hex')}`
   const hashedPassword = await hash(demoPassword, 12)
 
   // Demo admin user

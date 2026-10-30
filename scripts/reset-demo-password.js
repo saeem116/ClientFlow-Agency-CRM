@@ -11,7 +11,7 @@
  * Usage:
  *   CONFIRM_DEMO_RESET=YES \
  *   DEMO_RESET_MONGODB_URI="mongodb+srv://<user>:<pass>@host/clientflow_demo" \
- *   DEMO_RESET_PASSWORD="NewPassword!2026" \
+ *   DEMO_RESET_PASSWORD="<your-strong-password>" \
  *   node scripts/reset-demo-password.js
  */
 import mongoose from "mongoose"

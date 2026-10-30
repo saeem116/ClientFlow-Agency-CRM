@@ -18,7 +18,7 @@
  * Usage:
  *   CONFIRM_DEMO_SEED=YES \
  *   DEMO_SEED_MONGODB_URI=mongodb+srv://<user>:<pass>@host/clientflow_demo \
- *   DEMO_REVIEWER_PASSWORD="MyDemoPassword!2026" \
+ *   DEMO_REVIEWER_PASSWORD="<your-strong-password>" \
  *   node scripts/seed-demo-public.js
  */
 import mongoose from 'mongoose'

@@ -41,7 +41,7 @@ Creates the shared public reviewer account for Vibe96 submissions. Uses a
 ```bash
 CONFIRM_DEMO_SEED=YES \
 DEMO_SEED_MONGODB_URI=mongodb://localhost:27017/clientflow_demo \
-DEMO_REVIEWER_PASSWORD="MyDemoPassword!2026" \
+DEMO_REVIEWER_PASSWORD="<your-strong-password>"
 node scripts/seed-demo-public.js
 ```
 

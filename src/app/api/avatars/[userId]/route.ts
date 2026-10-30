@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb } from "@/lib/database"
+import { getSession } from "@/lib/auth"
 import { getClientOrThrow } from "@/lib/gridfs"
 import { GridFSBucket, ObjectId } from "mongodb"
 
 /**
  * GET /api/avatars/[userId]
  *
- * Public image-serving endpoint. Serves the authenticated user's avatar
- * (if any) without requiring a session cookie, so `next/image` can
- * retrieve it when the browser does not send cookies for this origin.
+ * Serves the authenticated user's avatar (if any).
  *
- * Ownership is enforced server-side by verifying the requesting user
- * belongs to the same organization as the avatar's owner, or by allowing
- * any logged-in user to view their own avatar. Unauthenticated requests
- * are rejected.
+ * Authorization: the requesting session must be authenticated, and the
+ * avatar's owner must belong to the same organization as the requesting
+ * user. A user can never retrieve another organization's avatars.
+ *
+ * The endpoint is NOT public: it requires a signed session cookie, so
+ * `next/image` must be configured with `unoptimized` or the avatar must
+ * be embedded inline where cookies are available.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   await ensureDb()
+
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
   const { userId } = await params
   if (!userId) {
@@ -31,12 +38,27 @@ export async function GET(
   // orphaned files left over from previous uploads, which would show an
   // old image even after the user's avatar has been cleared.
   const { User } = await import("@/lib/database")
-  const user = await User.findById(userId).lean()
+  const user = await User.findById(userId).lean() as unknown as {
+    _id: { toString(): string }
+    organizationId: { toString(): string } | null
+    avatar: string | null
+  } | null
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 })
   }
 
-  const avatarId = (user as { avatar?: string | null }).avatar || null
+  // Tenant isolation: the avatar's owner must share an organization with
+  // the requesting session. A user from Org A cannot fetch Org B's avatars.
+  // The owner's organization is resolved through Membership (User has no
+  // direct organizationId field).
+  const { Membership } = await import("@/lib/database")
+  const ownerMembership = await Membership.findOne({ userId: user._id.toString() }).lean() as unknown as { organizationId: { toString(): string } } | null
+  const ownerOrgId = ownerMembership?.organizationId?.toString() || null
+  if (!ownerOrgId || ownerOrgId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const avatarId = user.avatar || null
   if (!avatarId) {
     // Return a 1×1 transparent PNG instead of 404 so next/image has a
     // stable placeholder and doesn't retry.
