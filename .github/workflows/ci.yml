@@ -80,14 +80,26 @@ jobs:
       - name: Run database initialization
         run: |
           echo "Waiting for MongoDB to be ready..."
-          for i in {1..30}; do
-            if mongosh --eval "db.adminCommand('ping')" mongodb://localhost:27017/clientflow-test --quiet 2>/dev/null; then
-              echo "MongoDB is ready"
-              break
-            fi
-            echo "Waiting for MongoDB... (attempt $i/30)"
-            sleep 2
-          done
+          node -e "
+            const { MongoClient } = require('mongodb');
+            async function check() {
+              for (let i = 0; i < 30; i++) {
+                try {
+                  const c = await MongoClient.connect('mongodb://localhost:27017/clientflow-test', { serverSelectionTimeoutMS: 2000 });
+                  await c.db().admin().ping();
+                  await c.close();
+                  console.log('MongoDB is ready');
+                  return;
+                } catch (e) {
+                  console.log('Waiting for MongoDB... (attempt ' + (i+1) + '/30)');
+                  await new Promise(r => setTimeout(r, 2000));
+                }
+              }
+              console.error('MongoDB did not become ready');
+              process.exit(1);
+            }
+            check();
+          "
           npx tsx database/migrations/001-create-indexes.mjs
         env:
           MONGODB_URI: mongodb://localhost:27017/clientflow-test
