@@ -139,7 +139,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id })
+  interface InvoiceLean {
+    status: string
+    paidAmount: number
+    dueDate: Date | null
+    notes: string | null
+  }
+  const invoice = await Invoice.findOne({ _id: id, organizationId: org.id }).lean() as InvoiceLean | null
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
   }

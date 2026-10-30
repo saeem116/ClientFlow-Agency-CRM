@@ -158,7 +158,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <div className="rounded-lg border border-slate-200 dark:border-[var(--border)] p-4">
           <h3 className="font-medium text-slate-900 dark:text-[var(--foreground)] mb-3">Payment History</h3>
           <div className="space-y-3">
-            {payments.map((payment: {
+            {(payments as unknown as Array<{
+              _id: { toString(): string };
+              amount: number;
+              date: Date;
+              method: string;
+            }>).map((payment: {
               _id: { toString(): string };
               amount: number;
               date: Date;

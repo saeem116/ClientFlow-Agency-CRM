@@ -17,9 +17,6 @@
  */
 import type { Model, Document } from "mongoose"
 
-import { getSession } from "@/lib/auth"
-import { Session } from "@/lib/auth"
-
 /**
  * Returns the correct Mongoose model for each entity based on the current
  * session context (demo vs production).

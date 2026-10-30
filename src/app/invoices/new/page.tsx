@@ -40,7 +40,7 @@ export default async function NewInvoicePage() {
     notes?: string | null
     status?: string
   }
-  const plainClients = (clients || []).map((c: ClientLean) => ({
+  const plainClients = ((clients || []) as unknown as ClientLean[]).map((c: ClientLean) => ({
     id: c._id.toString(),
     firstName: c.firstName || null,
     lastName: c.lastName || null,

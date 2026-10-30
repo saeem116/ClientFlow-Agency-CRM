@@ -83,7 +83,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
           lastName: null,
         } : null,
       }}
-      clients={clients.map((c) => ({
+      clients={clients.map((c: { _id?: { toString(): string }; companyName?: string | null; firstName?: string | null; lastName?: string | null }) => ({
         id: c._id?.toString() || "",
         companyName: c.companyName || null,
         firstName: c.firstName || null,

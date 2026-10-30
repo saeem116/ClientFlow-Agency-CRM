@@ -197,9 +197,12 @@ async function getModel(name: string): Promise<mongoose.Model<mongoose.Document>
   if (!m) throw new Error(`Demo connection not available for model: ${name}`)
 
   // Clear any previously cached model with this name on the demo connection.
-  delete (m as unknown as Record<string, unknown>).models[name]
+  const cache = m as unknown as { models?: Record<string, unknown> }
+  if (cache.models) {
+    delete cache.models[name]
+  }
 
-  const model = m.model(name, schemaMap[name])
+  const model = m.model(name, schemaMap[name]) as unknown as mongoose.Model<mongoose.Document>
   modelCache.set(name, model)
   return model
 }

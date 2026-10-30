@@ -29,7 +29,7 @@ export default async function ProjectsPage() {
     projectId: { toString(): string } | null;
     completedAt: Date | null;
   }
-  const milestonesTyped = milestones as MilestoneLean[]
+  const milestonesTyped = milestones as unknown as MilestoneLean[]
   const milestonesByProject = new Map<string, Array<{ id: string; completedAt: Date | null }>>()
   for (const m of milestonesTyped) {
     const pid = m.projectId?.toString() ?? ""
@@ -63,7 +63,7 @@ export default async function ProjectsPage() {
     } | null;
   }
 
-  const normalizedProjects = projects.map((project: ProjectLean) => ({
+  const normalizedProjects = (projects as unknown as ProjectLean[]).map((project: ProjectLean) => ({
     id: project._id.toString(),
     name: project.name,
     description: project.description || null,
@@ -79,8 +79,8 @@ export default async function ProjectsPage() {
     createdById: project.createdById?.toString() || null,
     client: project.clientId && typeof project.clientId === "object"
       ? {
-          id: project.clientId._id?.toString() || project.clientId.id || "unknown",
-          name: project.clientId.companyName || "Unnamed",
+          id: ((project.clientId as unknown as { _id?: { toString(): string } })._id?.toString()) || ((project.clientId as unknown as { id?: string }).id) || "unknown",
+          name: (project.clientId as unknown as { companyName?: string }).companyName || "Unnamed",
         }
       : project.client
         ? {

@@ -41,7 +41,7 @@ export default async function LeadsPage() {
 
   // Normalize to match the Lead interface in leads-page-client
   const normalizedLeads = leads.map((lead: RawLead) => ({
-    id: lead._id?.toString() || lead.id,
+    id: lead._id?.toString() || "",
     title: lead.title,
     email: lead.email,
     stage: lead.stage as "NEW" | "CONTACTED" | "QUALIFIED" | "PROPOSAL_SENT" | "WON" | "LOST",
@@ -50,8 +50,8 @@ export default async function LeadsPage() {
     followUpAt: lead.followUpAt || null,
     client: lead.clientId && typeof lead.clientId === "object"
       ? {
-          id: lead.clientId._id?.toString() || lead.clientId.id,
-          name: lead.clientId.companyName || `${lead.clientId.firstName || ""} ${lead.clientId.lastName || ""}`.trim() || "Unnamed",
+          id: (lead.clientId as unknown as { _id?: { toString(): string }; id?: string })._id?.toString() || (lead.clientId as unknown as { id?: string }).id || "",
+          name: (lead.clientId as unknown as { companyName?: string | null; firstName?: string | null; lastName?: string | null }).companyName || `${(lead.clientId as unknown as { firstName?: string | null }).firstName || ""} ${(lead.clientId as unknown as { lastName?: string | null }).lastName || ""}`.trim() || "Unnamed",
         }
       : null,
   }))

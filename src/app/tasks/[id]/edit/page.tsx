@@ -24,10 +24,10 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   const task = sanitize(rawTask) as {
     _id: { toString(): string }
     title: string
-    description?: string | null
+    description: string | null
     status: string
     priority: string
-    dueDate?: Date | null
+    dueDate: Date | null
   } | null
 
   if (!task) notFound()

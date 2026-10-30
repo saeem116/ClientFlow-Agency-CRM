@@ -94,7 +94,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           companyName: client.companyName || null,
           email: client.email || null,
         } : null,
-        tasks: tasks.map((t: {
+        tasks: (tasks as unknown as Array<{
+          _id: { toString(): string };
+          title: string;
+          status: string;
+          assigneeId: { toString(): string } | null;
+        }>).map((t: {
           _id: { toString(): string };
           title: string;
           status: string;
@@ -105,7 +110,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           status: t.status,
           assignee: t.assigneeId ? { id: t.assigneeId.toString(), name: "User", email: "" } : null,
         })),
-        milestones: milestones.map((m: {
+        milestones: (milestones as unknown as Array<{
+          _id: { toString(): string };
+          title: string;
+          description: string | null;
+          dueDate: Date | null;
+          completedAt: Date | null;
+        }>).map((m: {
           _id: { toString(): string };
           title: string;
           description: string | null;
@@ -118,7 +129,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           dueDate: m.dueDate || null,
           completedAt: m.completedAt || null,
         })),
-        activities: activities.map((a: {
+        activities: (activities as unknown as Array<{
+          _id: { toString(): string };
+          type: string;
+          title: string;
+          description: string | null;
+          createdAt: Date;
+        }>).map((a: {
           _id: { toString(): string };
           type: string;
           title: string;

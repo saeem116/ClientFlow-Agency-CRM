@@ -43,7 +43,7 @@ export default async function InvoicesPage() {
       lastName: string | null
     } | null
   }
-  const normalizedInvoices = invoices.map((invoice: InvoiceLean) => ({
+  const normalizedInvoices = (invoices as unknown as InvoiceLean[]).map((invoice: InvoiceLean) => ({
     id: invoice._id.toString(),
     number: invoice.number,
     status: invoice.status,
@@ -60,12 +60,12 @@ export default async function InvoicesPage() {
     client: {
       id:
         (invoice.clientId && typeof invoice.clientId === "object"
-          ? invoice.clientId._id?.toString()
-          : invoice.clientId?.toString()) || "",
+          ? (invoice.clientId as unknown as { _id?: { toString(): string }; id?: string })._id?.toString()
+          : (invoice.clientId as unknown as { toString?: () => string }).toString?.() || "") || "",
       name:
         (invoice.clientId && typeof invoice.clientId === "object"
-          ? invoice.clientId.companyName || invoice.clientId.firstName || invoice.clientId.lastName || "Unnamed"
-          : invoice.client?.companyName || invoice.clientName || "Unnamed"),
+          ? (invoice.clientId as unknown as { companyName?: string | null; firstName?: string | null; lastName?: string | null }).companyName || (invoice.clientId as unknown as { firstName?: string | null; lastName?: string | null }).firstName || (invoice.clientId as unknown as { lastName?: string | null }).lastName || "Unnamed"
+          : (invoice as unknown as { client?: { companyName?: string | null } }).client?.companyName || (invoice as unknown as { clientName?: string }).clientName || "Unnamed"),
     },
     payments: [],
   }))

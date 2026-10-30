@@ -2,13 +2,19 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { IInvitationDocument } from "@/lib/mongoose/invitation"
-import { IInvitation } from "@/lib/mongoose/invitation"
+
+interface AcceptInvitationData {
+  _id: { toString(): string }
+  email: string
+  role: "ADMIN" | "MEMBER" | "CLIENT"
+  expiresAt: Date
+  token: string
+}
 
 export default function AcceptInvitationClient({
   invitation,
 }: {
-  invitation: IInvitation | null
+  invitation: AcceptInvitationData | null
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -28,7 +34,7 @@ export default function AcceptInvitationClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: invitation.token,
+          token: invitation!.token,
         }),
       })
 

@@ -73,24 +73,23 @@ export default async function ReportsPage() {
   return (
     <ReportsPageClient
       invoices={invoices.map((i: InvoiceLean) => ({
-        status: i.status,
-        total: i.total,
-        paidAmount: i.paidAmount || 0,
-        issueDate: i.issueDate,
+        issueDate: i.issueDate as Date,
+        status: i.status as string,
+        paidAmount: i.paidAmount as number,
       }))}
       leads={leads.map((l: LeadLean) => ({
-        stage: l.stage,
-        value: l.value || 0,
+        stage: l.stage as string,
+        value: l.value as number,
       }))}
       projects={projects.map((p: ProjectLean) => ({
-        status: p.status,
+        status: p.status as string,
       }))}
       tasks={tasks.map((t: TaskLean) => ({
-        status: t.status,
-        dueDate: t.dueDate,
+        status: t.status as string,
+        dueDate: (t.dueDate as Date | string | null) as Date | null,
       }))}
       clients={clients.map((c: ClientLean) => ({
-        status: c.status,
+        status: c.status as string,
       }))}
     />
   )

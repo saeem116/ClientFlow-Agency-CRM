@@ -37,7 +37,7 @@ export default async function AcceptInvitationPage({
   const invitations = await Invitation.find({
     tokenPrefix,
     status: "PENDING",
-  }).lean()
+  }).lean() as unknown as InvitationLean[]
 
   if (!invitations.length) {
     return (
@@ -55,8 +55,15 @@ export default async function AcceptInvitationPage({
   }
 
   // Find the invitation whose hash matches the token
-  let invitation: (typeof invitations)[0] & { token: string } | null = null
-  for (const inv of invitations) {
+  interface InvitationLean {
+    _id: { toString(): string }
+    email: string
+    role: "ADMIN" | "MEMBER" | "CLIENT"
+    tokenHash: string
+    expiresAt: Date
+  }
+  let invitation: (InvitationLean & { token: string }) | null = null
+  for (const inv of invitations as InvitationLean[]) {
     if (await verifyToken(token, inv.tokenHash)) {
       invitation = { ...inv, token }
       break

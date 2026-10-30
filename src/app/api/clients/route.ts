@@ -103,16 +103,20 @@ export async function POST(request: NextRequest) {
 
   // Notify other org members about new client
   if (session) {
-    const orgMembers = await Membership.find({ organizationId: org.id }).lean() as MembershipLean[]
-    for (const member of orgMembers) {
+    const orgMembers = await Membership.find({ organizationId: org.id }).lean()
+    interface MembershipLean {
+      _id: { toString(): string }
+      userId: { toString(): string }
+    }
+    for (const member of orgMembers as unknown as MembershipLean[]) {
       if (member.userId.toString() !== session.user.id) {
         await createNotification({
           userId: member.userId.toString(),
           organizationId: org.id,
           type: "client_created",
           title: "New Client Added",
-          message: `${client.companyName || `${client.firstName || ""} ${client.lastName || ""}`.trim() || client.email} has been added as a client`,
-          link: `/clients/${client._id}`,
+          message: `${(client as unknown as { companyName?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null }).companyName || `${(client as unknown as { firstName?: string | null; lastName?: string | null }).firstName || ""} ${(client as unknown as { firstName?: string | null; lastName?: string | null }).lastName || ""}`.trim() || (client as unknown as { email?: string | null }).email || "Client"}`,
+          link: `/clients/${(client as unknown as { _id?: { toString(): string } })._id?.toString() ?? ""}`,
         })
       }
     }
@@ -121,6 +125,6 @@ export async function POST(request: NextRequest) {
   const clientObj = client as unknown as ClientLean
   return NextResponse.json({
     id: clientObj._id.toString(),
-    ...(clientObj as Record<string, unknown>),
+    ...(clientObj as unknown as Record<string, unknown>),
   })
 }

@@ -352,7 +352,8 @@ export async function getOrganization() {
 
     if (!membership) return null
 
-    const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
+    const org = (membership as unknown as { organizationId?: { _id: { toString(): string }; name: string; slug: string } }).organizationId
+    if (!org) return null
     return {
       id: org._id.toString(),
       name: org.name,
@@ -367,7 +368,8 @@ export async function getOrganization() {
 
   if (!membership) return null
 
-  const org = membership.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string }
+  const org = (membership as unknown as { organizationId?: { _id: { toString(): string }; name: string; slug: string } }).organizationId
+  if (!org) return null
   return {
     id: org._id.toString(),
     name: org.name,
@@ -416,11 +418,11 @@ export async function signIn(email: string, password: string): Promise<{ user: S
         slug: string
       }>
       try {
-        UserModel = await DemoUser()
-        MemModel = await DemoMembership()
+        UserModel = await DemoUser() as unknown as typeof UserModel
+        MemModel = await DemoMembership() as unknown as typeof MemModel
         // Register the Organization model on the demo connection so .populate()
         // does not throw MissingSchemaError (it is not lazily created here).
-        DemoOrgModel = await DemoOrg()
+        DemoOrgModel = await DemoOrg() as unknown as typeof DemoOrgModel
       } catch (modelErr) {
         console.error("[signIn] Demo model creation failed:", modelErr instanceof Error ? modelErr.message : String(modelErr))
         return { user: null, error: "Demo database is temporarily unavailable. Please try again later." }

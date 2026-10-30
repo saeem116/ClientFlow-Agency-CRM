@@ -20,40 +20,40 @@ interface LeanDoc {
 }
 
 interface InvoiceLean extends LeanDoc {
-  total?: number
-  paidAmount?: number
-  number?: string
-  status?: string
-  dueDate?: Date | string | null
-  clientId?: LeanDoc
-  issueDate?: Date | string
+  total: number
+  paidAmount: number
+  number: string
+  status: string
+  dueDate: Date | string | null
+  clientId: LeanDoc
+  issueDate: Date | string
 }
 
 interface TaskLean extends LeanDoc {
-  title?: string
-  status?: string
-  priority?: string
-  dueDate?: Date | string | null
-  projectId?: LeanDoc
+  title: string
+  status: string
+  priority: string
+  dueDate: Date | string | null
+  projectId: LeanDoc
 }
 
 interface ActivityLean extends LeanDoc {
-  type?: string
-  title?: string
-  description?: string | null
-  createdAt?: Date | string
-  clientId?: LeanDoc
-  projectId?: LeanDoc
+  type: string
+  title: string
+  description: string | null
+  createdAt: Date | string
+  clientId: LeanDoc
+  projectId: LeanDoc
 }
 
 interface LeadLean extends LeanDoc {
-  stage?: string
-  value?: number
+  stage: string
+  value: number
 }
 
 interface ProjectLean extends LeanDoc {
-  name?: string
-  status?: string
+  name: string
+  status: string
 }
 
 export default async function DashboardPage() {
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
   ])
 
   // Calculate KPI values
-  const outstandingTotal = (outstandingInvoices as InvoiceLean[]).reduce(
+  const outstandingTotal = (outstandingInvoices as unknown as InvoiceLean[]).reduce(
     (sum: number, inv: InvoiceLean) => sum + (inv.total || 0) - (inv.paidAmount || 0),
     0
   )
@@ -227,23 +227,23 @@ export default async function DashboardPage() {
 
   // Normalize tasks for TaskList: Mongoose .lean() returns _id, the component
   // expects id; populate projectId so the project link renders.
-  const recentTasksNormalized = (recentTasks as TaskLean[]).map((t: TaskLean) => ({
-    id: t._id?.toString() || t.id,
+  const recentTasksNormalized = (recentTasks as unknown as TaskLean[]).map((t: TaskLean) => ({
+    id: t._id?.toString() || t.id || "",
     title: t.title,
     status: t.status,
     priority: t.priority,
     dueDate: t.dueDate || null,
     project: t.projectId
       ? {
-          id: t.projectId._id?.toString() || t.projectId.id,
+          id: t.projectId._id?.toString() || t.projectId.id || "",
           name: t.projectId.name as string,
         }
       : null,
   }))
 
   // Normalize invoices for OutstandingPayments: _id → id, populate client.
-  const allInvoicesNormalized = (allInvoicesForOutstanding as InvoiceLean[]).map((inv: InvoiceLean) => ({
-    id: inv._id?.toString() || inv.id,
+  const allInvoicesNormalized = (allInvoicesForOutstanding as unknown as InvoiceLean[]).map((inv: InvoiceLean) => ({
+    id: inv._id?.toString() || inv.id || "",
     number: inv.number,
     status: inv.status,
     total: inv.total,
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
     dueDate: inv.dueDate || null,
     client: inv.clientId
       ? {
-          id: inv.clientId._id?.toString() || inv.clientId.id,
+          id: inv.clientId._id?.toString() || inv.clientId.id || "",
           firstName: (inv.clientId.firstName as string | null) || null,
           lastName: (inv.clientId.lastName as string | null) || null,
           companyName: (inv.clientId.companyName as string | null) || null,
@@ -260,15 +260,15 @@ export default async function DashboardPage() {
   }))
 
   // Normalize activities for ActivityFeed: _id → id, populate relations.
-  const recentActivitiesNormalized = (recentActivities as ActivityLean[]).map((a: ActivityLean) => ({
-    id: a._id?.toString() || a.id,
+  const recentActivitiesNormalized = (recentActivities as unknown as ActivityLean[]).map((a: ActivityLean) => ({
+    id: a._id?.toString() || a.id || "",
     type: a.type,
     title: a.title,
     description: a.description || null,
-    createdAt: a.createdAt || a.created_at,
+    createdAt: (a.createdAt || a.created_at) as Date | string || new Date(),
     client: a.clientId
       ? {
-          id: a.clientId._id?.toString() || a.clientId.id,
+          id: a.clientId._id?.toString() || a.clientId.id || "",
           firstName: (a.clientId.firstName as string | null) || null,
           lastName: (a.clientId.lastName as string | null) || null,
           companyName: (a.clientId.companyName as string | null) || null,
@@ -276,7 +276,7 @@ export default async function DashboardPage() {
       : null,
     project: a.projectId
       ? {
-          id: a.projectId._id?.toString() || a.projectId.id,
+          id: a.projectId._id?.toString() || a.projectId.id || "",
           name: a.projectId.name as string,
         }
       : null,
@@ -286,7 +286,7 @@ export default async function DashboardPage() {
   const stages = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL_SENT", "WON", "LOST"]
   const leadsByStage: Record<string, { count: number; totalValue: number }> = {}
   stages.forEach((s) => (leadsByStage[s] = { count: 0, totalValue: 0 }))
-  for (const lead of leads as LeadLean[]) {
+  for (const lead of leads as unknown as LeadLean[]) {
     const stage = lead.stage
     if (stage && leadsByStage[stage]) {
       leadsByStage[stage].count += 1
@@ -301,7 +301,7 @@ export default async function DashboardPage() {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-    const monthRevenue = (paidInvoicesLast6Months as InvoiceLean[])
+    const monthRevenue = (paidInvoicesLast6Months as unknown as InvoiceLean[])
       .filter((inv) => {
         const issueDate = new Date(inv.issueDate as unknown as string)
         return issueDate.getMonth() === d.getMonth() && issueDate.getFullYear() === d.getFullYear() && inv.status === "PAID"

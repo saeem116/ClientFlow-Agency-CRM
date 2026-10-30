@@ -21,7 +21,17 @@ export default async function TasksPage() {
     .lean()
     .exec()
 
-  return <TasksPageClient tasks={tasks.map((t: {
+  return <TasksPageClient tasks={(tasks as unknown as Array<{
+    _id: { toString(): string };
+    title: string;
+    description: string | null;
+    status: string;
+    priority: string;
+    dueDate: Date | null;
+    completedAt: Date | null;
+    projectId: { toString(): string } | null;
+    assigneeId: { toString(): string } | null;
+  }>).map((t: {
     _id: { toString(): string };
     title: string;
     description: string | null;

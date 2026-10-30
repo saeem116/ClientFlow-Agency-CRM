@@ -44,7 +44,7 @@ export default async function NewTaskPage() {
           <CardTitle>Task Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <TaskForm org={org} projects={projects} />
+          <TaskForm org={org} projects={projects as unknown as Array<{ _id: { toString(): string }; name: string }>} />
         </CardContent>
       </Card>
     </div>
