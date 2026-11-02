@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { DemoLoginButtons } from "./demo-login-buttons"
 
 export default function SignInPage() {
   const [formData, setFormData] = useState({
@@ -52,10 +53,6 @@ export default function SignInPage() {
         const data = await response.json()
 
         if (response.ok && data.user) {
-          // The sign-in API route sets the httpOnly session cookie in its
-          // response. Before navigating, ask the server to re-validate that
-          // cookie and update the client auth context, so the dashboard shell
-          // (sidebar) renders immediately without a manual refresh.
           await refresh()
           router.push("/dashboard")
         } else {
@@ -71,6 +68,14 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <span className="font-semibold text-lg tracking-tight text-foreground">ClientFlow</span>
+          </Link>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
           <p className="text-muted-foreground">Sign in to your ClientFlow account</p>
         </div>
@@ -153,19 +158,31 @@ export default function SignInPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link href="/signup" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                  Sign up
-                </Link>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                By signing in, you agree to our Terms of Service and Privacy Policy
-              </p>
+            {/* Demo login section */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-card px-2 text-muted-foreground">OR EXPLORE THE DEMO</span>
+              </div>
             </div>
+
+            <DemoLoginButtons />
           </CardContent>
         </Card>
+
+        <div className="text-center space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="font-medium text-primary hover:text-primary/80 transition-colors">
+              Sign up
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
       </div>
     </div>
   )

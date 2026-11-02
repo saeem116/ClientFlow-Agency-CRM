@@ -1,0 +1,87 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Loader2, Shield, Users, AlertCircle } from "lucide-react"
+
+export function DemoLoginButtons() {
+  const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleDemoLogin = async (persona: "admin" | "member") => {
+    setLoading(persona)
+    setError(null)
+    try {
+      const response = await fetch("/api/auth/demo-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ persona }),
+        credentials: "include",
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.user) {
+        // Refresh the auth context and redirect to dashboard
+        router.push("/dashboard")
+      } else {
+        setError(data.error || "Demo login failed. Please try again.")
+      }
+    } catch {
+      setError("An error occurred. Please try again.")
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-11 justify-start gap-3 border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 text-foreground font-medium transition-colors"
+        disabled={loading !== null}
+        onClick={() => handleDemoLogin("admin")}
+      >
+        {loading === "admin" ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Shield className="h-4 w-4 text-primary" />
+        )}
+        <div className="flex flex-col items-start">
+          <span className="text-sm font-semibold">Login as Admin</span>
+          <span className="text-xs text-muted-foreground font-normal">
+            Explore agency-wide dashboards, clients, projects and business operations
+          </span>
+        </div>
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-11 justify-start gap-3 border-2 border-muted-foreground/30 bg-muted/30 hover:bg-muted/50 hover:border-muted-foreground/50 text-foreground font-medium transition-colors"
+        disabled={loading !== null}
+        onClick={() => handleDemoLogin("member")}
+      >
+        {loading === "member" ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Users className="h-4 w-4 text-muted-foreground" />
+        )}
+        <div className="flex flex-col items-start">
+          <span className="text-sm font-semibold">Login as Team Member</span>
+          <span className="text-xs text-muted-foreground font-normal">
+            Explore assigned work, tasks, projects and everyday team workflows
+          </span>
+        </div>
+      </Button>
+    </div>
+  )
+}

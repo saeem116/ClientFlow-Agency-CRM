@@ -51,7 +51,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     env,
     setupFiles: ['./src/__tests__/utils/setup.ts'],
     hookTimeout: 30000,
