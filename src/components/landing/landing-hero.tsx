@@ -68,30 +68,34 @@ export function LandingHero() {
                 </span>
               </div>
               <div className="p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-4 gap-3 mb-4">
                   <KPICard
-                    icon={<Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                    icon={<Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />}
                     iconBgClass="bg-blue-100 dark:bg-blue-900/30"
+                    valueClass="text-base"
                     value={8}
                     label="Active Clients"
                     format="number"
                   />
                   <KPICard
-                    icon={<Briefcase className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                    icon={<Briefcase className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />}
                     iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
+                    valueClass="text-base"
                     value={6}
                     label="Active Projects"
                     format="number"
                   />
                   <KPICard
-                    icon={<DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
+                    icon={<DollarSign className="w-3 h-3 text-amber-600 dark:text-amber-400" />}
                     iconBgClass="bg-amber-100 dark:bg-amber-900/30"
+                    valueClass="text-base"
                     value={31000}
                     label="Outstanding"
                   />
                   <KPICard
-                    icon={<TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                    icon={<TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
                     iconBgClass="bg-emerald-100 dark:bg-emerald-900/30"
+                    valueClass="text-base"
                     value={38200}
                     label="Revenue This Month"
                   />
