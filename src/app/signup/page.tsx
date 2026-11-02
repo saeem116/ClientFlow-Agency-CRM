@@ -67,11 +67,9 @@ export default function SignUpPage() {
 
         if (response.ok && data.user) {
           // The sign-up API route sets the httpOnly session cookie in its
-          // response. Before navigating, ask the server to re-validate that
-          // cookie and update the client auth context, so the dashboard shell
-          // (sidebar) renders immediately without a manual refresh.
-          await refresh()
-          router.push("/dashboard")
+          // response. Use a full page navigation so the server re-renders the
+          // authenticated layout with the new session (sidebar, header).
+          window.location.href = "/dashboard"
         } else if (response.status === 400) {
           // Client error (validation, duplicate email) - show the server's message
           setError(data.error || "Registration failed. Please check your input.")

@@ -16,6 +16,18 @@ vi.mock('next/image', () => ({
   ),
 }))
 
+// Mock theme provider
+vi.mock('@/components/providers/theme-provider', () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useTheme: () => ({
+    theme: 'light',
+    resolvedTheme: 'light',
+    setTheme: vi.fn(),
+    density: 'normal',
+    setDensity: vi.fn(),
+  }),
+}))
+
 describe('LandingPage', () => {
   it('renders hero section with correct copy', () => {
     render(<LandingPage />)
@@ -60,7 +72,7 @@ describe('LandingPage', () => {
     expect(screen.getByText('Project Management')).toBeInTheDocument()
     expect(screen.getByText('Task Management')).toBeInTheDocument()
     expect(screen.getByText('Invoice & Payment Management')).toBeInTheDocument()
-    expect(screen.getByText('Revenue Analytics')).toBeInTheDocument()
+    expect(screen.getAllByText('Revenue Analytics').length).toBeGreaterThanOrEqual(2)
   })
 
   it('renders benefits section', () => {
