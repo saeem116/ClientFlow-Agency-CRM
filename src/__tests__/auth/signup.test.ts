@@ -7,22 +7,9 @@ import { connectPromise } from '../utils/setup'
 vi.mock('next/headers', () => {
   let cookieHeader = ''
   const cookiesMap = new Map<string, string>()
-  return {
-    headers: () => ({
-      get: (name: string) => (name === 'cookie' ? cookieHeader : null),
-    }),
-    cookies: () => ({
-      get: (name: string) => {
-        const v = cookiesMap.get(name)
-        return v ? { name, value: v } : undefined
-      },
-      set: (name: string, value: string) => {
-        cookiesMap.set(name, value)
-      },
-      delete: (name: string) => {
-        cookiesMap.delete(name)
-      },
-    }),
+
+  const mockHeaders = {
+    get: (name: string) => (name === 'cookie' ? cookieHeader : null),
     __setCookieHeader: (h: string) => {
       cookieHeader = h
     },
@@ -31,6 +18,27 @@ vi.mock('next/headers', () => {
       cookieHeader = ''
       cookiesMap.clear()
     },
+  }
+
+  const mockCookies = {
+    get: (name: string) => {
+      const v = cookiesMap.get(name)
+      return v ? { name, value: v } : undefined
+    },
+    set: (name: string, value: string) => {
+      cookiesMap.set(name, value)
+    },
+    delete: (name: string) => {
+      cookiesMap.delete(name)
+    },
+  }
+
+  return {
+    headers: vi.fn(() => Promise.resolve(mockHeaders)),
+    cookies: vi.fn(() => Promise.resolve(mockCookies)),
+    // Export the mock objects directly for test access
+    __mockHeaders: mockHeaders,
+    __mockCookies: mockCookies,
   }
 })
 
@@ -225,5 +233,110 @@ describe('Signup API', () => {
       // Restore original function
       Organization.create = originalCreate
     }
+  })
+})
+
+describe('Signup-to-Dashboard Transition', () => {
+  if (!testData) {
+    it.skip('MongoDB not available - skipping all tests', () => {})
+    return
+  }
+
+  it('should set session cookie and return user on successful signup', async () => {
+    const { POST } = await import('@/app/api/auth/signup/route')
+    const request = new NextRequest('http://localhost/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'transition@signup-test.com',
+        name: 'Transition User',
+        password: 'password123',
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.user).toBeDefined()
+    expect(data.user.email).toBe('transition@signup-test.com')
+    expect(data.user.organizationRole).toBe('ADMIN')
+    expect(data.user.organizationId).toBeDefined()
+
+    // Verify session cookie was set
+    const cookies = await import('next/headers').then(m => m.cookies())
+    const sessionCookie = cookies.get('session')
+    expect(sessionCookie).toBeDefined()
+    expect(sessionCookie?.value).toBeTruthy()
+    expect(sessionCookie?.value.length).toBeGreaterThan(0)
+  })
+
+  it('should establish session before authenticated navigation (verify /api/auth/me works after signup)', async () => {
+    const { POST } = await import('@/app/api/auth/signup/route')
+    const request = new NextRequest('http://localhost/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'mecheck@signup-test.com',
+        name: 'MeCheck User',
+        password: 'password123',
+      }),
+    })
+
+    const signupResponse = await POST(request)
+    expect(signupResponse.status).toBe(200)
+
+    // Get the session cookie from the signup response
+    const nextHeaders = await import('next/headers') as unknown as { __mockHeaders: { __setCookieHeader: (h: string) => void } }
+    const cookies = await import('next/headers').then(m => m.cookies())
+    const sessionCookie = cookies.get('session')
+    expect(sessionCookie).toBeDefined()
+
+    // Now call /api/auth/me with the session cookie to verify session is established
+    // We simulate this by setting the cookie header and calling the me route
+    nextHeaders.__mockHeaders.__setCookieHeader(`session=${sessionCookie?.value}`)
+
+    const { GET: meGET } = await import('@/app/api/auth/me/route')
+    const meResponse = await meGET()
+    const meData = await meResponse.json()
+
+    expect(meResponse.status).toBe(200)
+    expect(meData.user).toBeDefined()
+    expect(meData.user.email).toBe('mecheck@signup-test.com')
+    expect(meData.user.organizationRole).toBe('ADMIN')
+    expect(meData.org).toBeDefined()
+    expect(meData.org.id).toBe(meData.user.organizationId)
+    expect(meData.isDemo).toBe(false)
+  })
+
+  it('should verify session cookie contains valid signed payload with correct context', async () => {
+    const { POST } = await import('@/app/api/auth/signup/route')
+    const request = new NextRequest('http://localhost/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'payload@signup-test.com',
+        name: 'Payload User',
+        password: 'password123',
+      }),
+    })
+
+    const response = await POST(request)
+    expect(response.status).toBe(200)
+
+    // Get the session cookie
+    const nextHeaders = await import('next/headers') as unknown as { __mockHeaders: { __getCookies: () => Record<string, string> } }
+    const sessionCookie = nextHeaders.__mockHeaders.__getCookies().session
+    expect(sessionCookie).toBeDefined()
+
+    // Decode and verify the session payload
+    const { decodeSession } = await import('@/lib/session-token')
+    const payload = decodeSession(sessionCookie)
+    expect(payload).toBeDefined()
+    expect(payload?.userId).toBeDefined()
+    expect(payload?.organizationId).toBeDefined()
+    expect(payload?.context).toBe('production')
+    expect(payload?.timestamp).toBeDefined()
+    expect(typeof payload?.timestamp).toBe('number')
   })
 })
