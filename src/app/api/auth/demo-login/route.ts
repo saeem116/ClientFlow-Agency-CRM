@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession, createSession } from "@/lib/auth"
 import { connectDemoDb } from "@/lib/demo-mongoose"
-import { isDemoAccount } from "@/lib/demo-account"
+import { isDemoAccount, getDemoAccountEmail } from "@/lib/demo-account"
 
 /**
  * POST /api/auth/demo-login
  *
  * One-click demo login: signs in as a pre-configured demo persona.
  * Accepts only fixed persona identifiers — never arbitrary credentials.
+ *
+ * Persona mapping:
+ *   - "member" → DEMO_MEMBER_EMAIL, falling back to the shared demo account
+ *     (reviewer@clientflow.test, role MEMBER). This is the only demo account
+ *     that exists by default.
+ *   - "admin"  → DEMO_ADMIN_EMAIL. Requires explicit provisioning; there is
+ *     no admin demo account by default, so this persona returns 503 until the
+ *     env var is set. This prevents a button that falsely advertises a role
+ *     the demo does not actually have.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -44,11 +53,28 @@ export async function POST(request: NextRequest) {
     const UserModel = await DemoUser()
     const MemModel = await DemoMembership()
 
-    // Resolve demo users by email
-    const adminEmail = process.env.DEMO_ADMIN_EMAIL || "admin@demo.test"
-    const memberEmail = process.env.DEMO_MEMBER_EMAIL || "member@demo.test"
+    // Resolve demo users by email.
+    // The "member" persona maps to the shared demo account by default so the
+    // one-click button works out of the box. The "admin" persona requires an
+    // explicitly provisioned account (DEMO_ADMIN_EMAIL) — there is no admin
+    // demo account by default, and we will not fabricate one.
+    const adminEmail = process.env.DEMO_ADMIN_EMAIL?.trim().toLowerCase() || null
+    const memberEmail = (
+      process.env.DEMO_MEMBER_EMAIL?.trim().toLowerCase() ||
+      getDemoAccountEmail()
+    )
 
     const targetEmail = persona === "admin" ? adminEmail : memberEmail
+
+    if (!targetEmail) {
+      return NextResponse.json(
+        {
+          error: `Demo ${persona} account is not configured. ` +
+            `Set DEMO_ADMIN_EMAIL to enable admin demo login.`,
+        },
+        { status: 503 }
+      )
+    }
 
     // Verify the target account is actually a demo account
     if (!isDemoAccount(targetEmail)) {

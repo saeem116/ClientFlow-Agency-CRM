@@ -29,6 +29,7 @@ vi.mock('@/lib/database-demo', () => ({
 
 vi.mock('@/lib/demo-account', () => ({
   isDemoAccount: vi.fn(),
+  getDemoAccountEmail: vi.fn(() => 'reviewer@clientflow.test'),
 }))
 
 vi.mock('@/lib/auth', () => ({
