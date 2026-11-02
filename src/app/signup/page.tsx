@@ -7,8 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Loader2, Mail, User, Lock, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -21,8 +19,6 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
   const [isPending, startTransition] = useTransition()
-  const router = useRouter()
-  const { refresh } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

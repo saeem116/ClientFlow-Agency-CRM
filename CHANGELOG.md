@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `vitest.config.ts` uses `jsdom` environment for React component tests
 
+### Fixed
+- **Signup**: sidebar and header now appear immediately after signup (was missing until browser refresh). `signup/page.tsx` now uses full page navigation (`window.location.href`) instead of `router.push()` so the server re-renders the authenticated layout with the new session cookie.
+- Added focused regression tests for the signup-to-dashboard transition in `src/__tests__/auth/signup.test.ts`
+
 ## [1.1.0] - 2026-10-30
 
 ### Security Fixes
