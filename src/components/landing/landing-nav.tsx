@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Menu, X, Building2 } from "lucide-react"
 
 const navLinks = [
@@ -12,19 +13,44 @@ const navLinks = [
   { href: "#faq", label: "FAQ" },
 ]
 
-/** Smooth-scroll to an anchor on the current page. Falls back to default navigation. */
-function smoothScrollTo(hash: string, onClick?: () => void) {
-  // If the link points to another page, let normal navigation happen
-  if (hash.startsWith("http") || hash.includes("//")) {
-    return
+function LogoMark() {
+  return (
+    <>
+      <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+        <Building2 className="w-5 h-5 text-primary-foreground" />
+      </div>
+      <span className="font-bold text-lg tracking-tight text-foreground">
+        ClientFlow
+      </span>
+    </>
+  )
+}
+
+/**
+ * Logo click behavior:
+ *   - On the landing page: native anchor scroll to Hero (no JS needed).
+ *   - On any other route: client-side navigate to `/` and show the Hero section.
+ */
+function LogoLink() {
+  const pathname = usePathname()
+  const isLandingPage = pathname === "/" || pathname === ""
+
+  if (isLandingPage) {
+    return (
+      <a
+        href="#hero"
+        className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+      >
+        <LogoMark />
+      </a>
+    )
   }
-  const id = hash.replace(/^#/, "")
-  const target = document.getElementById(id)
-  if (!target) return
-  onClick?.()
-  target.scrollIntoView({ behavior: "smooth", block: "start" })
-  // Remove focus outline so the browser doesn't leave a visible ring on the hidden element
-  requestAnimationFrame(() => target.blur())
+
+  return (
+    <Link href="/#hero" aria-label="ClientFlow home page" className="flex items-center gap-2.5 group">
+      <LogoMark />
+    </Link>
+  )
 }
 
 export function LandingNav() {
@@ -49,14 +75,7 @@ export function LandingNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-foreground">
-              ClientFlow
-            </span>
-          </Link>
+          <LogoLink />
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-8">
@@ -64,10 +83,6 @@ export function LandingNav() {
               <a
                 key={link.href}
                 href={link.href}
-                onClick={(e) => {
-                  e.preventDefault()
-                  smoothScrollTo(link.href)
-                }}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
@@ -110,10 +125,7 @@ export function LandingNav() {
               <a
                 key={link.href}
                 href={link.href}
-                onClick={(e) => {
-                  e.preventDefault()
-                  smoothScrollTo(link.href, () => setMobileOpen(false))
-                }}
+                onClick={() => setMobileOpen(false)}
                 className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 {link.label}
