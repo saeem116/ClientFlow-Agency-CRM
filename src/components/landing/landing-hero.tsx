@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Play } from "lucide-react"
+import { LandingRevenueChart } from "./landing-revenue-chart"
 
 export function LandingHero() {
   return (
@@ -84,18 +85,8 @@ export function LandingHero() {
                     </div>
                   ))}
                 </div>
-                <div className="h-32 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 mb-4 flex items-end justify-between p-3">
-                  {[40, 60, 45, 80, 55, 90, 70].map((h, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1">
-                      <div
-                        className="w-6 rounded-sm bg-primary/70"
-                        style={{ height: `${h}%` }}
-                      />
-                      <span className="text-[9px] text-muted-foreground">
-                        {["J", "F", "M", "A", "M", "J", "J"][i]}
-                      </span>
-                    </div>
-                  ))}
+                <div className="h-32 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 mb-4 p-2">
+                  <LandingRevenueChart />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
