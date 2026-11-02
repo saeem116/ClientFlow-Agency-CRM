@@ -12,6 +12,21 @@ const navLinks = [
   { href: "#faq", label: "FAQ" },
 ]
 
+/** Smooth-scroll to an anchor on the current page. Falls back to default navigation. */
+function smoothScrollTo(hash: string, onClick?: () => void) {
+  // If the link points to another page, let normal navigation happen
+  if (hash.startsWith("http") || hash.includes("//")) {
+    return
+  }
+  const id = hash.replace(/^#/, "")
+  const target = document.getElementById(id)
+  if (!target) return
+  onClick?.()
+  target.scrollIntoView({ behavior: "smooth", block: "start" })
+  // Remove focus outline so the browser doesn't leave a visible ring on the hidden element
+  requestAnimationFrame(() => target.blur())
+}
+
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -49,6 +64,10 @@ export function LandingNav() {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={(e) => {
+                  e.preventDefault()
+                  smoothScrollTo(link.href)
+                }}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
@@ -91,8 +110,11 @@ export function LandingNav() {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={(e) => {
+                  e.preventDefault()
+                  smoothScrollTo(link.href, () => setMobileOpen(false))
+                }}
                 className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </a>
