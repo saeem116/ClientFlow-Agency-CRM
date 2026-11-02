@@ -66,37 +66,12 @@ export function LandingHero() {
                   clientflow.app/dashboard
                 </span>
               </div>
-              <div className="p-5">
-                <div className="grid grid-cols-4 gap-3 mb-5">
-                  {[
-                    { label: "Clients", value: "8", color: "bg-blue-500" },
-                    { label: "Projects", value: "6", color: "bg-indigo-500" },
-                    { label: "Outstanding", value: "$31K", color: "bg-amber-500" },
-                    { label: "Revenue", value: "$42K", color: "bg-emerald-500" },
-                  ].map((kpi) => (
-                    <div key={kpi.label} className="rounded-lg bg-muted/50 p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-2 h-2 rounded-full ${kpi.color}`} />
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          {kpi.label}
-                        </span>
-                      </div>
-                      <div className="text-lg font-bold text-foreground">{kpi.value}</div>
-                    </div>
-                  ))}
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Revenue Analytics</span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">Last 7 months</span>
                 </div>
-                <div className="h-32 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 mb-4 p-2">
-                  <LandingRevenueChart />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">TechStart Website Redesign</span>
-                    <span className="font-medium text-foreground">Active</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full w-3/4 rounded-full bg-primary" />
-                  </div>
-                </div>
+                <LandingRevenueChart />
               </div>
             </div>
           </div>
