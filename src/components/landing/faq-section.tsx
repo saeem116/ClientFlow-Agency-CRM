@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 const faqs = [
   {
@@ -60,28 +60,41 @@ export function FAQSection() {
         </div>
 
         <div className="max-w-3xl mx-auto space-y-4">
-          {faqs.map((faq, index) => (
-            <details
-              key={index}
-              className="group rounded-xl border border-border bg-card overflow-hidden"
-              open={openIndex === index}
-              onToggle={() => setOpenIndex(openIndex === index ? null : index)}
-            >
-              <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
-                <span className="text-lg font-medium text-foreground pr-8">{faq.question}</span>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  {openIndex === index ? (
-                    <ChevronUp className="h-5 w-5 transition-transform" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 transition-transform" />
-                  )}
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index
+            return (
+              <div
+                key={index}
+                className="rounded-xl border border-border bg-card overflow-hidden"
+              >
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${index}`}
+                  onClick={() => setOpenIndex(isOpen ? null : index)}
+                  className="flex items-center justify-between w-full p-5 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 rounded-xl"
+                >
+                  <span className="text-lg font-medium text-foreground pr-8">{faq.question}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <div
+                  id={`faq-answer-${index}`}
+                  aria-hidden={!isOpen}
+                  className={`grid transition-all duration-200 ease-out ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <p className="px-5 pb-5 pt-0 text-muted-foreground leading-relaxed">{faq.answer}</p>
+                  </div>
                 </div>
-              </summary>
-              <div className="px-5 pb-5 pt-0 animate-in fade-in-0 duration-200">
-                <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
               </div>
-            </details>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>
