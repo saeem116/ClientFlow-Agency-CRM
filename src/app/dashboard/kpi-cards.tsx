@@ -13,7 +13,10 @@ interface KPICardProps {
     label: string
   }
   iconBgClass: string
+  iconSizeClass?: string
+  labelClass?: string
   valueClass?: string
+  contentClass?: string
   format?: "currency" | "number"
 }
 
@@ -23,7 +26,10 @@ export function KPICard({
   label,
   trend,
   iconBgClass,
+  iconSizeClass,
+  labelClass,
   valueClass,
+  contentClass,
   format = "currency",
 }: KPICardProps) {
   const displayValue =
@@ -35,10 +41,10 @@ export function KPICard({
 
   return (
     <Card className="transition-shadow hover:shadow-md">
-      <CardContent className="p-5">
+      <CardContent className={cn("p-5", contentClass)}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <p className={cn("text-sm font-medium text-slate-500 dark:text-slate-400", labelClass)}>
               {label}
             </p>
             <p className={cn("mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-50", valueClass)}>
@@ -64,7 +70,8 @@ export function KPICard({
           </div>
           <div
             className={cn(
-              "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
+              "flex-shrink-0 rounded-xl flex items-center justify-center",
+              iconSizeClass || "w-10 h-10",
               iconBgClass
             )}
           >
