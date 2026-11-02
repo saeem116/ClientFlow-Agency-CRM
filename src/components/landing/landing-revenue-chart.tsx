@@ -5,6 +5,7 @@ import {
   Area,
   XAxis,
   YAxis,
+  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
@@ -30,7 +31,7 @@ function CustomTooltip({ active, payload, theme }: {
     const colors = chartColors[theme]
     return (
       <div
-        className="rounded-lg shadow-lg p-3 border"
+        className="rounded-lg shadow-lg p-3"
         style={{
           backgroundColor: colors.tooltipBg,
           borderColor: colors.tooltipBorder,
@@ -49,14 +50,13 @@ function CustomTooltip({ active, payload, theme }: {
   return null
 }
 
+// Mirrors src/app/dashboard/revenue-chart.tsx chartColors exactly
 const chartColors = {
   light: {
     grid: "#e2e8f0",
     axis: "#64748b",
     line: "#4f46e5",
     lineDark: "#4338ca",
-    areaTop: "rgba(79, 70, 229, 0.25)",
-    areaBottom: "rgba(79, 70, 229, 0.02)",
     tooltipBg: "#ffffff",
     tooltipBorder: "#e2e8f0",
     tooltipText: "#0f172a",
@@ -66,8 +66,6 @@ const chartColors = {
     axis: "#cbd5e1",
     line: "#818cf8",
     lineDark: "#a78bfa",
-    areaTop: "rgba(129, 141, 247, 0.25)",
-    areaBottom: "rgba(129, 141, 247, 0.02)",
     tooltipBg: "#111827",
     tooltipBorder: "#334155",
     tooltipText: "#f1f5f9",
@@ -93,11 +91,18 @@ export function LandingRevenueChart() {
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
         >
           <defs>
+            {/* Same gradient shape as the dashboard — solid-color stops, not rgba */}
             <linearGradient id="landing-revenue-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={colors.areaTop} />
-              <stop offset="95%" stopColor={colors.areaBottom} />
+              <stop offset="5%" stopColor={colors.line} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={colors.line} stopOpacity={0} />
             </linearGradient>
           </defs>
+          {/* Matches dashboard: dashed grid, vertical only */}
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={colors.grid}
+            vertical={false}
+          />
           <XAxis
             dataKey="month"
             tick={{ fontSize: 10, fill: colors.axis }}
@@ -128,7 +133,7 @@ export function LandingRevenueChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
-      {/* Summary row below chart */}
+      {/* Summary row matches dashboard format */}
       <div className="flex items-center justify-between text-xs mt-2" style={{ color: colors.axis }}>
         <span>
           Total:{" "}
