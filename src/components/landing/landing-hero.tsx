@@ -69,51 +69,51 @@ export function LandingHero() {
               </div>
               <div className="p-4 space-y-3">
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 h-full">
                     <KPICard
                       icon={<Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />}
                       iconBgClass="bg-blue-100 dark:bg-blue-900/30"
                       iconSizeClass="w-7 h-7"
                       labelClass="text-xs"
-                      valueClass="text-sm"
+                      valueClass="text-sm whitespace-nowrap"
                       contentClass="p-3"
                       value={8}
                       label="Active Clients"
                       format="number"
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 h-full">
                     <KPICard
                       icon={<Briefcase className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />}
                       iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
                       iconSizeClass="w-7 h-7"
                       labelClass="text-xs"
-                      valueClass="text-sm"
+                      valueClass="text-sm whitespace-nowrap"
                       contentClass="p-3"
                       value={6}
                       label="Active Projects"
                       format="number"
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 h-full">
                     <KPICard
                       icon={<DollarSign className="w-3 h-3 text-amber-600 dark:text-amber-400" />}
                       iconBgClass="bg-amber-100 dark:bg-amber-900/30"
                       iconSizeClass="w-7 h-7"
                       labelClass="text-xs"
-                      valueClass="text-sm"
+                      valueClass="text-sm whitespace-nowrap"
                       contentClass="p-3"
                       value={31000}
                       label="Outstanding"
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 h-full">
                     <KPICard
                       icon={<TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
                       iconBgClass="bg-emerald-100 dark:bg-emerald-900/30"
                       iconSizeClass="w-7 h-7"
                       labelClass="text-xs"
-                      valueClass="text-sm"
+                      valueClass="text-sm whitespace-nowrap"
                       contentClass="p-3"
                       value={38200}
                       label="Revenue This Month"
