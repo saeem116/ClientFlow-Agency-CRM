@@ -5,6 +5,19 @@ All notable changes to ClientFlow are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-02
+
+### Added
+- Premium marketing landing page at `/` (hero, features, benefits, product preview,
+  screenshots gallery, how it works, who it's for, security, FAQ, CTA, footer)
+- One-click demo login buttons on `/sign-in` ("Login as Admin" / "Login as Team Member")
+- `POST /api/auth/demo-login` endpoint with persona validation and demo-account checks
+- Landing page and demo-login unit tests (vitest + jsdom)
+- `DEMO_ADMIN_EMAIL` / `DEMO_MEMBER_EMAIL` env vars documented in `.env.example`
+
+### Changed
+- `vitest.config.ts` uses `jsdom` environment for React component tests
+
 ## [1.1.0] - 2026-10-30
 
 ### Security Fixes
