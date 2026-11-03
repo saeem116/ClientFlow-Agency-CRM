@@ -23,8 +23,21 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession()
-  const org = session ? await getOrganization() : null
+  // On cold-started Vercel serverless functions, the MongoDB connection may
+  // not be ready when this layout renders. If getSession()/getOrganization()
+  // fail, fall back to a null session rather than throwing a 500 — the
+  // client-side AuthProvider will re-validate on mount and the dashboard
+  // page will redirect to /sign-in if needed. This is a safety net for the
+  // retry logic in ensureDb(); both layers must fail before a cold-start
+  // request can surface as a 500.
+  let session: Awaited<ReturnType<typeof getSession>> = null
+  let org: Awaited<ReturnType<typeof getOrganization>> = null
+  try {
+    session = await getSession()
+    org = session ? await getOrganization() : null
+  } catch (error) {
+    console.error('[RootLayout] Session resolution failed:', error instanceof Error ? error.message : String(error))
+  }
 
   return (
     <html lang="en" className={`${inter.variable} ${geistMono.variable}`} suppressHydrationWarning>

@@ -3,7 +3,6 @@ import { LandingHero } from "./landing-hero"
 import { ProductPreview } from "./product-preview"
 import { BenefitsSection } from "./benefits-section"
 import { FeaturesSection } from "./features-section"
-import { ScreenshotsSection } from "./screenshots-section"
 import { HowItWorks } from "./how-it-works"
 import { WhoItFor } from "./who-it-for"
 import { SecuritySection } from "./security-section"
@@ -20,7 +19,6 @@ export function LandingPage() {
         <ProductPreview />
         <BenefitsSection />
         <FeaturesSection />
-        <ScreenshotsSection />
         <HowItWorks />
         <WhoItFor />
         <SecuritySection />
