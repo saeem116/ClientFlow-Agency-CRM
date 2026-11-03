@@ -60,25 +60,23 @@ export function ProductPreview() {
             >
               {/* Image */}
               <div className="relative w-full lg:w-1/2 order-1 lg:order-none">
-                <div className="relative w-full lg:w-1/2 order-1 lg:order-none">
-                  {/* Browser chrome */}
-                  <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur border-b border-border flex items-center px-3 gap-1.5 z-10">
-                    <div className="flex gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-destructive/60" />
-                      <span className="w-3 h-3 rounded-full bg-warning/60" />
-                      <span className="w-3 h-3 rounded-full bg-success/60" />
-                    </div>
-                    <span className="ml-3 text-xs text-muted-foreground font-mono">
-                      clientflow.app
-                    </span>
+                {/* Browser chrome */}
+                <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur border-b border-border flex items-center px-3 gap-1.5 z-10">
+                  <div className="flex gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-destructive/60" />
+                    <span className="w-3 h-3 rounded-full bg-warning/60" />
+                    <span className="w-3 h-3 rounded-full bg-success/60" />
                   </div>
-                  <div className="relative aspect-[2.08/1] rounded-2xl overflow-hidden border border-border bg-muted shadow-xl">
-                    <img
-                      src={shot.image}
-                      alt={shot.alt}
-                      className="w-full h-full object-contain object-center"
-                    />
-                  </div>
+                  <span className="ml-3 text-xs text-muted-foreground font-mono">
+                    clientflow.app
+                  </span>
+                </div>
+                <div className="relative aspect-[2.08/1] rounded-2xl overflow-hidden border border-border bg-muted shadow-xl">
+                  <img
+                    src={shot.image}
+                    alt={shot.alt}
+                    className="w-full h-full object-contain object-center"
+                  />
                 </div>
               </div>
 
