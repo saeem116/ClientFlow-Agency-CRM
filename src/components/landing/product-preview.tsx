@@ -1,35 +1,39 @@
-import { Monitor, Smartphone } from "lucide-react"
+import { Monitor, Smartphone } from "lucide-react";
 
 const screenshots = [
   {
     id: "dashboard",
     title: "Dashboard & Analytics",
     image: "/Dashboard & Analytics.png",
-    description: "Real-time KPIs, revenue trends, and project health at a glance",
+    description:
+      "Real-time KPIs, revenue trends, and project health at a glance",
     alt: "ClientFlow dashboard showing KPI cards, revenue chart, lead pipeline, and task list",
   },
   {
     id: "clients",
     title: "Client & Lead Management",
     image: "/Client & Lead Management.png",
-    description: "Organize contacts, track leads through stages, and never miss a follow-up",
+    description:
+      "Organize contacts, track leads through stages, and never miss a follow-up",
     alt: "ClientFlow client list and lead pipeline view",
   },
   {
     id: "projects",
     title: "Project & Task Management",
     image: "/Project & Task Management.png",
-    description: "Plan projects, set milestones, assign tasks, and track progress visually",
+    description:
+      "Plan projects, set milestones, assign tasks, and track progress visually",
     alt: "ClientFlow project view with milestones and task board",
   },
   {
     id: "invoices",
     title: "Invoice & Payment Tracking",
     image: "/Invoice & Payment Tracking.png",
-    description: "Create invoices, record payments, and monitor outstanding balances",
+    description:
+      "Create invoices, record payments, and monitor outstanding balances",
     alt: "ClientFlow invoice list with status badges and payment history",
   },
-]
+];
 
 export function ProductPreview() {
   return (
@@ -40,8 +44,9 @@ export function ProductPreview() {
             See ClientFlow in action
           </h2>
           <p className="text-lg text-muted-foreground">
-            Real screenshots from the actual application. No mockups, no placeholders — just
-            the real product interface you&apos;ll use every day.
+            Real screenshots from the actual application. No mockups, no
+            placeholders — just the real product interface you&apos;ll use every
+            day.
           </p>
         </div>
 
@@ -57,15 +62,12 @@ export function ProductPreview() {
               <div className="relative w-full lg:w-1/2 order-1 lg:order-none">
                 <div className="relative aspect-[16/10] lg:aspect-[16/9] rounded-2xl overflow-hidden border border-border bg-muted shadow-xl">
                   {/* Placeholder for real screenshot */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <Monitor className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                      <img
-                        src={shot.image}
-                        alt={shot.alt}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5">
+                    <img
+                      src={shot.image}
+                      alt={shot.alt}
+                      className="w-full h-full object-cover object-center"
+                    />
                   </div>
                   {/* Browser chrome */}
                   <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur border-b border-border flex items-center px-3 gap-1.5">
@@ -109,5 +111,5 @@ export function ProductPreview() {
         </div>
       </div>
     </section>
-  )
+  );
 }
