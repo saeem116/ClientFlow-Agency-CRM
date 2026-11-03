@@ -11,6 +11,7 @@ import {
 } from "recharts"
 import { formatCurrency, formatCompactCurrency } from "@/lib/utils"
 import { useTheme } from "@/components/providers/theme-provider"
+import { useEffect, useState } from "react"
 
 const data = [
   { month: "2026-01", revenue: 18400 },
@@ -80,7 +81,14 @@ function formatMonth(month: string) {
 
 export function LandingRevenueChart() {
   const { resolvedTheme } = useTheme()
-  const theme: "light" | "dark" = resolvedTheme || "light"
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Use the resolved theme only after client mount; default to "light" for SSR
+  const theme: "light" | "dark" = mounted ? (resolvedTheme || "light") : "light"
   const colors = chartColors[theme]
 
   return (
