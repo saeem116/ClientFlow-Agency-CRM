@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: `Demo ${persona} account not found. Please provision the demo database first.` },
+        { error: "Demo admin account not found. Please provision the demo database first." },
         { status: 404 }
       )
     }

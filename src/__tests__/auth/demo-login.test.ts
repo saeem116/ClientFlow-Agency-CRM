@@ -96,16 +96,18 @@ describe('demo-login API', () => {
     expect(response.status).toBe(503)
   })
 
-  it('returns 404 when demo user not found', async () => {
+  it('returns 404 when demo admin account not found', async () => {
     mockDemoUser.findOne.mockImplementation(() => makeQueryMock(null))
 
     const request = new NextRequest('http://localhost/api/auth/demo-login', {
       method: 'POST',
-      body: JSON.stringify({ persona: 'member' }),
+      body: JSON.stringify({ persona: 'admin' }),
       headers: { 'Content-Type': 'application/json' },
     })
 
     const response = await POST(request)
     expect(response.status).toBe(404)
+    const data = await response.json()
+    expect(data.error).toBe("Demo admin account not found. Please provision the demo database first.")
   })
 })
