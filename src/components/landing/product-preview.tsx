@@ -60,15 +60,12 @@ export function ProductPreview() {
             >
               {/* Image */}
               <div className="relative w-full lg:w-1/2 order-1 lg:order-none">
-                <div className="relative aspect-[16/10] lg:aspect-[16/9] rounded-2xl overflow-hidden border border-border bg-muted shadow-xl">
-                  {/* Placeholder for real screenshot */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5">
-                    <img
-                      src={shot.image}
-                      alt={shot.alt}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
+                <div className="relative aspect-[2.08/1] rounded-2xl overflow-hidden border border-border bg-muted shadow-xl">
+                  <img
+                    src={shot.image}
+                    alt={shot.alt}
+                    className="w-full h-full object-contain object-center"
+                  />
                   {/* Browser chrome */}
                   <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur border-b border-border flex items-center px-3 gap-1.5">
                     <div className="flex gap-1.5">
