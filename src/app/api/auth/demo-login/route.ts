@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession, createSession } from "@/lib/auth"
 import { connectDemoDb } from "@/lib/demo-mongoose"
-import { isDemoAccount, getDemoAccountEmail } from "@/lib/demo-account"
+import { getDemoAccountEmail, getDemoAdminEmail, isAnyDemoAccount } from "@/lib/demo-account"
 
 /**
  * POST /api/auth/demo-login
@@ -17,9 +17,44 @@ import { isDemoAccount, getDemoAccountEmail } from "@/lib/demo-account"
  *     no admin demo account by default, so this persona returns 503 until the
  *     env var is set. This prevents a button that falsely advertises a role
  *     the demo does not actually have.
+ *
+ * Rate limiting: basic in-memory store (resets on deploy). In production,
+ * consider using a Redis-backed store for distributed rate limiting.
  */
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10 // max 10 attempts per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitStore.get(ip)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false
+  }
+
+  entry.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting by IP
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown"
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many demo login attempts. Please wait a moment and try again." },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { persona } = body
 
@@ -58,29 +93,16 @@ export async function POST(request: NextRequest) {
     // one-click button works out of the box. The "admin" persona requires an
     // explicitly provisioned account (DEMO_ADMIN_EMAIL) — there is no admin
     // demo account by default, and we will not fabricate one.
-    const adminEmail = process.env.DEMO_ADMIN_EMAIL?.trim().toLowerCase() || null
-    const memberEmail = (
-      process.env.DEMO_MEMBER_EMAIL?.trim().toLowerCase() ||
-      getDemoAccountEmail()
-    )
+    const adminEmail = getDemoAdminEmail()
+    const memberEmail = getDemoAccountEmail() // DEMO_MEMBER_EMAIL falls back to reviewer
 
     const targetEmail = persona === "admin" ? adminEmail : memberEmail
 
-    if (!targetEmail) {
+    // Verify the target account is a configured demo account
+    if (!isAnyDemoAccount(targetEmail)) {
       return NextResponse.json(
-        {
-          error: `Demo ${persona} account is not configured. ` +
-            `Set DEMO_ADMIN_EMAIL to enable admin demo login.`,
-        },
+        { error: `Demo ${persona} account is not configured.` },
         { status: 503 }
-      )
-    }
-
-    // Verify the target account is actually a demo account
-    if (!isDemoAccount(targetEmail)) {
-      return NextResponse.json(
-        { error: "Target account is not a demo account." },
-        { status: 500 }
       )
     }
 
@@ -95,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: `Demo ${persona} account not found. Please seed the demo database first.` },
+        { error: `Demo ${persona} account not found. Please provision the demo database first.` },
         { status: 404 }
       )
     }
@@ -111,6 +133,14 @@ export async function POST(request: NextRequest) {
     if (!membership) {
       return NextResponse.json(
         { error: "Demo user has no organization." },
+        { status: 500 }
+      )
+    }
+
+    // Verify the admin persona gets an ADMIN role membership
+    if (persona === "admin" && membership.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Demo admin account does not have ADMIN role." },
         { status: 500 }
       )
     }

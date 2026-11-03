@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST } from '@/app/api/auth/demo-login/route'
 import { connectDemoDb } from '@/lib/demo-mongoose'
@@ -29,7 +29,9 @@ vi.mock('@/lib/database-demo', () => ({
 
 vi.mock('@/lib/demo-account', () => ({
   isDemoAccount: vi.fn(),
+  isAnyDemoAccount: vi.fn(() => true),
   getDemoAccountEmail: vi.fn(() => 'reviewer@clientflow.test'),
+  getDemoAdminEmail: vi.fn(() => 'admin@demo.test'),
 }))
 
 vi.mock('@/lib/auth', () => ({
@@ -55,10 +57,6 @@ describe('demo-login API', () => {
     // Reset query mocks
     mockDemoUser.findOne.mockImplementation(() => makeQueryMock(null))
     mockDemoMembership.findOne.mockImplementation(() => makeQueryMock(null))
-  })
-
-  afterEach(() => {
-    vi.resetAllMocks()
   })
 
   it('returns 400 for invalid persona', async () => {

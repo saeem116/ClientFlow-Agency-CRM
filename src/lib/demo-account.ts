@@ -1,29 +1,39 @@
 /**
  * Shared demo-account authorization helper.
  *
- * The public Vibe96 demo uses ONE shared account (reviewer@clientflow.test)
- * that anyone can sign in with. Because the credentials are public, that
- * account must never be able to modify or delete shared demo data.
+ * The public Vibe96 demo uses TWO demo accounts:
+ *   - REVIEWER: reviewer@clientflow.test (MEMBER role, read-only)
+ *   - ADMIN:    configured via DEMO_ADMIN_EMAIL (ADMIN role, full access)
  *
- * This module is the single source of truth for "is this the demo account?"
- * so that:
+ * Both accounts authenticate against the isolated demo database (clientflow_demo).
+ * The reviewer account is public and must never modify/delete shared demo data.
+ * The admin account is for exploration of admin features and is configured per-deployment.
+ *
+ * This module is the single source of truth for "is this a demo account?" and
+ * "which demo account is this?" so that:
  *   - Every write route can check the same rule without duplicating logic.
  *   - The check cannot be bypassed by forgetting it in one route.
- *   - The identity is configurable via DEMO_ACCOUNT_EMAIL without touching code.
+ *   - The identities are configurable via env vars without touching code.
  *
- * The check is EMAIL-BASED, matching how the app's own admin check works
- * (see `isAdminEmail` in lib/auth.ts). It is server-only: it reads the
- * environment and compares a normalized email string.
+ * The checks are EMAIL-BASED, matching how the app's own admin check works
+ * (see `isAdminEmail` in lib/auth.ts). They are server-only: they read the
+ * environment and compare normalized email strings.
  */
 
-/** The env var that selects which account is the shared demo account. */
+/** The env var that selects which account is the shared reviewer demo account. */
 export const DEMO_ACCOUNT_EMAIL_ENV = "DEMO_ACCOUNT_EMAIL"
 
-/** The default demo account email used when the env var is not set. */
+/** The default reviewer demo account email used when the env var is not set. */
 export const DEFAULT_DEMO_ACCOUNT_EMAIL = "reviewer@clientflow.test"
 
+/** The env var for the admin demo account email. */
+export const DEMO_ADMIN_EMAIL_ENV = "DEMO_ADMIN_EMAIL"
+
+/** The default admin demo account email used when the env var is not set. */
+export const DEFAULT_DEMO_ADMIN_EMAIL = "admin@demo.test"
+
 /**
- * Return the configured demo account email (lowercased, trimmed).
+ * Return the configured reviewer demo account email (lowercased, trimmed).
  *
  * When DEMO_ACCOUNT_EMAIL is not set, falls back to DEFAULT_DEMO_ACCOUNT_EMAIL
  * (reviewer@clientflow.test) so the public demo account is always available
@@ -40,7 +50,23 @@ export function getDemoAccountEmail(): string {
 }
 
 /**
- * Determine whether the given email belongs to the shared demo account.
+ * Return the configured admin demo account email (lowercased, trimmed).
+ *
+ * When DEMO_ADMIN_EMAIL is not set, falls back to DEFAULT_DEMO_ADMIN_EMAIL
+ * (admin@demo.test). This account must be explicitly provisioned in the
+ * demo database before the admin demo login will work.
+ */
+export function getDemoAdminEmail(): string {
+  const raw = process.env[DEMO_ADMIN_EMAIL_ENV]
+  if (raw) {
+    const normalized = raw.trim().toLowerCase()
+    if (normalized.length > 0) return normalized
+  }
+  return DEFAULT_DEMO_ADMIN_EMAIL
+}
+
+/**
+ * Determine whether the given email belongs to the shared reviewer demo account.
  *
  * Comparison is case-insensitive and trims whitespace to match the app's
  * own email normalization (User schema uses `lowercase: true, trim: true`).
@@ -48,6 +74,27 @@ export function getDemoAccountEmail(): string {
 export function isDemoAccount(email: string | null | undefined): boolean {
   if (!email) return false
   return email.trim().toLowerCase() === getDemoAccountEmail()
+}
+
+/**
+ * Determine whether the given email belongs to the admin demo account.
+ *
+ * Comparison is case-insensitive and trims whitespace to match the app's
+ * own email normalization.
+ */
+export function isDemoAdminAccount(email: string | null | undefined): boolean {
+  if (!email) return false
+  return email.trim().toLowerCase() === getDemoAdminEmail()
+}
+
+/**
+ * Determine whether the given email belongs to ANY demo account
+ * (reviewer or admin).
+ */
+export function isAnyDemoAccount(email: string | null | undefined): boolean {
+  if (!email) return false
+  const normalized = email.trim().toLowerCase()
+  return normalized === getDemoAccountEmail() || normalized === getDemoAdminEmail()
 }
 
 /**
@@ -66,7 +113,9 @@ export class DemoAccountReadOnlyError extends Error {
 
 /**
  * Throw {@link DemoAccountReadOnlyError} when the given email is the shared
- * demo account. Returns silently otherwise.
+ * reviewer demo account. Returns silently otherwise.
+ *
+ * The admin demo account (isDemoAdminAccount) is allowed to perform writes.
  *
  * Use this at the top of every write handler so the guard is applied
  * uniformly and cannot be skipped by a route that forgets to check.
