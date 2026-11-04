@@ -12,7 +12,8 @@ const steps = [
   {
     number: "02",
     title: "Collaborate",
-    description: "Assign tasks, coordinate milestones, and track progress visually.",
+    description:
+      "Assign tasks, coordinate milestones, and track progress visually.",
     details: [
       "Kanban board for task flow (Backlog → Done)",
       "Assign work with priorities and due dates",
@@ -31,11 +32,11 @@ const steps = [
       "Lead pipeline and project health at a glance",
     ],
   },
-]
+];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-16 lg:py-24 bg-muted/30">
+    <section id="how-it-works" className="py-16 lg:py-24 ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-4">
@@ -45,7 +46,8 @@ export function HowItWorks() {
             Three steps to an organized agency
           </h2>
           <p className="text-lg text-muted-foreground">
-            No complex setup. No weeks of onboarding. Start managing your agency better today.
+            No complex setup. No weeks of onboarding. Start managing your agency
+            better today.
           </p>
         </div>
 
@@ -61,11 +63,18 @@ export function HowItWorks() {
               </div>
 
               <div className="pt-8 pb-6 px-6 border border-border bg-card rounded-2xl flex flex-col h-full">
-                <h3 className="text-2xl font-bold text-foreground mb-3">{step.title}</h3>
-                <p className="text-muted-foreground mb-6 flex-1">{step.description}</p>
+                <h3 className="text-2xl font-bold text-foreground mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground mb-6 flex-1">
+                  {step.description}
+                </p>
                 <ul className="space-y-3">
                   {step.details.map((detail, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 text-sm text-muted-foreground"
+                    >
                       <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       </span>
@@ -79,5 +88,5 @@ export function HowItWorks() {
         </div>
       </div>
     </section>
-  )
+  );
 }
