@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { getSession, createSession } from "@/lib/auth"
+import { SESSION_COOKIE_NAME } from "@/lib/session-cookie"
 import { connectDemoDb } from "@/lib/demo-mongoose"
 import { getDemoAccountEmail, getDemoAdminEmail, isAnyDemoAccount } from "@/lib/demo-account"
 
@@ -66,13 +68,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if already logged in
+    // If there's an existing session, we must invalidate it before creating a new one
+    // for a different persona. The existing session's user ID is embedded in the
+    // signed token and cannot be changed without a fresh sign-in. This prevents
+    // the "Team Member login opens Admin account" bug where an existing admin
+    // session would be returned for the member persona.
     const existingSession = await getSession()
     if (existingSession) {
-      return NextResponse.json({
-        user: existingSession.user,
-        isDemo: existingSession.isDemo,
-      })
+      // Sign out the existing session by clearing the cookie
+      const cookieStore = await cookies()
+      cookieStore.delete(SESSION_COOKIE_NAME)
     }
 
     // Connect to demo database

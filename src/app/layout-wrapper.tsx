@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import { AppShell } from "@/components/layout/app-shell"
 import { AuthProvider, useAuth } from "@/lib/auth-context"
+import { RouteLoader } from "@/components/ui/route-loader"
 import type { Session } from "@/lib/auth"
 
 function ShellRouter({
@@ -36,7 +37,12 @@ function ShellRouter({
     return <>{children}</>
   }
 
-  return <AppShell session={session} org={authOrg ?? org}>{children}</AppShell>
+  return (
+    <>
+      <RouteLoader />
+      <AppShell session={session} org={authOrg ?? org}>{children}</AppShell>
+    </>
+  )
 }
 
 export function LayoutWrapper({
