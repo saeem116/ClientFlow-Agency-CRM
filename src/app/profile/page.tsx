@@ -1,6 +1,7 @@
 import { ensureDb } from "@/lib/database"
 import { getSession, getOrganization } from "@/lib/auth"
 import { ProfilePage } from "./profile-page"
+import { NavigationLoaderProvider } from "@/components/ui/navigation-loader-context"
 
 export default async function ProfilePageServer() {
   await ensureDb()
@@ -13,18 +14,20 @@ export default async function ProfilePageServer() {
   }
 
   return (
-    <ProfilePage
-      user={{
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        avatar: session.user.avatar,
-        role: session.user.role,
-        organizationRole: session.user.organizationRole,
-        phone: session.user.phone,
-      }}
-      org={org}
-      isDemo={session.isDemo}
-    />
+    <NavigationLoaderProvider>
+      <ProfilePage
+        user={{
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          avatar: session.user.avatar,
+          role: session.user.role,
+          organizationRole: session.user.organizationRole,
+          phone: session.user.phone,
+        }}
+        org={org}
+        isDemo={session.isDemo}
+      />
+    </NavigationLoaderProvider>
   )
 }

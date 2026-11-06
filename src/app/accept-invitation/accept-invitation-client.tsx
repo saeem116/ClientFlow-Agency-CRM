@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useNavigationLoader } from "@/components/ui/navigation-loader-context"
 
 interface AcceptInvitationData {
   _id: { toString(): string }
@@ -20,6 +21,7 @@ export default function AcceptInvitationClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const { begin } = useNavigationLoader()
 
   if (!invitation) {
     return null
@@ -49,6 +51,7 @@ export default function AcceptInvitationClient({
       setSuccess(true)
       // Redirect to dashboard after a brief delay
       setTimeout(() => {
+        begin()
         router.push("/dashboard")
       }, 1000)
     } catch (err) {

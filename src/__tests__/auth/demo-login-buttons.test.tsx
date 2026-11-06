@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { DemoLoginButtons } from '@/app/sign-in/demo-login-buttons'
+import { NavigationLoaderProvider } from '@/components/ui/navigation-loader-context'
 
 // Mock fetch
 const mockFetch = vi.fn()
@@ -24,7 +25,11 @@ describe('DemoLoginButtons', () => {
   })
 
   it('renders both demo login buttons', () => {
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     expect(screen.getByText('Login as Admin')).toBeInTheDocument()
     expect(screen.getByText('Login as Team Member')).toBeInTheDocument()
@@ -33,7 +38,11 @@ describe('DemoLoginButtons', () => {
   })
 
   it('calls demo-login endpoint on admin button click', async () => {
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     fireEvent.click(screen.getByText('Login as Admin'))
 
@@ -48,7 +57,11 @@ describe('DemoLoginButtons', () => {
   })
 
   it('calls demo-login endpoint on member button click', async () => {
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     fireEvent.click(screen.getByText('Login as Team Member'))
 
@@ -65,7 +78,11 @@ describe('DemoLoginButtons', () => {
   it('shows loading state during login', async () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
 
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     fireEvent.click(screen.getByText('Login as Admin'))
 
@@ -80,7 +97,11 @@ describe('DemoLoginButtons', () => {
       json: async () => ({ error: 'Demo database not configured.' }),
     })
 
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     fireEvent.click(screen.getByText('Login as Admin'))
 
@@ -92,7 +113,11 @@ describe('DemoLoginButtons', () => {
   it('disables buttons while loading', async () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
 
-    render(<DemoLoginButtons />)
+    render(
+      <NavigationLoaderProvider>
+        <DemoLoginButtons />
+      </NavigationLoaderProvider>
+    )
 
     fireEvent.click(screen.getByText('Login as Admin'))
 

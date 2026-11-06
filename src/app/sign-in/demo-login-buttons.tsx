@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Shield, Users, AlertCircle } from "lucide-react";
+import { useNavigationLoader } from "@/components/ui/navigation-loader-context";
 
 export function DemoLoginButtons() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { begin } = useNavigationLoader();
 
   const handleDemoLogin = async (persona: "admin" | "member") => {
     setLoading(persona);
@@ -25,6 +27,7 @@ export function DemoLoginButtons() {
 
       if (response.ok && data.user) {
         // Refresh the auth context and redirect to dashboard
+        begin();
         router.push("/dashboard");
       } else {
         setError(data.error || "Demo login failed. Please try again.");

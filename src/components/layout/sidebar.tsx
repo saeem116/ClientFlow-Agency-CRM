@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { resolveDisplayName } from "@/lib/utils"
+import { LoadingLink } from "@/components/ui/loading-link"
 import type { Session } from "@/lib/auth"
 
 const navItems = [
@@ -156,7 +156,7 @@ export function Sidebar({
             const Icon = item.icon
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
             return (
-              <Link
+              <LoadingLink
                 key={item.href}
                 href={item.href}
                 onClick={() => onMobileOpenChange?.(false)}
@@ -169,14 +169,14 @@ export function Sidebar({
               >
                 <Icon className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
-              </Link>
+              </LoadingLink>
             )
           })}
         </nav>
 
         {/* User Profile — links to /profile */}
         <div className="p-3 border-t border-[var(--border)]">
-          <Link
+          <LoadingLink
             href="/profile"
             onClick={() => onMobileOpenChange?.(false)}
             aria-label="My profile"
@@ -195,7 +195,7 @@ export function Sidebar({
                 <p className="text-xs text-[var(--muted-foreground)] truncate">{userEmail}</p>
               </div>
             )}
-          </Link>
+          </LoadingLink>
         </div>
       </aside>
     </>

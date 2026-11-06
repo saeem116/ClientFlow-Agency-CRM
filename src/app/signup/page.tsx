@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Loader2, Mail, User, Lock, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { useNavigationLoader } from "@/components/ui/navigation-loader-context"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +18,9 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
   })
+  const router = useRouter()
+  const { refresh } = useAuth()
+  const { begin } = useNavigationLoader()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
@@ -65,6 +71,7 @@ export default function SignUpPage() {
           // The sign-up API route sets the httpOnly session cookie in its
           // response. Use a full page navigation so the server re-renders the
           // authenticated layout with the new session (sidebar, header).
+          begin()
           window.location.href = "/dashboard"
         } else if (response.status === 400) {
           // Client error (validation, duplicate email) - show the server's message

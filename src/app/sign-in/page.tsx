@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useNavigationLoader } from "@/components/ui/navigation-loader-context"
 import { DemoLoginButtons } from "./demo-login-buttons"
 
 export default function SignInPage() {
@@ -21,6 +22,7 @@ export default function SignInPage() {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const { refresh } = useAuth()
+  const { begin } = useNavigationLoader()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +56,7 @@ export default function SignInPage() {
 
         if (response.ok && data.user) {
           await refresh()
+          begin()
           router.push("/dashboard")
         } else {
           setError(data.error || "Invalid email or password")

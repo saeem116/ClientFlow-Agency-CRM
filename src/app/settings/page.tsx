@@ -4,6 +4,7 @@ import { getOrganization } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { SettingsPageClient } from "./settings-page-client"
 import { sanitize } from "@/lib/sanitize"
+import { NavigationLoaderProvider } from "@/components/ui/navigation-loader-context"
 
 function memberAvatarUrl(avatarId: string | null | undefined, userId: string): string | null {
   if (!avatarId) return null
@@ -34,21 +35,23 @@ export default async function SettingsPage() {
   const memberships = sanitize(rawMemberships) as Array<{ _id?: { toString(): string }; role?: string; userId?: { name?: string; email?: string; avatar?: string | null; _id?: { toString(): string } } }>
 
   return (
-    <SettingsPageClient
-      org={{
-        id: organization?._id?.toString() || org.id,
-        name: organization?.name || org.name,
-        slug: organization?.slug || org.slug,
-        memberships: memberships.map((m) => ({
-          id: m._id?.toString() || "",
-          role: m.role || "",
-          user: {
-            name: m.userId?.name || "Unknown",
-            email: m.userId?.email || "",
-            avatar: memberAvatarUrl(m.userId?.avatar, m.userId?._id?.toString() || ""),
-          },
-        })),
-      }}
-    />
+    <NavigationLoaderProvider>
+      <SettingsPageClient
+        org={{
+          id: organization?._id?.toString() || org.id,
+          name: organization?.name || org.name,
+          slug: organization?.slug || org.slug,
+          memberships: memberships.map((m) => ({
+            id: m._id?.toString() || "",
+            role: m.role || "",
+            user: {
+              name: m.userId?.name || "Unknown",
+              email: m.userId?.email || "",
+              avatar: memberAvatarUrl(m.userId?.avatar, m.userId?._id?.toString() || ""),
+            },
+          })),
+        }}
+      />
+    </NavigationLoaderProvider>
   )
 }
