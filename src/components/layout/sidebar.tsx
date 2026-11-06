@@ -66,6 +66,14 @@ export function Sidebar({
   const userAvatar = currentUser?.avatar || null
   const orgName = org?.name || "My Workspace"
 
+  // Team Members (workspace-level MEMBER) cannot access Settings, which
+  // contains the Manage Team and Invite Team Member controls. Admins and
+  // platform admins retain full access.
+  const isOrgAdmin = currentUser?.organizationRole === "ADMIN"
+  const visibleNavItems = isOrgAdmin
+    ? navItems
+    : navItems.filter((item) => item.href !== "/settings")
+
   return (
     <>
       {/* Mobile menu button */}
@@ -77,18 +85,6 @@ export function Sidebar({
           className="bg-white dark:bg-[var(--card)] shadow-md border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-      </div>
-      {/* Desktop toggle button for sidebar */}
-      <div className="hidden lg:flex items-center justify-end p-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onCollapsedChange?.(!collapsed)}
-          className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-        >
-          <ChevronLeft className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} />
-          <span className="ml-2 text-sm">Toggle Sidebar</span>
         </Button>
       </div>
 
@@ -152,7 +148,7 @@ export function Sidebar({
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
             return (

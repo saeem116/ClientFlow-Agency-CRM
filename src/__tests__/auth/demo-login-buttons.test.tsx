@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { DemoLoginButtons } from '@/app/sign-in/demo-login-buttons'
 import { NavigationLoaderProvider } from '@/components/ui/navigation-loader-context'
+import { AuthProvider } from '@/lib/auth-context'
 
 // Mock fetch
 const mockFetch = vi.fn()
@@ -26,9 +27,11 @@ describe('DemoLoginButtons', () => {
 
   it('renders both demo login buttons', () => {
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     expect(screen.getByText('Login as Admin')).toBeInTheDocument()
@@ -39,9 +42,11 @@ describe('DemoLoginButtons', () => {
 
   it('calls demo-login endpoint on admin button click', async () => {
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     fireEvent.click(screen.getByText('Login as Admin'))
@@ -58,9 +63,11 @@ describe('DemoLoginButtons', () => {
 
   it('calls demo-login endpoint on member button click', async () => {
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     fireEvent.click(screen.getByText('Login as Team Member'))
@@ -79,9 +86,11 @@ describe('DemoLoginButtons', () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
 
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     fireEvent.click(screen.getByText('Login as Admin'))
@@ -98,9 +107,11 @@ describe('DemoLoginButtons', () => {
     })
 
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     fireEvent.click(screen.getByText('Login as Admin'))
@@ -114,9 +125,11 @@ describe('DemoLoginButtons', () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
 
     render(
-      <NavigationLoaderProvider>
-        <DemoLoginButtons />
-      </NavigationLoaderProvider>
+      <AuthProvider initialUser={null} initialOrg={null} initialIsDemo={false}>
+        <NavigationLoaderProvider>
+          <DemoLoginButtons />
+        </NavigationLoaderProvider>
+      </AuthProvider>
     )
 
     fireEvent.click(screen.getByText('Login as Admin'))

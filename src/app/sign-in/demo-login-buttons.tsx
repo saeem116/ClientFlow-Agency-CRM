@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Shield, Users, AlertCircle } from "lucide-react";
 import { useNavigationLoader } from "@/components/ui/navigation-loader-context";
+import { useAuth } from "@/lib/auth-context";
 
 export function DemoLoginButtons() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { begin } = useNavigationLoader();
+  const { refresh } = useAuth();
 
   const handleDemoLogin = async (persona: "admin" | "member") => {
     setLoading(persona);
@@ -26,7 +28,9 @@ export function DemoLoginButtons() {
       const data = await response.json();
 
       if (response.ok && data.user) {
-        // Refresh the auth context and redirect to dashboard
+        // Refresh the auth context from the server to pick up the new session
+        // (mirrors the regular sign-in flow in /sign-in/page.tsx)
+        await refresh();
         begin();
         router.push("/dashboard");
       } else {

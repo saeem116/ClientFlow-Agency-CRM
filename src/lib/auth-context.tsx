@@ -20,6 +20,15 @@ export interface AuthUser {
   organizationId: string
 }
 
+/**
+ * Check if the current user has organization-level ADMIN role.
+ * This mirrors the server-side getOrgAdminSession() check.
+ */
+export function isOrgAdmin(user: AuthUser | null): boolean {
+  if (!user) return false
+  return user.organizationRole === "ADMIN"
+}
+
 export interface AuthOrg {
   id: string
   name: string

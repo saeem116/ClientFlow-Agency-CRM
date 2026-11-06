@@ -250,6 +250,56 @@ export async function signOut(): Promise<void> {
   redirect("/sign-in")
 }
 
+/**
+ * Check if the current session has organization-level ADMIN role.
+ *
+ * This is the trusted server-side authorization check for workspace-level
+ * administrative operations (Manage Team, Manage Settings, Invite Team Member).
+ *
+ * Platform admins (ADMIN_EMAIL) are implicitly allowed because they always
+ * have organizationRole === "ADMIN" in their active organization.
+ *
+ * Returns the session if authorized, throws/redirects if not.
+ */
+export async function requireOrgAdmin(): Promise<Session | null> {
+  const session = await getSession()
+  if (!session) return null
+
+  // Platform admin check - if email matches ADMIN_EMAIL, allow
+  if (await isAdminEmail(session.user.email)) {
+    return session
+  }
+
+  // Organization admin check - workspace-level ADMIN role
+  if (session.user.organizationRole === "ADMIN") {
+    return session
+  }
+
+  return null
+}
+
+/**
+ * Get the session if the user has organization-level ADMIN role,
+ * otherwise return null. Non-throwing version for routes that
+ * need to conditionally render or return 403.
+ */
+export async function getOrgAdminSession(): Promise<Session | null> {
+  const session = await getSession()
+  if (!session) return null
+
+  // Platform admin check
+  if (await isAdminEmail(session.user.email)) {
+    return session
+  }
+
+  // Organization admin check
+  if (session.user.organizationRole === "ADMIN") {
+    return session
+  }
+
+  return null
+}
+
 export async function getUserByEmail(email: string): Promise<{
   _id: { toString(): string }
   email: string

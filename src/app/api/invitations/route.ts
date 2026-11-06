@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ensureDb, Invitation, Membership, Organization } from "@/lib/database"
-import { getSession, isAdminEmail, requireOrg } from "@/lib/auth"
+import { getOrgAdminSession, requireOrg } from "@/lib/auth"
 import { generateTokenPair } from "@/lib/mongoose/invitation"
 import { sendInvitationEmail } from "@/lib/email"
 
 /**
  * GET /api/invitations
  * Returns pending invitations for the current user's organization.
+ *
+ * Authorization: Organization admin (workspace-level ADMIN) or platform admin.
  */
 export async function GET() {
   await ensureDb()
 
-  const session = await getSession()
+  const session = await getOrgAdminSession()
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  // Only configured admin email can manage invitations
-  if (!await isAdminEmail(session.user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -67,9 +64,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   await ensureDb()
 
-  const session = await getSession()
+  // Check if user is an org admin (workspace-level ADMIN or platform admin)
+  const session = await getOrgAdminSession()
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   // Shared demo account may view invitations but may never create them.
@@ -77,11 +75,6 @@ export async function POST(request: NextRequest) {
   // null check is the authoritative gate — a bare try/catch would never fire.
   const org = await requireOrg()
   if (!org) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
-
-  // Verify inviter is ADMIN (by email match)
-  if (!await isAdminEmail(session.user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 

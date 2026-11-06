@@ -1,6 +1,6 @@
 import { ensureDb } from "@/lib/database"
 import { Membership, Organization } from "@/lib/database"
-import { getOrganization } from "@/lib/auth"
+import { getOrganization, getOrgAdminSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { SettingsPageClient } from "./settings-page-client"
 import { sanitize } from "@/lib/sanitize"
@@ -19,6 +19,10 @@ export default async function SettingsPage() {
   if (!org) {
     redirect("/sign-in")
   }
+
+  // Check if the current user is an org admin
+  const adminSession = await getOrgAdminSession()
+  const isAdmin = !!adminSession
 
   // Fetch organization details with memberships
   const organization = await Organization.findOne({ _id: org.id }).lean() as unknown as {
@@ -41,15 +45,18 @@ export default async function SettingsPage() {
           id: organization?._id?.toString() || org.id,
           name: organization?.name || org.name,
           slug: organization?.slug || org.slug,
-          memberships: memberships.map((m) => ({
-            id: m._id?.toString() || "",
-            role: m.role || "",
-            user: {
-              name: m.userId?.name || "Unknown",
-              email: m.userId?.email || "",
-              avatar: memberAvatarUrl(m.userId?.avatar, m.userId?._id?.toString() || ""),
-            },
-          })),
+          // Only pass memberships to admins; non-admins get empty array
+          memberships: isAdmin
+            ? memberships.map((m) => ({
+                id: m._id?.toString() || "",
+                role: m.role || "",
+                user: {
+                  name: m.userId?.name || "Unknown",
+                  email: m.userId?.email || "",
+                  avatar: memberAvatarUrl(m.userId?.avatar, m.userId?._id?.toString() || ""),
+                },
+              }))
+            : [],
         }}
       />
     </NavigationLoaderProvider>
